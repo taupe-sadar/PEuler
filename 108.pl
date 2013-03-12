@@ -27,30 +27,51 @@ my($p)= Prime::next_prime();
 my(@prime_tab)=($p);
 my(@prime_prod_cumulated)=($p);
 
-my(@kis)=(1);
+my(@kis)=(0);
 while( $#prime_tab+1 < $num_primes )
 {
     $p= Prime::next_prime();
     push( @prime_tab, $p);
     push( @prime_prod_cumulated, $p * $prime_prod_cumulated[-1] );
-    push( @kis, 1 );
+    push( @kis, 0 );
 }
     
 my($best_prod)= $prime_prod_cumulated[-1];
+$kis[ -1 ] = 0;
 
-recursive_solve_PROB( $#kis + 1, \$best_prod,  
+recursive_solve_PROB( $#kis-1, 0  , \@kis,  1, \$best_prod  );  
 
 sub recursive_solve_PROB
 {
-    my($m,$rbest_prod,
-}
-
-
-
-while(1) #Bleh
-{
-    next_kis( \@kis, \$best_prod );
+    my($j,$rkis, $minki, $current_prod, $rbestprod ) = @_;
     
+    if( $j == 0 )
+    {
+	
+
+    }
+    else
+    {
+	
+	for(my($i)=0;$i<=$j;$i++)
+	{
+	    $$rkis[$i] = $minki;
+	}
+	
+	while( $current_prod < $$rbestprod )
+	{
+	    if( prod_kis( $rkis ) >= $max_for_odd_product )
+	    {
+		recursive_solve_PROB( $j-1, $minki, $current_prod, $rbestprod );
+	    }
+	    $minki++;
+	    $current_prod *= $prime_prod_cumulated[ $j ];
+	    for(my($i)=0;$i<=$j;$i++)
+	    {
+		$$rkis[$i] ++;
+	    }
+	}
+    }
 }
 
 sub prime_for_kis
