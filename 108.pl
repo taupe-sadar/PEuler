@@ -45,14 +45,14 @@ sub recursive_solve_PROB
   my($idx, $base_ki, $rkis, $current_prod, $rbestprod ) = @_;
   my($max_ki) = calc_max_ki ( $rbestprod, $current_prod, $idx ) + $base_ki;
   
-  print Dumper \@_; 
-  print "MAX_ki : $max_ki\n";<STDIN>;
+  # print Dumper \@_; 
+  # print "MAX_ki : $max_ki\n";<STDIN>;
   
   if( $idx == 0 )
   {
     my($curent_ki_prod)= prod_kis( $rkis );
     my( $min_Xi ) =  $max_for_odd_product/ ($curent_ki_prod/ (2*$base_ki+1) ) ;
-    my( $min_ki ) =  max( 0, ceil( ($min_Xi -1)/2 ) );
+    my( $min_ki ) =  max( $base_ki, ceil( ($min_Xi -1)/2 ) );
     
     if( $min_ki > $max_ki )
     {
@@ -60,6 +60,7 @@ sub recursive_solve_PROB
     }
     else
     {
+      
       $$rbestprod = $current_prod * ($prime_prod_cumulated[ $idx ] ** ($min_ki - $base_ki) );
       return 1;
     }
