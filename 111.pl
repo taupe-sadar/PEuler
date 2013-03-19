@@ -30,55 +30,6 @@ print $sum;
 sub find_all_digits_primes
 {
   my( $n, $d , $num_different_digits ) = @_;
-  if( $d == 0 )
-  {
-    return find_all_digits_primes_use_last_and_first( $n , $d, $num_different_digits );
-  }
-  elsif( $d %2 == 0 || $d%5 == 0 )  
-  {
-    return find_all_digits_primes_use_last( $n , $d, $num_different_digits );
-  }
-  else
-  {
-    return find_all_digits_primes_free( $n , $d, $num_different_digits );
-  }
-}
-
-#For 0
-sub find_all_digits_primes_use_last_and_first 
-{
-  my( $n, $d , $num_different_digits ) = @_;
-  my(@prime_list)=();
-  for( my($first_digit)=1; $first_digit<=9; $first_digit++)
-  {
-    foreach my $last_digit (@authorized_last_digits);
-    {
-      enumarate_numbers_and_test_primes( \@prime_list, $first_digit,$last_digit, $n, $d, $num_different_digits - 2) ;
-    }
-  }
-  return @prime_list;
-}
-
-#For 2 4 5 6 8 
-sub find_all_digits_primes_use_last
-{
-  my( $n, $d , $num_different_digits ) = @_;
-  my(@prime_list)=();
-  
-  foreach my $last_digit (@authorized_last_digits);
-  {
-    for( my($first_digit)=1; $first_digit<=9; $first_digit++)
-    {
-      my($different_digits_already_used)= 1 + (( $first_digit == $d )? 0 : 1);
-      enumarate_numbers_and_test_primes( \@prime_list, $first_digit,$last_digit, $n, $d, $num_different_digits - $different_digits_already_used) ;
-    }
-  }
-}
-
-#For 1 3 7 9
-sub find_all_digits_primes_free
-{
-  my( $n, $d , $num_different_digits ) = @_;
   my(@prime_list)=();
   
   foreach my $last_digit (@authorized_last_digits);
