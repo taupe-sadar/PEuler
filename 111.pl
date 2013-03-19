@@ -22,17 +22,17 @@ for( my($d) = 0; $d <= 9 ; $d++ )
     @primes = find_all_digits_primes( $digits, $d , $num_different_digits );
     $num_different_digits++;
   } 
-  $sum += sum(@primes);
+  $sum_primes += sum(@primes);
 }
 
-print $sum;
+print $sum_primes;
 
 sub find_all_digits_primes
 {
   my( $n, $d , $num_different_digits ) = @_;
   my(@prime_list)=();
   
-  foreach my $last_digit (@authorized_last_digits);
+  foreach my $last_digit (@authorized_last_digits)
   {
     for( my($first_digit)=1; $first_digit<=9; $first_digit++)
     {
@@ -45,7 +45,7 @@ sub find_all_digits_primes
 sub enumarate_numbers_and_test_primes
 {
   my($rprime_list,$first_digit,$last_digit, $n, $d, $num_free_digits)=@_;
-  foreach my($p) (map ( {"$first_digit".$_."$last_digit";} build_digit_number($n-2,$d, $num_free_digits ) ))
+  foreach  my $p (map ( {"$first_digit".$_."$last_digit";} build_digit_number($n-2,$d, $num_free_digits ) ))
   {
     if( Prime::fast_is_prime( $p ) )
     {
@@ -56,20 +56,45 @@ sub enumarate_numbers_and_test_primes
 
 sub build_digit_number
 {
-  my( $nminus2,$d, $num_different_digits) = @_;
+  my( $n,$d, $num_free_digits) = @_;
   if( $num_free_digits < 0 )
   {
     return ();
   }
   
-  #For Now just doing the case $nminus2 - $num_different_digits <=1;
   my(@list);
-  if( $nminus2 == $num_different_digits )
+  rec_add_digit_number( \@list, "", $n,$d, $num_free_digits );
+  return @list;
+}
+
+sub rec_add_digit_number
+{
+  my( $rlist, $current, $n,$d, $num_free_digits )=@_;
+  if( $n == 0 )
   {
-    my($srt)="";
-    for(my($a)=0;$a<$nminus2;$a++)
+     push( @$rlist,$current);
+  }
+  elsif( $num_free_digits == 0 )
+  {
+    for(my($a)=0;$a<$n;$a++)
     {
-      $str.=$d;
+       $current.=$d;
+    }
+    push( @$rlist,$current);
+  }
+  else
+  {
+    for(my($digit)=0;$digit<=9;$digit++)
+    {
+      if( $digit == $d )
+      {
+        next if($n == $num_free_digits );
+        rec_add_digit_number( $rlist, $current.$d , $n-1,$d, $num_free_digits);
+      }
+      else
+      {
+        rec_add_digit_number( $rlist, $current.$digit , $n-1,$d, $num_free_digits-1 );
+      }
     }
   }
 }
