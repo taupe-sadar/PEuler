@@ -12,11 +12,11 @@ my( $digits ) = 10;
 my(@authorized_last_digits)=(1,3,7,9);
     
 my($sum_primes)=0;
-
+Prime::init_crible(sqrt(10**$digits) + 1);
 for( my($d) = 0; $d <= 9 ; $d++ )
 {
   my(@primes)=();
-  my($num_different_digits)= $d == (0 ? 2 : 1);
+  my($num_different_digits)= (($d == 0) ? 2 : 1);
   while( $#primes < 0 )
   {
     @primes = find_all_digits_primes( $digits, $d , $num_different_digits );
@@ -40,6 +40,7 @@ sub find_all_digits_primes
       enumarate_numbers_and_test_primes( \@prime_list, $first_digit,$last_digit, $n, $d, $num_different_digits - $different_digits_already_used) ;
     }
   }
+  return @prime_list;
 }
 
 sub enumarate_numbers_and_test_primes
