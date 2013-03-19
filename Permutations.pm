@@ -7,6 +7,8 @@ use List::Util qw( sum );
 
 our(@facts)=(1,1);
 
+my(%cache_cnk)=();
+
 #Retourne le j-ieme sous ensemble de k elements parmi n 
 sub subset
 {
@@ -55,15 +57,20 @@ sub subset
 #retourne le coefficient binomial C(n,k) = nombre de subsets k parmi n 
 sub cnk
 {
-	my($n,$k)=@_;
+    my($n,$k)=@_;
+    my($key)="$n-$k";
+    if( !exists( $cache_cnk{$key}))
+    {
 	my($val)=new Math::BigInt(1);
 	my($i)=0;
 	for($i=0;$i<$k;$i++)
 	{
-		$val*=($n-$i);
-		$val/=($i+1);
+	    $val*=($n-$i);
+	    $val/=($i+1);
 	}
-	return $val;
+	$cache_cnk{$key} = $val;
+    }
+    return $cache_cnk{$key};
 }
 
 #returns the numbers of permutations in a given set, where some elements are identical
