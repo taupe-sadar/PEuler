@@ -3,34 +3,39 @@ use warnings;
 use Data::Dumper;
 use Permutations;
 
-print count_bouncy( 876, 1 );
+print count_bouncy_power10( 5 );
 
 
+my(%cache_bouncy)=();
+my(%cache_descending_power10)=();
 
-sub count_bouncy
+# Returns the number of bouncy numbers in
+# [ 1 ; 10^n ]
+sub count_bouncy_power10
 {
-  my( $n ) = @_;
-  my(@digits)=split(//,$n);
-  
-  #We now that the number of bouncy numbers below 100 is 0
-  my($sum_bouncy) = 0;
-  for( my($ndigits)=2; $ndigits <= $#digits; $ndigits ++ )
-  {
-    for( my($first_digit)=1; $first_digit <= 9; $first_digit ++ )
-    {
-      $sum_bouncy += count_bouncy_interval( $first_digit, $ndigits );
-    }
-  }
+    my($n)=@_;
+    my($constants )= 9*$n ;
+    my($ascending ) = Permutations::cnk( $n + 9 , 9 ) - $constants - 1; #Remove the num of constant terms
+    my($decending)= count_descending( $n );
+    my( $bouncys )= 10**$n -1 - ($ascending + $decending + $constants);
+    return $bouncys;
+}
 
-  for( my($ndigits)=$#digits -1 ; $ndigits <= $#digits; $ndigits ++ )
-  {
-    for( my($first_digit)=1; $first_digit <= 9; $first_digit ++ )
+sub count_descending
+{
+    my($n)=@_;
+    if( !exists($cache_descending_power10{$n}) )
     {
-      $sum_bouncy += count_bouncy_interval( $first_digit, $ndigits );
+	if( $n <= 1 )
+	{
+	    $cache_descending_power10{$n} = 0;
+	}
+	else
+	{
+	    $cache_descending_power10{$n} = Permutations::cnk( $n + 9 , 9 ) - 10 + count_descending( $n-1 ); 
+	}
     }
-  }
-
-  
+    return $cache_descending_power10{$n}
 }
 
 # Returns the number of bouncy numbers in
