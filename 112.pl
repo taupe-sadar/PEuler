@@ -2,23 +2,28 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Permutations;
-
-print count_bouncy_power10( 5 );
+#no warnings 'recursion';
+#print count_bouncy_power10( 100 );
 
 
 my(%cache_bouncy)=();
 my(%cache_descending_power10)=();
 
 # Returns the number of bouncy numbers in
-# [ 1 ; 10^n ]
+# [ 1 ; 10^n - 1 ]
 sub count_bouncy_power10
 {
     my($n)=@_;
-    my($constants )= 9*$n ;
-    my($ascending ) = Permutations::cnk( $n + 9 , 9 ) - $constants - 1; #Remove the num of constant terms
-    my($decending)= count_descending( $n );
-    my( $bouncys )= 10**$n -1 - ($ascending + $decending + $constants);
-    return $bouncys;
+    my($num)=10**$n;
+    if( !exists($cache_bouncy{$num}))
+    {
+	my($constants )= 9*$n ;
+	my($ascending ) = Permutations::cnk( $n + 9 , 9 ) - $constants - 1; #Remove the num of constant terms
+	my($decending)= count_descending( $n );
+	$cache_bouncy{$num} = 10**$n -1 - ($ascending + $decending + $constants);
+    }
+    return $cache_bouncy{$num}
+    
 }
 
 sub count_descending
@@ -39,38 +44,73 @@ sub count_descending
 }
 
 # Returns the number of bouncy numbers in
+# [ 1 ; n ]
+sub count_bouncy
+{
+    my($n)=@_;
+    if( $n < 100 )
+    {
+	return 0;
+    }
+
+    if( !exists($cache_bouncy{$n}))
+    {
+	my($count_last_zeros)=0;
+	$n=~m/^([^0]*([^0]))(0*)$/ or die "invalid number $n";
+	my($prefix)=$1;
+	my($prefixlast)=$2;
+	my($num_zeros)=length($3);
+	if( length($prefix) == 1 )
+	{
+	    $cache_bouncy{$n} = count_bouncy_power10( $num_zeros );
+	    for( my($a)=1; $a< $prefix; $a++ )
+	    {
+		$cache_bouncy{$n} += count_bouncy_interval( $a, $num_zeros );
+	    }
+	}
+	else
+	{
+	  my($ascending,$descending)= ascending_or_descending( $prefix );
+	  if( $acending && $descending )
+	  {
+	      
+	  }
+	}
+    }
+    return $cache_bouncy{$n};
+}
+
+# Returns the number of ascending/descending numbers in
 # [ prefix * 10^num_digits ; (prefix+1) * 10^num_digits -1 ]
+# knowing that prefix as the same property, 
+# and given the last number of prefix
+sub count_ascending_interval
+{
+  my($prefixlast, $num_digits)=@_;
+  return Permutations::cnk( $num_digits + 9 - $prefixlast , 9 - $prefixlast  ) - 1;
+}
+
+sub count_descending_interval
+{
+  my($prefixlast, $num_digits)=@_;
+  return Permutations::cnk( $num_digits + $prefixlast , $prefixlast  ) - 1;
+}
+
+# Returns the number of bouncy  numbers in
+# [ prefix * 10^num_digits ; (prefix+1) * 10^num_digits -1 ]
+# knowing that prefix is constant, 
+# and given the last number of prefix
 sub count_bouncy_interval
 {
-  my($prefix, $num_digits)=@_;
-  my($prefix_ascending,$prefix_descending) = ascending_or_descending( $prefix ) ;
-  my($last_digit) = ($prefix =~m/^.*(.)$/ );
-  my($num_ascending,$num_descending,$num_constant) = (0,0,0);
-  
-  if( $prefix_ascending )
-  {
-    $num_ascending = Permutations::cnk( $num_digits + 9 - $last_digit , 9 - $last_digit  );
-  }
-
-  if( $prefix_descending )
-  {
-    $num_descending = Permutations::cnk( $num_digits + $last_digit , $last_digit  );
-  }
-  
-  if( $prefix_ascending && $prefix_descending )
-  {
-    $num_constant = 1;
-  }
-  
-  my($num_bouncy)= 10**$num_digits - $num_ascending - $num_descending - $num_constant;
-  return $num_bouncy;
+  my($prefixlast, $num_digits)=@_;
+  return 10**$num_digits - count_ascending_interval($prefixlast, $num_digits) - count_descending_interval($prefixlast, $num_digits) - 1;
 }
 
 sub ascending_or_descending
 {
   my( $n )=@_;
-  my(@tab_digits)=split(//,$n);
-  my($sorted_increased) = join("",sort({ $a <=> $b } @tab_digits));
-  my($sorted_decreased) = join("",sort({ $b <=> $a } @tab_digits));
+  my(@sorted)=sort({ $a <=> $b } split(//,$n));
+  my($sorted_increased) = join("",@sorted);
+  my($sorted_decreased) = join("",reverse(@sorted));
   return ($n==$sorted_increased,$n==$sorted_decreased);
 }
