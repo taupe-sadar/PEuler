@@ -70,11 +70,40 @@ sub count_bouncy
 	}
 	else
 	{
-	  my($ascending,$descending)= ascending_or_descending( $prefix );
-	  if( $acending && $descending )
-	  {
-	      
-	  }
+	    #my($ascending,$descending)= ascending_or_descending( $prefix );
+	    my($type,@parts)=split_in_bouncy_parts( $prefix );
+	    if( $type =~ m/(.)!/ )
+	    {
+		my($previous_part)=$1;
+		if( $previous_part eq '<' )
+		{
+		    $cache_bouncy{$n} = $parts[2]*(10**$num_zeros);
+		}
+		else #'>'
+		{
+		    $parts[1]=~m/(.)$/;
+		    my( $last_of_monotone_part )=$1;
+		    my($working_zeros)= length($parts[2])-1 + $num_zeros;
+		    my($working_base) = 10**$working_zeros;
+		    $cache_bouncy{$n} = ($parts[2] - ($last_of_monotone_part + 1))*$working_zeros  + 1;
+		    for(my($i)=1;$i<= $last_of_monotone_part; $i++ )
+		    {
+			$cache_bouncy{$n} += $working_base - count_descending_interval( $i,$working_zeros );
+		    }
+		    $cache_bouncy{$n} += $working_base - 1;
+		}
+
+		$cache_bouncy{$n} += count_bouncy( $parts[0].$parts[1]*(10**($num_zeros + length($parts[2]))));
+	    }
+	    elsif($type eq '<' )
+	    {
+		my(@digits)=split(//,$parts[1]);
+		$parts[0]=~m/(.)$/;
+		unshift(@digits, $1 );
+		    
+		
+	    }
+
 	}
     }
     return $cache_bouncy{$n};
@@ -113,4 +142,49 @@ sub ascending_or_descending
   my($sorted_increased) = join("",@sorted);
   my($sorted_decreased) = join("",reverse(@sorted));
   return ($n==$sorted_increased,$n==$sorted_decreased);
+}
+
+sub split_in_bouncy_parts
+{
+    my($prefix)=@_;
+    my(@tab)=split(//,$prefix);
+    my($type,$constant,$monotone,$bouncy)=("","","");
+    my($d);
+    my($previous)="";
+    my($current)="";
+    while( defined( $d = shift( @tab)) )
+    {
+	if($previous eq "" )
+	{
+	    $type = '='; #for constant
+	}
+	elsif( $type eq '=' && $previous != $d )
+	{
+		$monotone = $current;
+		$current="";
+		$type = ( $previous < $d ) ? '<' : '>'; #for ascending or descending
+	}
+	elsif( $type eq '<' && $previous > $d )
+	{
+		$constant = $current;
+		$current="";
+		$type .=  '!'; #for bouncy (with first part ascending/decending)
+	}
+	
+	$current.=$d;
+	$previous=$d;
+    }
+    if( $type eq '=' )
+    {
+	$constant = $current;
+    }
+    elsif( $type eq '<' || $type eq '>' )
+    {
+	$monotone = $current;
+    }
+    else
+    {
+	$bouncy = $current;
+    }
+    return ($type,$constant,$monotone,$bouncy);
 }
