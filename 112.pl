@@ -47,64 +47,80 @@ sub count_descending
 # [ 1 ; n ]
 sub count_bouncy
 {
-    my($n)=@_;
-    if( $n < 100 )
+  my($n)=@_;
+  if( $n < 100 )
+  {
+    return 0;
+  }
+
+  if( !exists($cache_bouncy{$n}))
+  {
+    my($count_last_zeros)=0;
+    $n=~m/^([^0]*([^0]))(0*)$/ or die "invalid number $n";
+    my($prefix)=$1;
+    my($prefixlast)=$2;
+    my($num_zeros)=length($3);
+    if( length($prefix) == 1 )
     {
-	return 0;
+      $cache_bouncy{$n} = count_bouncy_power10( $num_zeros );
+      for( my($a)=1; $a< $prefix; $a++ )
+      {
+        $cache_bouncy{$n} += count_bouncy_interval( $a, $num_zeros );
+      }
     }
-
-    if( !exists($cache_bouncy{$n}))
+    else
     {
-	my($count_last_zeros)=0;
-	$n=~m/^([^0]*([^0]))(0*)$/ or die "invalid number $n";
-	my($prefix)=$1;
-	my($prefixlast)=$2;
-	my($num_zeros)=length($3);
-	if( length($prefix) == 1 )
-	{
-	    $cache_bouncy{$n} = count_bouncy_power10( $num_zeros );
-	    for( my($a)=1; $a< $prefix; $a++ )
-	    {
-		$cache_bouncy{$n} += count_bouncy_interval( $a, $num_zeros );
-	    }
-	}
-	else
-	{
-	    #my($ascending,$descending)= ascending_or_descending( $prefix );
-	    my($type,@parts)=split_in_bouncy_parts( $prefix );
-	    if( $type =~ m/(.)!/ )
-	    {
-		my($previous_part)=$1;
-		if( $previous_part eq '<' )
-		{
-		    $cache_bouncy{$n} = $parts[2]*(10**$num_zeros);
-		}
-		else #'>'
-		{
-		    $parts[1]=~m/(.)$/;
-		    my( $last_of_monotone_part )=$1;
-		    my($working_zeros)= length($parts[2])-1 + $num_zeros;
-		    my($working_base) = 10**$working_zeros;
-		    $cache_bouncy{$n} = ($parts[2] - ($last_of_monotone_part + 1))*$working_zeros  + 1;
-		    for(my($i)=1;$i<= $last_of_monotone_part; $i++ )
-		    {
-			$cache_bouncy{$n} += $working_base - count_descending_interval( $i,$working_zeros );
-		    }
-		    $cache_bouncy{$n} += $working_base - 1;
-		}
+        #my($ascending,$descending)= ascending_or_descending( $prefix );
+        my($type,@parts)=split_in_bouncy_parts( $prefix );
+        if( $type =~ m/(.)!/ )
+        {
+          my($previous_part)=$1;
+          if( $previous_part eq '<' )
+          {
+              $cache_bouncy{$n} = $parts[2]*(10**$num_zeros);
+          }
+          else #'>'
+          {
+              $parts[1]=~m/(.)$/;
+              my( $last_of_monotone_part )=$1;
+              my($working_zeros)= length($parts[2])-1 + $num_zeros;
+              my($working_base) = 10**$working_zeros;
+              $cache_bouncy{$n} = ($parts[2] - ($last_of_monotone_part + 1))*$working_zeros  + 1;
+              for(my($i)=1;$i<= $last_of_monotone_part; $i++ )
+              {
+                $cache_bouncy{$n} += $working_base - count_descending_interval( $i,$working_zeros );
+              }
+              $cache_bouncy{$n} += $working_base - 1;
+          }
 
-		$cache_bouncy{$n} += count_bouncy( $parts[0].$parts[1]*(10**($num_zeros + length($parts[2]))));
-	    }
-	    elsif($type eq '<' )
-	    {
-		my(@digits)=split(//,$parts[1]);
-		$parts[0]=~m/(.)$/;
-		unshift(@digits, $1 );
-		    
-		
-	    }
+          $cache_bouncy{$n} += count_bouncy( $parts[0].$parts[1]*(10**($num_zeros + length($parts[2]))));
+        }
+        elsif($type eq '<' )
+        {
+          my(@digits)=split(//,$parts[1]);
+          $parts[0]=~m/(.)$/;
+          unshift(@digits, $1 );
+          $cache_bouncy{$n} = ($num_zeros == 0) ? 0 : 1; # Is this number bouncy ?
+          my($working_zeros)= length($parts[0]) + length($parts[1]) + $num_zeros;
+          my($working_base) = 10**$working_zeros;
+                 
+          for( my($d)= 1;$d<=$#digits;$d++)
+          {
+            my($high_digit)=$digits[$i];
+            my($previous_digit)=$digits[$i-1];
+            $cache_bouncy{$n} += $working_base * $previous_digit; #All them are bouncy
+            for( my($v)= $previous_digit; $v<$high_digit;$v++)
+            {
+              $cache_bouncy{$n} += $working_base - count_ascending_interval( $v,$working_zeros );
+            }
+            $working_zeros++;
+            $working_base*=10;
+          }
+          #$cache_bouncy{$n} -=0; #Not need to Remove the constant*10*workingbase which is descending
+          $cache_bouncy{$n} += count_bouncy( $parts[0]*(10**($num_zeros + length($parts[1]) + length($parts[2]))));
+        }
 
-	}
+      }
     }
     return $cache_bouncy{$n};
 }
