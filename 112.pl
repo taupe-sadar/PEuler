@@ -13,34 +13,35 @@ my(%cache_descending_power10)=();
 # [ 1 ; 10^n - 1 ]
 sub count_bouncy_power10
 {
-    my($n)=@_;
-    my($num)=10**$n;
-    if( !exists($cache_bouncy{$num}))
-    {
-	my($constants )= 9*$n ;
-	my($ascending ) = Permutations::cnk( $n + 9 , 9 ) - $constants - 1; #Remove the num of constant terms
-	my($decending)= count_descending( $n );
-	$cache_bouncy{$num} = 10**$n -1 - ($ascending + $decending + $constants);
-    }
-    return $cache_bouncy{$num}
-    
+  my($n)=@_;
+  my($num)=10**$n;
+  if( !exists($cache_bouncy{$num}))
+  {
+    my($constants )= 9*$n ;
+    my($ascending ) = Permutations::cnk( $n + 9 , 9 ) - $constants - 1; #Remove the num of constant terms
+    my($decending)= count_descending( $n );
+    $cache_bouncy{$num} = 10**$n -1 - ($ascending + $decending + $constants);
+  }
+  return $cache_bouncy{$num}
+  
 }
 
 sub count_descending
 {
-    my($n)=@_;
-    if( !exists($cache_descending_power10{$n}) )
+  my($n)=@_;
+  if( !exists($cache_descending_power10{$n}) )
+  {
+    if( $n <= 1 )
     {
-	if( $n <= 1 )
-	{
+
 	    $cache_descending_power10{$n} = 0;
-	}
-	else
-	{
-	    $cache_descending_power10{$n} = Permutations::cnk( $n + 9 , 9 ) - 10 + count_descending( $n-1 ); 
-	}
     }
-    return $cache_descending_power10{$n}
+    else
+    {
+	    $cache_descending_power10{$n} = Permutations::cnk( $n + 9 , 9 ) - 10 + count_descending( $n-1 ); 
+    }
+  }
+  return $cache_descending_power10{$n}
 }
 
 # Returns the number of bouncy numbers in
@@ -70,59 +71,59 @@ sub count_bouncy
     }
     else
     {
-        #my($ascending,$descending)= ascending_or_descending( $prefix );
-        my($type,@parts)=split_in_bouncy_parts( $prefix );
-        if( $type =~ m/(.)!/ )
+      #my($ascending,$descending)= ascending_or_descending( $prefix );
+      my($type,@parts)=split_in_bouncy_parts( $prefix );
+      if( $type =~ m/(.)!/ )
+      {
+        my($previous_part)=$1;
+        if( $previous_part eq '<' )
         {
-          my($previous_part)=$1;
-          if( $previous_part eq '<' )
-          {
-              $cache_bouncy{$n} = $parts[2]*(10**$num_zeros);
-          }
-          else #'>'
-          {
-              $parts[1]=~m/(.)$/;
-              my( $last_of_monotone_part )=$1;
-              my($working_zeros)= length($parts[2])-1 + $num_zeros;
-              my($working_base) = 10**$working_zeros;
-              $cache_bouncy{$n} = ($parts[2] - ($last_of_monotone_part + 1))*$working_zeros  + 1;
-              for(my($i)=1;$i<= $last_of_monotone_part; $i++ )
-              {
-                $cache_bouncy{$n} += $working_base - count_descending_interval( $i,$working_zeros );
-              }
-              $cache_bouncy{$n} += $working_base - 1;
-          }
-
-          $cache_bouncy{$n} += count_bouncy( $parts[0].$parts[1]*(10**($num_zeros + length($parts[2]))));
+          $cache_bouncy{$n} = $parts[2]*(10**$num_zeros);
         }
-        elsif($type eq '<' )
+        else #'>'
         {
-          my(@digits)=split(//,$parts[1]);
-          $parts[0]=~m/(.)$/;
-          unshift(@digits, $1 );
-          $cache_bouncy{$n} = ($num_zeros == 0) ? 0 : 1; # Is this number bouncy ?
-          my($working_zeros)= length($parts[0]) + length($parts[1]) + $num_zeros;
+          $parts[1]=~m/(.)$/;
+          my( $last_of_monotone_part )=$1;
+          my($working_zeros)= length($parts[2])-1 + $num_zeros;
           my($working_base) = 10**$working_zeros;
-                 
-          for( my($d)= 1;$d<=$#digits;$d++)
+          $cache_bouncy{$n} = ($parts[2] - ($last_of_monotone_part + 1))*$working_zeros  + 1;
+          for(my($i)=1;$i<= $last_of_monotone_part; $i++ )
           {
-            my($high_digit)=$digits[$i];
-            my($previous_digit)=$digits[$i-1];
-            $cache_bouncy{$n} += $working_base * $previous_digit; #All them are bouncy
-            for( my($v)= $previous_digit; $v<$high_digit;$v++)
-            {
-              $cache_bouncy{$n} += $working_base - count_ascending_interval( $v,$working_zeros );
-            }
-            $working_zeros++;
-            $working_base*=10;
+            $cache_bouncy{$n} += $working_base - count_descending_interval( $i,$working_zeros );
           }
-          #$cache_bouncy{$n} -=0; #Not need to Remove the constant*10*workingbase which is descending
-          $cache_bouncy{$n} += count_bouncy( $parts[0]*(10**($num_zeros + length($parts[1]) + length($parts[2]))));
+          $cache_bouncy{$n} += $working_base - 1;
         }
 
+        $cache_bouncy{$n} += count_bouncy( $parts[0].$parts[1]*(10**($num_zeros + length($parts[2]))));
       }
+      elsif($type eq '<' )
+      {
+        my(@digits)=split(//,$parts[1]);
+        $parts[0]=~m/(.)$/;
+        unshift(@digits, $1 );
+        $cache_bouncy{$n} = ($num_zeros == 0) ? 0 : 1; # Is this number bouncy ?
+        my($working_zeros)= length($parts[0]) + length($parts[1]) + $num_zeros;
+        my($working_base) = 10**$working_zeros;
+        
+        for( my($d)= 1;$d<=$#digits;$d++)
+        {
+          my($high_digit)=$digits[$i];
+          my($previous_digit)=$digits[$i-1];
+          $cache_bouncy{$n} += $working_base * $previous_digit; #All them are bouncy
+          for( my($v)= $previous_digit; $v<$high_digit;$v++)
+          {
+            $cache_bouncy{$n} += $working_base - count_ascending_interval( $v,$working_zeros );
+          }
+          $working_zeros++;
+          $working_base*=10;
+        }
+        #$cache_bouncy{$n} -=0; #Not need to Remove the constant*10*workingbase which is descending
+        $cache_bouncy{$n} += count_bouncy( $parts[0]*(10**($num_zeros + length($parts[1]) + length($parts[2]))));
+      }
+
     }
-    return $cache_bouncy{$n};
+  }
+  return $cache_bouncy{$n};
 }
 
 # Returns the number of ascending/descending numbers in
@@ -162,45 +163,45 @@ sub ascending_or_descending
 
 sub split_in_bouncy_parts
 {
-    my($prefix)=@_;
-    my(@tab)=split(//,$prefix);
-    my($type,$constant,$monotone,$bouncy)=("","","");
-    my($d);
-    my($previous)="";
-    my($current)="";
-    while( defined( $d = shift( @tab)) )
+  my($prefix)=@_;
+  my(@tab)=split(//,$prefix);
+  my($type,$constant,$monotone,$bouncy)=("","","");
+  my($d);
+  my($previous)="";
+  my($current)="";
+  while( defined( $d = shift( @tab)) )
+  {
+    if($previous eq "" )
     {
-	if($previous eq "" )
-	{
 	    $type = '='; #for constant
-	}
-	elsif( $type eq '=' && $previous != $d )
-	{
-		$monotone = $current;
-		$current="";
-		$type = ( $previous < $d ) ? '<' : '>'; #for ascending or descending
-	}
-	elsif( $type eq '<' && $previous > $d )
-	{
-		$constant = $current;
-		$current="";
-		$type .=  '!'; #for bouncy (with first part ascending/decending)
-	}
-	
-	$current.=$d;
-	$previous=$d;
     }
-    if( $type eq '=' )
+    elsif( $type eq '=' && $previous != $d )
     {
-	$constant = $current;
+      $monotone = $current;
+      $current="";
+      $type = ( $previous < $d ) ? '<' : '>'; #for ascending or descending
     }
-    elsif( $type eq '<' || $type eq '>' )
+    elsif( $type eq '<' && $previous > $d )
     {
-	$monotone = $current;
+      $constant = $current;
+      $current="";
+      $type .=  '!'; #for bouncy (with first part ascending/decending)
     }
-    else
-    {
-	$bouncy = $current;
-    }
-    return ($type,$constant,$monotone,$bouncy);
+    
+    $current.=$d;
+    $previous=$d;
+  }
+  if( $type eq '=' )
+  {
+    $constant = $current;
+  }
+  elsif( $type eq '<' || $type eq '>' )
+  {
+    $monotone = $current;
+  }
+  else
+  {
+    $bouncy = $current;
+  }
+  return ($type,$constant,$monotone,$bouncy);
 }
