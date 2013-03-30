@@ -102,13 +102,13 @@ sub count_bouncy
         $parts[0]=~m/(.)$/;
         unshift(@digits, $1 );
         $cache_bouncy{$n} = ($num_zeros == 0) ? 0 : 1; # Is this number bouncy ?
-        my($working_zeros)= length($parts[0]) + length($parts[1]) + $num_zeros;
+        my($working_zeros)= length($parts[1]) + $num_zeros;
         my($working_base) = 10**$working_zeros;
         
         for( my($d)= 1;$d<=$#digits;$d++)
         {
-          my($high_digit)=$digits[$i];
-          my($previous_digit)=$digits[$i-1];
+          my($high_digit)=$digits[$d];
+          my($previous_digit)=$digits[$d-1];
           $cache_bouncy{$n} += $working_base * $previous_digit; #All them are bouncy
           for( my($v)= $previous_digit; $v<$high_digit;$v++)
           {
@@ -118,9 +118,52 @@ sub count_bouncy
           $working_base*=10;
         }
         #$cache_bouncy{$n} -=0; #Not need to Remove the constant*10*workingbase which is descending
-        $cache_bouncy{$n} += count_bouncy( $parts[0]*(10**($num_zeros + length($parts[1]) + length($parts[2]))));
+        $cache_bouncy{$n} += count_bouncy( $parts[0]*$working_base );
       }
+      elsif( $type eq '>' )
+      {
+        my(@digits)=split(//,$parts[1]);
+        my($working_zeros)= length($parts[1]) + $num_zeros;
+        my($working_base) = 10**$working_zeros;
+        
+        $cache_bouncy{$n} = 0; # This number is descending
+        for( my($d)= 0;$d<=$#digits;$d++)
+        {
+          my($high_digit)=$digits[$d];
+          for( my($v)= 0; $v<$high_digit;$v++)
+          {
+            $cache_bouncy{$n} += $working_base - count_descending_interval( $v,$working_zeros );
+          }
+          $working_zeros++;
+          $working_base*=10;
+        }
+        #$cache_bouncy{$n} -=0; #Not need to Remove the constant*10*workingbase which is descending
+        $cache_bouncy{$n} += count_bouncy( $parts[0]*$working_base );
+      }
+      elsif( $type eq '=' )
+      {
+        $parts[0]=~m/(.)$/;
+        my($digits)=$1;
+        my($working_zeros)= $num_zeros;
+        my($working_base) = 10**$working_zeros;
 
+        $cache_bouncy{$n} = 0; # This number is descending
+        for( my($d)= 1;$d<=length($parts[0]);$d++)
+        {
+          for( my($v)= 0; $v<$digits;$v++)
+          {
+            $cache_bouncy{$n} += count_bouncy_interval( $v,$working_zeros );
+          }
+          $working_zeros++;
+          $working_base*=10;
+        }
+        #$cache_bouncy{$n} -=0;
+        $cache_bouncy{$n} += count_bouncy( $digits*$working_base );
+      }
+      else
+      {
+        die "Unexcpected case";
+      }
     }
   }
   return $cache_bouncy{$n};
