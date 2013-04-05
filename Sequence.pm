@@ -16,12 +16,13 @@ sub new
   $#$rcoeffs == $#$rinit  or die " Cannot create sequence of order ".($#$rcoeffs + 1)." with ".($#$rinit+1)." initial values.";
   $$this{'cache'}=[];
   
-  init_cache( $rinit);
+  $this->init_cache( $rinit);
+  return $this;
 }
 
 sub init_cache
 {
-  my($rinit)=@_;
+  my($this,$rinit)=@_;
   for(my($i)=0;$i<=$#$rinit;$i++)
   {
     $$this{'cache'}[$i] = $$rinit[$i];
@@ -30,11 +31,11 @@ sub init_cache
 
 sub calc
 {
-  my($idx)=@_;
-  for( my($i) = $#{$this{'cache'}}; $i <= $idx; $i++ )
+  my($this,$idx)=@_;
+  for( my($i) = $#{$$this{'cache'}}+1; $i <= $idx; $i++ )
   {
      my($val)=0;
-     for( my($j) = 0; $j <= $#{$this{'coeff'}}; $j++ )
+     for( my($j) = 0; $j <= $#{$$this{'coeff'}}; $j++ )
      {
        $val += $$this{'cache'}[$i - $j - 1 ] * $$this{'coeff'}[$j];
      }
