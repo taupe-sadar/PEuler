@@ -37,5 +37,38 @@ sub sequence_blocksize_min
   return Sequence->new(\@coeffs,\@inits);
 }
 
+sub sequence_blocksize_min_max
+{
+  my( $sizemin,$sizemax ) =@_;
+  my(@coeffs)=(1);
+  if( $sizemin == 1 )
+  {
+    @coeffs=(2);
+  }
+  for(my($i)=2;$i<$sizemin;$i++)
+  {
+    push(@coeffs,0);
+  }
+  my($first)=($sizemin==1)?2:$sizemin ;
+  for(my($i)=$first;$i<=$sizemax;$i++)
+  {
+    push(@coeffs,1);
+  }
+
+  my(@inits)=();
+  for(my($i)=0;$i<$sizemax-1;$i++)
+  {
+    push(@inits,0);
+  }
+  push(@inits,1);
+  my($seq)=Sequence->new(\@coeffs,\@inits);
+  
+  for(my($i)=0;$i<$sizemax-1;$i++)
+  {
+    $seq->calc_shift();
+   
+  } 
+  return  $seq;
+}
 
 1;

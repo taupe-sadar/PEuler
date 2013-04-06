@@ -45,4 +45,11 @@ sub calc
   return $$this{'cache'}[$idx];
   
 }
+
+sub calc_shift
+{
+  my($this)=@_;
+  $this->calc( $#{$$this{'cache'}} + 1 );
+  shift( @{$$this{'cache'}} );
+}
 1;
