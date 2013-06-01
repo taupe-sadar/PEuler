@@ -2,14 +2,17 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Prime;
+use PermutationsIterator;
 
 Prime::init_crible( sqrt(10**9)+100 );
+my($max_digit_for_prime)=4;
 
 my( @pandigital_primes )=();
 my(@length_start_idx)=(0);
 my($current_log)=1;
 my($p) = Prime::next_prime();
-while( $p < 10000 )
+my($max)=10**$max_digit_for_prime;
+while( $p < $max  )
 {
   if( is_pandigital( $p ) )
   {
@@ -22,7 +25,6 @@ while( $p < 10000 )
   }
   $p = Prime::next_prime();
 }
-
 my(%available)=();
 for(my($i)=1;$i<=9;$i++)
 {
@@ -33,8 +35,10 @@ my($count_set_pandigital_prime)=0;
 for( my($i)=0; $i<= $#pandigital_primes; $i++)
 {
   my($prime)= $pandigital_primes[ $i ];
-  $count_set_pandigital_prime = nb_subset_pandigital_primes(remove_digits($prime,\%available),$prime%3,$i);
+  $count_set_pandigital_prime += nb_subset_pandigital_primes(remove_digits($prime,\%available),$prime%3,$i);
 }
+
+print "$count_set_pandigital_prime\n";
 
 sub nb_subset_pandigital_primes
 {
@@ -45,7 +49,7 @@ sub nb_subset_pandigital_primes
   #no split case
   if( $current_modulo != 0  )
   {
-    if( $size_left <= 4 )
+    if( $size_left <= $max_digit_for_prime )
     {
       my($start_idx)=( length($pandigital_primes[ $max_idx_in_tab ]) == $size_left ) ? $max_idx_in_tab : $length_start_idx[$size_left ];
       my($stop_prime)=10**$size_left;
@@ -59,14 +63,33 @@ sub nb_subset_pandigital_primes
     }
     else
     {
-      #Todo : list all available permutations
-      #die "implement todo";
+      my(@permutables)=@k;
+      
+      for(my($digit)=0;$digit< $size_left;$digit++)
+      {
+        my($d)=shift( @k );
+        if( $d%2 != 0 && $d != 5 )
+        {
+          my($perm_it) = PermutationsIterator->new( \@k );
+          
+          while( $perm_it->next() )
+          {
+            if( Prime::fast_is_prime( join("",@k )."$d"  ) )
+            {
+              $count ++;
+            }
+          }
+        }
+        push( @k,$d);
+        
+      }
+      
     }
   }
   
   # Split case
   my($stop_prime)= 10**int($size_left/2);
-  for( my($idx)= $max_idx_in_tab; $idx<=$#pandigital_primes; $idx++)
+  for( my($idx)= $max_idx_in_tab; $idx<$#pandigital_primes; $idx++)
   {
     my($prime)= $pandigital_primes[ $idx ];
     last if( $prime >= $stop_prime);
