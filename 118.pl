@@ -25,6 +25,7 @@ while( $p < $max  )
   }
   $p = Prime::next_prime();
 }
+push(@length_start_idx,$#pandigital_primes+1);
 my(%available)=();
 for(my($i)=1;$i<=9;$i++)
 {
@@ -52,50 +53,43 @@ sub nb_subset_pandigital_primes
     if( $size_left <= $max_digit_for_prime )
     {
       my($start_idx)=( length($pandigital_primes[ $max_idx_in_tab ]) == $size_left ) ? $max_idx_in_tab : $length_start_idx[$size_left ];
-      my($stop_prime)=10**$size_left;
-      for( my($idx) = $start_idx; $idx<=$#pandigital_primes;$idx++)
+      my($stop_idx)= $length_start_idx[$size_left +1 ];
+      for( my($idx) = $start_idx+1; $idx<$stop_idx;$idx++)
       {
-        my($prime)= $pandigital_primes[ $idx ];
-        #print "$size_left $prime\n";#<STDIN>;
-        last if( $prime >= $stop_prime);
-        $count++ if( is_available($prime,$ravailable)); 
+        $count++ if( is_available($pandigital_primes[ $idx ],$ravailable));
       }
     }
     else
     {
-      my(@permutables)=@k;
-      
+     
       for(my($digit)=0;$digit< $size_left;$digit++)
       {
         my($d)=shift( @k );
         if( $d%2 != 0 && $d != 5 )
         {
-          my($perm_it) = PermutationsIterator->new( \@k );
+          my(@permutables)=@k;
+          my($perm_it) = PermutationsIterator->new( \@permutables );
           
-          while( $perm_it->next() )
+          do
           {
-            if( Prime::fast_is_prime( join("",@k )."$d"  ) )
-            {
-              $count ++;
-            }
+            $count ++ if( Prime::fast_is_prime( join("",@permutables )."$d"  ) );
           }
+          while( $perm_it->next() );
         }
         push( @k,$d);
-        
       }
-      
     }
   }
   
   # Split case
   my($stop_prime)= 10**int($size_left/2);
-  for( my($idx)= $max_idx_in_tab; $idx<$#pandigital_primes; $idx++)
+  for( my($idx)= $max_idx_in_tab + 1; $idx<$#pandigital_primes; $idx++)
   {
     my($prime)= $pandigital_primes[ $idx ];
     last if( $prime >= $stop_prime);
     if( is_available($prime,$ravailable))
     {
-      $count += nb_subset_pandigital_primes( remove_digits($prime, $ravailable), ($current_modulo + $prime%3)%3,$idx + 1 );
+      $count += nb_subset_pandigital_primes( remove_digits($prime, $ravailable), ($current_modulo + $prime%3)%3,$idx  );
     }
   }
       
