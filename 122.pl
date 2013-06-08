@@ -66,7 +66,7 @@ sub superior_chain
   }
   return @new_chains;
 }
-
+ 
 sub select_new_best_exponents
 {
   my($multplications,$rchains)=@_;
