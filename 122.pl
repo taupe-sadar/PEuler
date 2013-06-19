@@ -1,8 +1,9 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use Prime;
 use POSIX qw/floor ceil/;
-use List::Util qw( max min );
+use List::Util qw(max min );
 
 my( $largest_exp_needed ) = 200;
 
@@ -14,6 +15,12 @@ my(@suboptimal_exponentiation)=();
 for(my($i)=0;$i<=$largest_exp_needed;$i++){ $suboptimal_exponentiation[$i]=0; }
 
 optimal_binary( \@suboptimal_exponentiation, $largest_exp_needed );
+my($changes)=1;
+while( $changes )
+{
+  $changes=optimal_factor( \@suboptimal_exponentiation, $largest_exp_needed );
+  $changes|=close1and2( \@suboptimal_exponentiation, $largest_exp_needed );
+}
 
 for(my($a)=0;$a<=$#suboptimal_exponentiation;$a++)
 {
@@ -75,7 +82,59 @@ sub optimal_binary
 
 sub optimal_factor
 {
-  my($rsuboptimal)=@_;
+  my($rsuboptimal,$max)=@_;
+  Prime::init_crible($max);
+  Prime::next_prime();#flushing 2;
+  my(@factor_suboptimal)=(0,0);
+  for(my($i)=1;$i<=$max;$i++)
+  {
+    $factor_suboptimal[$i]=$$rsuboptimal[$i];
+  }
+  my($p)=Prime::next_prime(); 
+  while( $p*$p <= $max )
+  {
+    for(my($i)=2;$i<=($max/$p);$i++)
+    {
+      if($i%2 == 0)
+      {
+        $factor_suboptimal[$p*$i] = min( $factor_suboptimal[$p*$i], $factor_suboptimal[$p*$i/2] + 1);
+      }
+      else
+      {
+        $factor_suboptimal[$p*$i] = min( $factor_suboptimal[$p*$i], $factor_suboptimal[$p] + $factor_suboptimal[$i]);
+      }
+    }
+    $p=Prime::next_prime();
+  }
+  my($changes_done)=0;
+  for(my($i)=1;$i<=$max;$i++)
+  {
+    next unless(defined($factor_suboptimal[$i]));
+    if( $factor_suboptimal[$i] < $$rsuboptimal[$i])
+    {
+      print "$i : $$rsuboptimal[$i] <- $factor_suboptimal[$i]\n";
+      $$rsuboptimal[$i] = $factor_suboptimal[$i];
+      $changes_done = 1;
+    }
+  }
+  return $changes_done;
+  
+}
+
+sub close1and2
+{
+  my($rsuboptimal,$max)=@_;
+  my($changes_done)=0;
+  for(my($i)=4;$i<=$max;$i++)
+  {
+    my($old_exponentiation)=min( $$rsuboptimal[$i-1], $$rsuboptimal[$i-2] );
+    if( $$rsuboptimal[$i] > ($old_exponentiation+1) )
+    {
+      $$rsuboptimal[$i] = ($old_exponentiation+1);
+      $changes_done = 1;
+    }
+  }
+  return $changes_done;
 }
 
 sub build_superior_chains
