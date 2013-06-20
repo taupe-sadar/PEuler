@@ -34,7 +34,7 @@ while( $min_not_found <= $largest_exp_needed  )
   update_suboptimal_with_best_optimal( \@suboptimal_exponentiation,$largest_exp_needed  );
   update_smallest_useful( \@suboptimal_exponentiation, $mult_needed  );
   my(@s)=sort({$a<=>$b} keys(%best_exponentiation));
-  # print Dumper \@s;
+   print Dumper \@s;
 
   print "$mult_needed : ".($#$rexponent_chains+1)." ( min_not_found = $min_not_found) (smallest useful = $smallest_useful) \n";<STDIN>;
 }
@@ -222,16 +222,16 @@ sub update_suboptimal_with_best_optimal
   my($changes_done)= 0;
   foreach $i (keys(%best_exponentiation))
   {
-    if(!exists($best_exponentiation{$i}) && $best_exponentiation{$i} < $$rsuboptimal_calculated[$i] )
+    if( $best_exponentiation{$i} < $$rsuboptimal_calculated[$i] )
     {
+      print "Best for $i : $$rsuboptimal_calculated[$i] <- $best_exponentiation{$i}\n";
       $$rsuboptimal_calculated[$i] = $best_exponentiation{$i};
       $changes_done = 1;
     }
   }
   if( $changes_done )
   {
-    print "YEAHHH !!! This is useful! Tou gotta know it !\n";<STDIN>;
-    recompute_suboptimal();
+    recompute_suboptimal($rsuboptimal_calculated,$max);
   }
 }
 
@@ -246,7 +246,7 @@ sub update_smallest_useful
       my($step_needed)= $$rsuboptimal_calculated[$i] - $mult_current;
       if( !defined( $smallest_useful_from_suboptimal[$step_needed] ) )
       {
-        $smallest_useful_from_suboptimal[$step_needed] = ceil($i/(2**$step_needed));
+        $smallest_useful_from_suboptimal[$step_needed] = ceil($i/(2**($step_needed)));
       }
     }
   }
