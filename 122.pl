@@ -33,9 +33,26 @@ while( $min_not_found <= $largest_exp_needed  )
   update_min_not_found( );
   update_suboptimal_with_best_optimal( \@suboptimal_exponentiation,$largest_exp_needed  );
   update_smallest_useful( \@suboptimal_exponentiation, $mult_needed  );
-  my(@s)=sort({$a<=>$b} keys(%best_exponentiation));
-   print Dumper \@s;
-
+  
+  for(my($i)=0;$i<=$largest_exp_needed;$i++)
+  {
+    my($best)=exists($best_exponentiation{$i})?$best_exponentiation{$i}:"  -";
+    print "  ".sprintf('%3s',$i)." ".sprintf('%3s',$suboptimal_exponentiation[$i])." ".sprintf('%3s',$best)."\n";
+  }
+  
+  #########" Debug ###########
+  if( $mult_needed == 6 )
+  {
+    for( my($i)=0; $i<=$#$rexponent_chains;$i++)
+    {
+      if($$rexponent_chains[$i][-1]==23)
+      {
+        print Dumper $$rexponent_chains[$i];<STDIN>;
+      }
+    }
+  }
+  ##############"
+  
   print "$mult_needed : ".($#$rexponent_chains+1)." ( min_not_found = $min_not_found) (smallest useful = $smallest_useful) \n";<STDIN>;
 }
 
@@ -86,19 +103,18 @@ sub optimal_factor
   my($p)=Prime::next_prime(); 
   while( $p*$p <= $max )
   {
-    for(my($i)=2;$i<=($max/$p);$i++)
+    for(my($i)=3;$i<=($max/$p);$i+=2)
     {
-      if($i%2 == 0)
-      {
-        $factor_suboptimal[$p*$i] = min( $factor_suboptimal[$p*$i], $factor_suboptimal[$p*$i/2] + 1);
-      }
-      else
-      {
-        $factor_suboptimal[$p*$i] = min( $factor_suboptimal[$p*$i], $factor_suboptimal[$p] + $factor_suboptimal[$i]);
-      }
+      $factor_suboptimal[$p*$i] = min( $factor_suboptimal[$p*$i], $factor_suboptimal[$p] + $factor_suboptimal[$i]);
     }
     $p=Prime::next_prime();
   }
+
+  for(my($i)=2;$i<=($max/2);$i++)
+  {
+    $factor_suboptimal[2*$i] = min( $factor_suboptimal[2*$i], $factor_suboptimal[$i] + 1);
+  }
+  
   my($changes_done)=0;
   for(my($i)=1;$i<=$max;$i++)
   {
@@ -123,6 +139,7 @@ sub close1and2
     my($old_exponentiation)=min( $$rsuboptimal[$i-1], $$rsuboptimal[$i-2] );
     if( $$rsuboptimal[$i] > ($old_exponentiation+1) )
     {
+      print "$i : $$rsuboptimal[$i] <- ".($old_exponentiation+1)."\n";
       $$rsuboptimal[$i] = ($old_exponentiation+1);
       $changes_done = 1;
     }
@@ -149,7 +166,7 @@ sub build_superior_chains
   {
     push( @new_chains, superior_chain( $$rchains[$i] ) ); 
   }
-  return \@new_chains
+  return \@new_chains;
 }
 
 sub superior_chain
@@ -161,7 +178,7 @@ sub superior_chain
   for(my($a)=$#$rchain;$a>=0;$a--)
   {
     my($double)=2*$$rchain[$a];
-    last if( $double <= $max );
+    last if( $double <= $max || $double < $smallest_useful );
     if( !exists( $already_used_items{ $double} ) )
     {
       push( @new_chains, [ @$rchain, $double ] )  if( is_valid( $double));
@@ -170,7 +187,7 @@ sub superior_chain
     for(my($b)=$a-1;$b>=0;$b--)
     {
       my($new_item)= $$rchain[$a] + $$rchain[$b];
-      last if( $new_item <= $max );
+      last if( $new_item <= $max || $new_item < $smallest_useful);
       next if( exists( $already_used_items{ $new_item } ));
       push( @new_chains, [ @$rchain, $new_item ] )  if( is_valid( $new_item));
       $already_used_items{ $new_item } = 1;
@@ -246,7 +263,7 @@ sub update_smallest_useful
       my($step_needed)= $$rsuboptimal_calculated[$i] - $mult_current;
       if( !defined( $smallest_useful_from_suboptimal[$step_needed] ) )
       {
-        $smallest_useful_from_suboptimal[$step_needed] = ceil($i/(2**($step_needed)));
+        $smallest_useful_from_suboptimal[$step_needed] = ceil($i/(2**($step_needed-1)));
       }
     }
   }
@@ -259,7 +276,7 @@ sub update_smallest_useful
 sub is_valid
 {
   my($n)=@_;
-  return ( $n <= $largest_exp_needed && $n >= $smallest_useful );
+  return ( $n <= $largest_exp_needed );
 }
 
 
