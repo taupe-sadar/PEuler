@@ -3,7 +3,7 @@ use warnings;
 use Data::Dumper;
 use Bouncy;
 use Math::BigInt;
-no warnings 'recursion';
+
 
 my($power)=100;
 

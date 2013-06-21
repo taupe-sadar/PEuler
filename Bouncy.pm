@@ -2,6 +2,7 @@ package Bouncy;
 use strict;
 use warnings;
 use Permutations;
+no warnings 'recursion';
 
 my(%cache_bouncy)=();
 my(%cache_descending_power10)=();
