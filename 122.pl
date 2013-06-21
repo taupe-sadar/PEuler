@@ -3,7 +3,7 @@ use warnings;
 use Data::Dumper;
 use Prime;
 use POSIX qw/floor ceil/;
-use List::Util qw(max min );
+use List::Util qw( sum max min );
 
 my( $largest_exp_needed ) = 200;
 
@@ -15,11 +15,6 @@ for(my($i)=0;$i<=$largest_exp_needed;$i++){ $suboptimal_exponentiation[$i]=0; }
 
 optimal_binary( \@suboptimal_exponentiation, $largest_exp_needed );
 recompute_suboptimal( \@suboptimal_exponentiation, $largest_exp_needed );
-
-for(my($a)=0;$a<=$#suboptimal_exponentiation;$a++)
-{
-  print " $a : $suboptimal_exponentiation[$a]\n";
-}<STDIN>;
 
 my($mult_needed)=0;
 my($min_not_found)=2;
@@ -34,27 +29,28 @@ while( $min_not_found <= $largest_exp_needed  )
   update_suboptimal_with_best_optimal( \@suboptimal_exponentiation,$largest_exp_needed  );
   update_smallest_useful( \@suboptimal_exponentiation, $mult_needed  );
   
-  for(my($i)=0;$i<=$largest_exp_needed;$i++)
+  if( max(@suboptimal_exponentiation) == $mult_needed + 2)
   {
-    my($best)=exists($best_exponentiation{$i})?$best_exponentiation{$i}:"  -";
-    print "  ".sprintf('%3s',$i)." ".sprintf('%3s',$suboptimal_exponentiation[$i])." ".sprintf('%3s',$best)."\n";
-  }
-  
-  #########" Debug ###########
-  if( $mult_needed == 6 )
-  {
-    for( my($i)=0; $i<=$#$rexponent_chains;$i++)
+    # select the obvious exponent at $mult_needed + 1
+    select_suboptimals( $mult_needed + 1, \@suboptimal_exponentiation );
+    
+    update_min_not_found( );
+    if(!final_chain_search( $rexponent_chains, $mult_needed+1, $largest_exp_needed ))
     {
-      if($$rexponent_chains[$i][-1]==23)
-      {
-        print Dumper $$rexponent_chains[$i];<STDIN>;
-      }
+      select_suboptimals( $mult_needed + 2, \@suboptimal_exponentiation );
     }
-  }
-  ##############"
-  
-  print "$mult_needed : ".($#$rexponent_chains+1)." ( min_not_found = $min_not_found) (smallest useful = $smallest_useful) \n";<STDIN>;
+    # for(my($i)=0;$i<=$largest_exp_needed;$i++)
+    # {
+    #   my($best)=exists($best_exponentiation{$i})?$best_exponentiation{$i}:"  -";
+    #   print "  ".sprintf('%3s',$i)." ".sprintf('%3s',$suboptimal_exponentiation[$i])." ".sprintf('%3s',$best)."\n";
+    # }
+    update_suboptimal_with_best_optimal( \@suboptimal_exponentiation,$largest_exp_needed  );
+    update_min_not_found( );
+  }  
 }
+
+print sum( @suboptimal_exponentiation );
+
 
 sub optimal_binary
 {
@@ -121,7 +117,6 @@ sub optimal_factor
     next unless(defined($factor_suboptimal[$i]));
     if( $factor_suboptimal[$i] < $$rsuboptimal[$i])
     {
-      print "$i : $$rsuboptimal[$i] <- $factor_suboptimal[$i]\n";
       $$rsuboptimal[$i] = $factor_suboptimal[$i];
       $changes_done = 1;
     }
@@ -139,7 +134,6 @@ sub close1and2
     my($old_exponentiation)=min( $$rsuboptimal[$i-1], $$rsuboptimal[$i-2] );
     if( $$rsuboptimal[$i] > ($old_exponentiation+1) )
     {
-      print "$i : $$rsuboptimal[$i] <- ".($old_exponentiation+1)."\n";
       $$rsuboptimal[$i] = ($old_exponentiation+1);
       $changes_done = 1;
     }
@@ -196,7 +190,32 @@ sub superior_chain
   }
   return @new_chains;
 }
- 
+
+sub final_chain_search
+{
+  my($rchains, $mults,$max)=@_;
+  for(my($i)=0;$i<=$#$rchains;$i++)
+  {
+    my($last_of_chain)=$$rchains[$i][-1];
+    next if( $last_of_chain*2 < $min_not_found);
+    my($rch)=$$rchains[$i];
+    for(my($idx)=$#$rch;$idx>=0;$idx--)
+    {
+      my($new_item)= $$rch[$idx] + $last_of_chain;
+      next if $new_item > $max ;
+      last if $new_item < $min_not_found;
+      if( !exists($best_exponentiation{$new_item}) )
+      {
+        $best_exponentiation{$new_item} = $mults;
+        update_min_not_found( );
+        return 1 if( $min_not_found > $max );
+      }
+    }
+  }
+  return 0;
+}
+
+
 sub select_new_best_exponents
 {
   my($multplications,$rchains)=@_;
@@ -206,6 +225,18 @@ sub select_new_best_exponents
     if( !exists($best_exponentiation{ $number } ) )
     {
       $best_exponentiation{ $number } = $multplications;
+    }
+  }
+}
+
+sub select_suboptimals
+{
+  my($mults,$rsuboptimal)=@_;
+  for( my($i)=$min_not_found;$i<=$#$rsuboptimal;$i++)
+  {
+    if($$rsuboptimal[$i] == $mults)
+    {
+      $best_exponentiation{$i} = $mults;
     }
   }
 }
@@ -241,7 +272,6 @@ sub update_suboptimal_with_best_optimal
   {
     if( $best_exponentiation{$i} < $$rsuboptimal_calculated[$i] )
     {
-      print "Best for $i : $$rsuboptimal_calculated[$i] <- $best_exponentiation{$i}\n";
       $$rsuboptimal_calculated[$i] = $best_exponentiation{$i};
       $changes_done = 1;
     }
@@ -268,7 +298,6 @@ sub update_smallest_useful
     }
   }
   shift(@smallest_useful_from_suboptimal);
-  print Dumper \@smallest_useful_from_suboptimal;<STDIN>;
   $smallest_useful = min( @smallest_useful_from_suboptimal );
 }
 
