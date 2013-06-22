@@ -22,13 +22,9 @@ while(1)
   my( @primes_dec )=sort( {$a<=>$b} keys( %decomposition ));
   my($count_same_radical) = count_integer_with_same_radical( $overall_size, @primes_dec );
   
-  print "".join(" ",@primes_dec)." -> ";
-  print "+ $count_same_radical = ".($count_same_radical+$count_radical )."\n";#<STDIN>;
-  
-  
   if( $count_radical + $count_same_radical >= $sorted_element_requiered )
   {
-    $element_requiered = find_indexed_integer_with_radical( $overall_size , $sorted_element_requiered - $count_radical, \@primes_dec );
+    $element_requiered = find_indexed_integer_with_radical( $overall_size , $sorted_element_requiered - $count_radical, @primes_dec );
     last;
   }
   else
@@ -64,23 +60,9 @@ sub count_integer_with_same_radical
   {
     my($add)=   log($reduced_size /  $$rlistcomposites[$i]  )/log($p)  ;
 
-    $counting += floor("$add" + 1);
- }
-
-
-  my($rfullist) = list_composites($reduced_size, @primedec  );
-
-  if( ($#$rfullist+1) != $counting )
-  {
-    print "".join(" ",@primedec)."\n";
-    print Dumper $rlistcomposites;
-    print Dumper $rfullist;
-    print "$reduced_size\n";
-    die "$#$rfullist + 1 != $counting "
+    $counting += floor("$add") + 1;
   }
-  
   return $counting ;
-  
 }
 
 sub find_indexed_integer_with_radical
@@ -88,7 +70,12 @@ sub find_indexed_integer_with_radical
   my( $size, $index_wanted , @primedec ) =@_;
   my($mincomposite) = product(@primedec);
   my($reduced_size) = floor($size/$mincomposite);
-  die "TODO";
+  
+  my($rfullist) = list_composites($reduced_size, @primedec  );
+  my(@sortedlist)= sort( {$a<=>$b} @$rfullist );
+  
+  return $mincomposite * $sortedlist[ $index_wanted - 1 ];
+
 }
 
 sub list_composites
