@@ -3,8 +3,9 @@ use warnings;
 use Data::Dumper;
 use Sums;
 use POSIX qw/floor ceil/;
+use List::Util qw( sum );
 
-my($max)=10**3;
+my($max)=10**8;
 my(@square_sums)=();
 
 my($sum)=0;
@@ -15,8 +16,7 @@ while( ($i**2 + ($i-1)**2) <= $max)
   $i++;
   $sum = Sums::int_square_sum( $i);
 }
-my($count)=0;
-my($sum_palindromes)=0;
+my(%all_palindromic_sum_square)=();
 for( my($a)=$#square_sums;$a>1;$a--)
 {
   my($squ)=$square_sums[$a];
@@ -26,13 +26,14 @@ for( my($a)=$#square_sums;$a>1;$a--)
     last if( $consecutive_squares > $max );
     if( is_palindromic( $consecutive_squares ) )
     {
-      print "$consecutive_squares\n";
-      $sum_palindromes+= $consecutive_squares ;
-      $count ++;
+      if( !exists( $all_palindromic_sum_square{$consecutive_squares} ))
+      {
+        $all_palindromic_sum_square{$consecutive_squares} = 1;
+      }
     }
   }
 }
-print "$count : $sum_palindromes\n";
+print sum(keys(%all_palindromic_sum_square));
 
 sub is_palindromic
 {
