@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use List::Util qw( max min );
+use List::Util qw( sum max min );
 use Hashtools;
 
 # Visiting all a >= b >= c >=1,
@@ -27,6 +27,7 @@ while( !$target_reached )
   {
     count_cuboids_no_greater( $min_counting, 2*$S + 1  );
     
+  
     $target_reached = find_target_occurence( $num_layers, $min_counting, 2*$S +1 );
     
     $milestone*=2;
@@ -41,27 +42,27 @@ print $target_reached;
 sub visit_a_b_c_cuboids
 {
   my($sum)=@_;
-  my($mina)=max( 2, $sum/3 );
+  my($mina)=$sum/3;
   my(%cuboids_sum)=();
   for(my($a)=$sum-2;$a>= $mina; $a--)
   {
     my($sum_minus_a)= $sum-$a;
-    for(my($b)=$a;$b>= $sum_minus_a/2; $b--)
+    my($minb)=$sum_minus_a/2;
+    my($firstb)= min($a, $sum_minus_a - 1);
+    for(my($b)=$firstb;$b>= $minb; $b--)
     {
-      my($sum_minus_a_b)= $sum_minus_a-$b;
-      my($trio_ab)= $a*$b;
-      for(my($c)=$b;$c>=1; $c--)
+      my($c)= $sum_minus_a-$b;
+      my($trio)=$a*$b + $c*($a + $b);
+      if( !exists( $cuboids_sum{ $trio } ) )
       {
-        my($trio)=$trio_ab + $c*($a + $b);
-        if( !exists( $cuboids_sum{ $trio } ) )
-        {
-          $cuboids_sum{$trio}={ "occurence" => 1 ,"layer" => 0 ,"value"=> 0 }; 
-        }
-        else
-        {
-          $cuboids_sum{$trio}{ "occurence" }++;
-        }
+        $cuboids_sum{$trio}={ "occurence" => 1 ,"layer" => 0 ,"value"=> 0 }; 
       }
+      else
+      {
+        $cuboids_sum{$trio}{ "occurence" }++;
+      }
+      # sum( $a, $b,$c )== $sum or die " sum( $a, $b,$c ) != $sum ";
+      # print "ABC : ($a,$b,$c)\n";
     }
   }
   $cuboids[$sum] = \%cuboids_sum;
