@@ -9,7 +9,7 @@ use Hashtools;
 # After each S we have all cuboids with 
 # trio(a,b,c) = ab + ac + bc <= 2S + 1 
 
-my($num_layers)=100;
+my($num_layers)=10;
 
 my(@cuboids)=({},{},{});
 my(@layer_occurence_div2)=();
@@ -25,19 +25,24 @@ while( !$target_reached )
   visit_a_b_c_cuboids( $S );
   if( $S >= $milestone )
   {
-    count_cuboids_no_greater( $min_counting, 2*$S + 1  );
-    
+    count_cuboids_no_greater( $min_counting, $S, 2*$S - 3   );
+    #print Dumper \@cuboids;<STDIN>;
   
-    $target_reached = find_target_occurence( $num_layers, $min_counting, 2*$S +1 );
+    $target_reached = find_target_occurence( $num_layers, $min_counting, 2*$S  -3 );
     
     $milestone*=2;
-    $min_counting = 2*$S+2;
+    $min_counting = 2*$S - 2;
      
   }
   $S++;
 }
 
-print $target_reached;
+for(my($i)=3;$i<=$#layer_occurence_div2;$i++)
+{
+  print "".(2*$i)." : ".($layer_occurence_div2[$i])."\n";
+}
+
+print $target_reached*2;
 
 sub visit_a_b_c_cuboids
 {
@@ -70,8 +75,8 @@ sub visit_a_b_c_cuboids
 
 sub count_cuboids_no_greater
 {
-  my($min, $max ) = @_;
-  for(my($i)=$min;$i<=$max;$i++)
+  my($min, $max , $max_layer ) = @_;
+  for(my($i)=$min;$i<=$max_layer;$i++)
   {
     $layer_occurence_div2[ $i ] = 0;
   }
@@ -82,22 +87,22 @@ sub count_cuboids_no_greater
     my($trio)=0;
     foreach  $trio (keys( %{$cuboids[$i]} ))
     {
-      next if( $trio > $max );
+      next if( $trio > $max_layer );
       my($occ)= $cuboids[$i]{$trio}{"occurence"};
       if( $cuboids[$i]{$trio}{"layer"} == 0 )
       {
         $cuboids[$i]{$trio}{"layer"} = 1;
         $cuboids[$i]{$trio}{"value"} = $trio;
-        $layer_occurence_div2[ $trio ] += $occ  ;
       }
       
-      while( $cuboids[$i]{$trio}{"value"} <= $max )
+      while( $cuboids[$i]{$trio}{"value"} <= $max_layer )
       {
-        my($new_value) = $cuboids[$i]{$trio}{"value"} + $trio * 2 + ( $cuboids[$i]{$trio}{"layer"} - 1 )*6;
+        $layer_occurence_div2[ $cuboids[$i]{$trio}{"value"} ] += $occ  ;
+        my($new_value) = $cuboids[$i]{$trio}{"value"} + $i * 2 + ( $cuboids[$i]{$trio}{"layer"} - 1 )*4;
 
         $cuboids[$i]{$trio}{"layer"} ++;
         $cuboids[$i]{$trio}{"value"} = $new_value;
-        $layer_occurence_div2[ $new_value ] += $occ  ;
+        
       }
     }
   }
@@ -108,7 +113,7 @@ sub find_target_occurence
   my($asked_layers,$min,$max)=@_;
   for( my($i)=$min;$i<=$max;$i++)
   {
-    return $i if $layer_occurence_div2[ $i ] = $asked_layers;
+    return $i if(defined( $layer_occurence_div2[ $i ]) && $layer_occurence_div2[ $i ] == $asked_layers );
   }
   return 0;
 }
