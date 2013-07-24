@@ -2,7 +2,9 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Prime;
+use Radical;
 use POSIX qw/floor ceil/;
+ 
 
 my($overall_size)=10**5;
 my($sorted_element_requiered)=10**4;
@@ -16,7 +18,7 @@ while(1)
 {
   $nb++;
   my(%decomposition)=Prime::decompose($nb);
-  next if(!first_radical(\%decomposition));
+  next if(!Radical::pure_radical(\%decomposition));
 
   
   my( @primes_dec )=sort( {$a<=>$b} keys( %decomposition ));
@@ -36,23 +38,12 @@ while(1)
 
 print $element_requiered;
 
-sub first_radical
-{
-  my( $rhash )=@_;
-  my($a);
-  foreach  $a (values(%$rhash))
-  {
-    return 0 if $a!=1;
-  }
-  return 1;
-}
-
 sub count_integer_with_same_radical
 {
   my($size, @primedec ) =@_;
   my($p,@others)=(@primedec);
-  my($reduced_size)= floor($size/product(@primedec));
-  my($rlistcomposites)= list_composites($reduced_size, @others  );
+  my($reduced_size)= floor($size/Radical::product(@primedec));
+  my($rlistcomposites)= Radical::list_composites($reduced_size, @others  );
   my($counting)=0;
   
 
@@ -68,56 +59,15 @@ sub count_integer_with_same_radical
 sub find_indexed_integer_with_radical
 {
   my( $size, $index_wanted , @primedec ) =@_;
-  my($mincomposite) = product(@primedec);
+  my($mincomposite) = Radical::product(@primedec);
   my($reduced_size) = floor($size/$mincomposite);
   
-  my($rfullist) = list_composites($reduced_size, @primedec  );
+  my($rfullist) = Radical::list_composites($reduced_size, @primedec  );
   my(@sortedlist)= sort( {$a<=>$b} @$rfullist );
   
   return $mincomposite * $sortedlist[ $index_wanted - 1 ];
 
 }
 
-sub list_composites
-{
-  my($max, @primes)=@_;
-  
-  return [1] if $#primes < 0;
-  
-  my(@composites)=(1);
-  
-  my($pow,@otherscomposites)=(@primes);
-  while( $pow <= $max )
-  {
-    push(@composites,$pow);
-    $pow*=$primes[0];
-  }
-    
-  if( $#primes > 0 )
-  {
-    my($size_single_composite)=$#composites;
-    my($rothers_composites)= list_composites( $max, @otherscomposites );
-    #Starting with the first element not equal to one 
-    for(my($i)=1;$i<=$#$rothers_composites;$i++)
-    {
-      for(my($j)=0;$j<=$size_single_composite;$j++)
-      {
-        my($composite)= $$rothers_composites[$i]*$composites[$j];
-        last if($composite > $max );
-        push(@composites,$composite);
-      }
-    }
-  }
-  return \@composites;
-}
 
-sub product
-{
-  my(@factors)=@_;
-  my($prod)=1;
-  for(my($i)=0;$i<=$#factors;$i++)
-  {
-    $prod*=$factors[$i];
-  }
-  return $prod;
-}
+
