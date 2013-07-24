@@ -46,6 +46,7 @@ sub find_next_radical
     my(%decomposition)=Prime::decompose($radical_number);
     last if( Radical::pure_radical(\%decomposition) );
   }
+  push( @radicals, $radical_number ) ;
 }
  
 

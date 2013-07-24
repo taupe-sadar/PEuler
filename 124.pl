@@ -9,15 +9,17 @@ use POSIX qw/floor ceil/;
 my($overall_size)=10**5;
 my($sorted_element_requiered)=10**4;
 
+Radical::init_set( $overall_size );
+
 #Starting with 1
 my($count_radical)=1;
-
-my($nb)=1;
 my($element_requiered)=0;
+
+
 while(1)
 {
-  $nb++;
-  my(%decomposition)=Prime::decompose($nb);
+  
+  my(%decomposition)=Prime::decompose( Radical::next_radical() );
   next if(!Radical::pure_radical(\%decomposition));
 
   
