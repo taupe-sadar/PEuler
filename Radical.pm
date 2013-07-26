@@ -5,8 +5,11 @@ use warnings;
 # dynamically sorts integers by their radical
 
 my($set_size);
+
 my(@radicals);
-my(@nb_radical);
+my(@decomposition_of_radicals);
+
+my(@quantity_numbers_for_radical);
 
 my(@iterators)=(1);
 
@@ -16,7 +19,8 @@ sub init_set
 {
   my($size)=@_;
   @radicals=(1);
-  @nb_radical=(1);
+  @quantity_numbers_for_radical=(1);
+  @decomposition_of_radicals=([]);
   $set_size = $size;
 }
 
@@ -26,27 +30,30 @@ sub next_radical
   my($iterator)=@_;
   
   $iterator = 0 if(!defined($iterator));
-  $iterators[$iterator]=0 if(($#iterators<$iterator) ||(!defined($iterators[$iterator])));
+  $iterators[$iterator]=1 if(($#iterators<$iterator) ||(!defined($iterators[$iterator])));
   
   while($iterators[$iterator]>$#radicals)
   {
     find_next_radical();
   }
 
-  my($ret)=$radicals[$iterators[$iterator]];
+  my($rad,$decrad)=($radicals[$iterators[$iterator]],$decomposition_of_radicals [$iterators[$iterator]]);
   $iterators[$iterator]++;
-  return $ret;
+  return ($rad,$decrad);
 }
 
 sub find_next_radical
 {
+  my(%decomposition);
   while( 1 )
   {
     $radical_number++;
-    my(%decomposition)=Prime::decompose($radical_number);
+    %decomposition=Prime::decompose($radical_number);
     last if( Radical::pure_radical(\%decomposition) );
   }
   push( @radicals, $radical_number ) ;
+  my(@primes_sorted)=sort( {$a<=>$b} keys( %decomposition ));
+  push( @decomposition_of_radicals, \@primes_sorted ) ;
 }
  
 

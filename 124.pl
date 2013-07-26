@@ -19,16 +19,13 @@ my($element_requiered)=0;
 while(1)
 {
   
-  my(%decomposition)=Prime::decompose( Radical::next_radical() );
-  next if(!Radical::pure_radical(\%decomposition));
-
+  my($radical,$rdecomposition) = Radical::next_radical() ;
   
-  my( @primes_dec )=sort( {$a<=>$b} keys( %decomposition ));
-  my($count_same_radical) = count_integer_with_same_radical( $overall_size, @primes_dec );
+    my($count_same_radical) = count_integer_with_same_radical( $overall_size, @$rdecomposition );
   
   if( $count_radical + $count_same_radical >= $sorted_element_requiered )
   {
-    $element_requiered = find_indexed_integer_with_radical( $overall_size , $sorted_element_requiered - $count_radical, @primes_dec );
+    $element_requiered = find_indexed_integer_with_radical( $overall_size , $sorted_element_requiered - $count_radical, @$rdecomposition );
     last;
   }
   else
