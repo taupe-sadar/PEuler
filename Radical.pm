@@ -1,6 +1,8 @@
 package Radical;
 use strict;
 use warnings;
+use POSIX qw/floor ceil/;
+
 
 # dynamically sorts integers by their radical
 
@@ -11,7 +13,7 @@ my(@decomposition_of_radicals);
 
 my(@quantity_numbers_for_radical);
 
-my(@iterators)=(1);
+my(@iterators);
 
 my( $radical_number)=1;
 
@@ -22,6 +24,7 @@ sub init_set
   @quantity_numbers_for_radical=(1);
   @decomposition_of_radicals=([]);
   $set_size = $size;
+  @iterators=(0);
 }
 
 
@@ -30,7 +33,10 @@ sub next_radical
   my($iterator)=@_;
   
   $iterator = 0 if(!defined($iterator));
-  $iterators[$iterator]=1 if(($#iterators<$iterator) ||(!defined($iterators[$iterator])));
+
+  $iterators[$iterator]++;
+
+  $iterators[$iterator]=0 if(($#iterators<$iterator) ||(!defined($iterators[$iterator])));
   
   while($iterators[$iterator]>$#radicals)
   {
@@ -38,8 +44,40 @@ sub next_radical
   }
 
   my($rad,$decrad)=($radicals[$iterators[$iterator]],$decomposition_of_radicals [$iterators[$iterator]]);
-  $iterators[$iterator]++;
+  
   return ($rad,$decrad);
+}
+
+sub quantity_radical
+{
+  my($iterator)=@_;
+  
+  $iterator = 0 if(!defined($iterator));
+  
+  if(!defined($quantity_numbers_for_radical[$iterators[$iterator]] ) )
+  {
+    count_integer_with_same_radical($iterators[$iterator] );
+  }
+
+  return $quantity_numbers_for_radical[$iterators[$iterator]];
+}
+
+sub count_integer_with_same_radical
+{
+  my($idx_quantity ) =@_;
+  my($p,@others)=@{$decomposition_of_radicals[ $idx_quantity ] };
+  my($reduced_size)= floor($set_size/($p* product(@others)));
+  my($rlistcomposites)= list_composites($reduced_size, @others  );
+  my($counting)=0;
+  
+
+  for(my($i)=0;$i<=$#$rlistcomposites;$i++)
+  {
+    my($add)=   log($reduced_size /  $$rlistcomposites[$i]  )/log($p)  ;
+
+    $counting += floor("$add") + 1;
+  }
+  $quantity_numbers_for_radical[$idx_quantity ] = $counting;
 }
 
 sub find_next_radical

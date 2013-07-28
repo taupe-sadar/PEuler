@@ -4,7 +4,7 @@ use Data::Dumper;
 use Prime;
 use Radical;
 use POSIX qw/floor ceil/;
- 
+
 
 my($overall_size)=10**5;
 my($sorted_element_requiered)=10**4;
@@ -21,7 +21,7 @@ while(1)
   
   my($radical,$rdecomposition) = Radical::next_radical() ;
   
-    my($count_same_radical) = count_integer_with_same_radical( $overall_size, @$rdecomposition );
+  my($count_same_radical) = Radical::quantity_radical();
   
   if( $count_radical + $count_same_radical >= $sorted_element_requiered )
   {
@@ -37,23 +37,6 @@ while(1)
 
 print $element_requiered;
 
-sub count_integer_with_same_radical
-{
-  my($size, @primedec ) =@_;
-  my($p,@others)=(@primedec);
-  my($reduced_size)= floor($size/Radical::product(@primedec));
-  my($rlistcomposites)= Radical::list_composites($reduced_size, @others  );
-  my($counting)=0;
-  
-
-  for(my($i)=0;$i<=$#$rlistcomposites;$i++)
-  {
-    my($add)=   log($reduced_size /  $$rlistcomposites[$i]  )/log($p)  ;
-
-    $counting += floor("$add") + 1;
-  }
-  return $counting ;
-}
 
 sub find_indexed_integer_with_radical
 {
