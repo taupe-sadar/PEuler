@@ -43,18 +43,19 @@ while( 1 )
 sub is_abc_hit
 {
   my($a,$radb,$kc)=@_;
-  my($limit_rad_a ) = floor( $kc / $radb );
+  my($limit_rad_a ) = ceil( $kc / $radb );
   my($rad_a)=1;
   my( $nb )= $a;
   print "----- $nb ---- \n"; 
-  while( $nb > 1  )
+  do
   {
     
     my( $p ,$pfactor, $left ) = Prime::partial_decompose( $nb );
     #print "($p, $pfactor, $left) -> $rad_a < $limit_rad_a\n";
     $rad_a *= $p;
-    return 0 if $rad_a > $limit_rad_a;
+    return 0 if $rad_a >= $limit_rad_a;
     $nb = $left;
   }
+  while( $nb > 1  );
   return $rad_a;
 }
