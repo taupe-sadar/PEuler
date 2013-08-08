@@ -28,6 +28,13 @@ sub init_set
 }
 
 
+sub reset_iterator
+{
+  my($iterator)=@_;
+  $iterator = 0 if(!defined($iterator));
+  $iterators[ $iterator ]=0;
+}
+
 sub next_radical
 {
   my($iterator)=@_;
