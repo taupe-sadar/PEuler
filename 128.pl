@@ -44,5 +44,4 @@ while( $tile_count < $tile_count_wanted )
   
   $layer++;
 }
-print "$layer\n";
 print $current_tile;
