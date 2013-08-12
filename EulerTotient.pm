@@ -65,7 +65,7 @@ sub sum_phi_x
   Prime::init_crible($max);
   my(%moebius)=();
   
-    my($p)=Prime::next_prime();
+  my($p)=Prime::next_prime();
   
   my($sum_of_phi_div)=Sums::sum_integer_div_by($max,$m); #on initialise avec k=1;
   while($p<=($max/2))
@@ -102,8 +102,31 @@ sub sum_phi_x
   #}
   
   # Attention on retourne 1/m dans le calcul
-    return $sum_of_phi_div ;
+  return $sum_of_phi_div ;
 }
 
+# Return phi decomposition
 
+sub phi_decomposition
+{
+  my( $n )=@_;
+  my( %decomposition ) = Prime::decompose( $n );
+  
+  my($prime);
+  my($left )= 1;
+  foreach $prime (keys(%decomposition))
+  {
+    $left*= $prime;
+    if( $decomposition{ $prime } == 1 )
+    {
+      delete  $decomposition{ $prime };
+    }
+    else
+    {
+      $decomposition{ $prime }--;
+    }
+    
+  }
+  return ($left, %decomposition);
+} 
 1;

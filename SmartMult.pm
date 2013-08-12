@@ -45,5 +45,22 @@ sub smart_mult_modulo
 	return $powwow;
 }
 
+sub fast_mult
+{
+  my($number,$exponent)=@_;
+  my( $result )= 1;
+  
+  my( @exps ) = ( $number );
+  
+}
+
+sub fast_mult_modulo
+{
+  my($number,$exponent,$modulo)=@_;
+  my( $result )= 1;
+  
+  my( @exps ) = ( $number );
+  
+}
 
 1;
