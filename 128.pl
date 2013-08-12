@@ -38,7 +38,7 @@ while( $tile_count < $tile_count_wanted )
   $current_tile+= 6*$layer - 1;
   if( $is_prime_common && $is_prime_last_inter_layer_diff )
   {
-    $tile_count ++ if( Prime::fast_is_prime( 6*$layer - 7 ) );
+    $tile_count ++ if( Prime::fast_is_prime( 6*$layer + 5 ) );
   }
   $is_prime_last_inter_layer_diff = $is_prime_inter_layer_diff;
   
