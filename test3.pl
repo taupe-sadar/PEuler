@@ -5,7 +5,7 @@ use Data::Dumper;
 
 my(@q)=(9,1,7,37);
 my($count)=0;
-while($count < 100)
+while($count < 10)
 {
   my($a,@q2 )= next_quad(@q);
   my($div)="";
