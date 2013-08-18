@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Gcd;
 use Data::Dumper;
 
 my(@q)=(9,1,7,37);
@@ -37,9 +38,9 @@ sub next_quad
     
     my($bb)=$aa*$r-$b;
     my($rr)=$c**2*$n-$bb**2;
-    my($d1)=pgcd($r*$bb,$rr);
-    my($d2)=pgcd($r*$c,$rr);
-    my($d3)=pgcd($d1,$d2);
+    my($d1)=Gcd::pgcd($r*$bb,$rr);
+    my($d2)=Gcd::pgcd($r*$c,$rr);
+    my($d3)=Gcd::pgcd($d1,$d2);
     print "$d1 $d2 $d3 $c\n";
     if($rr < 0)
     {
@@ -51,37 +52,4 @@ sub next_quad
     return ($aa , $bb*$r/$d3, $c*$r/$d3, $n, $rr/$d3 );
     
     
-}
-
-sub pgcd
-{
-    my($a,$b)=@_;
-    if($a*$b==0)
-    {
-	return 0;
-    }
-    
-    if($a<0)
-    {
-	$a = -$a;
-    }
-    if($b<0)
-    {
-	$b = -$b;
-    }
-    if($b>$a)
-    {
-	my($t)=$a;
-	$a=$b;
-	$b=$t;
-    }
-    my($r)=$b;
-    while($r>0)
-    {
-	$r = $a%$b;
-	$a=$b;
-	$b=$r;
-    }
-    return $a;
-
 }
