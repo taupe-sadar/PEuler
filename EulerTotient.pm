@@ -2,6 +2,7 @@ package EulerTotient;
 use strict;
 use warnings;
 use Prime;
+use Hashtools;
 use Sums;
 
 #Those functions use the equations with Moebius function
@@ -124,8 +125,12 @@ sub phi_decomposition
     {
       $decomposition{ $prime }--;
     }
-    
+    my( %left_decomposition ) = Prime::decompose( $left );
+    foreach my $p (keys( %left_decomposition )) 
+    {
+      Hashtools::increment( \%decomposition, $p, $left_decomposition{ $p } );
+    }
   }
-  return ($left, %decomposition);
+  return (%decomposition);
 } 
 1;
