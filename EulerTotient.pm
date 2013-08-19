@@ -105,18 +105,17 @@ sub sum_phi_x
   return $sum_of_phi_div ;
 }
 
-# Return phi decomposition
+# Return phi decomposition (partial)
 
 sub phi_decomposition
 {
   my( $n )=@_;
   my( %decomposition ) = Prime::decompose( $n );
-  
   my($prime);
   my($left )= 1;
   foreach $prime (keys(%decomposition))
   {
-    $left*= $prime;
+    $left*= ($prime-1);
     if( $decomposition{ $prime } == 1 )
     {
       delete  $decomposition{ $prime };
