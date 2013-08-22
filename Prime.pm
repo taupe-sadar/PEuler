@@ -336,4 +336,21 @@ sub remove_non_primes
     }
   }
 }
+
+sub p_valuation
+{
+  my( $n , $p ) = @_;
+  
+  my($pval) = 0;
+  while( $n % $p  == 0) 
+  {
+    $pval++;
+    $n= $n/$p;
+    
+  }
+  
+  return $pval;
+}
+
 1;
+
