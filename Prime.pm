@@ -185,6 +185,17 @@ sub decompose
   return %hash;
 }
 
+sub dec_to_nb
+{
+  my($rdec)=@_;
+  my($nb)=1;
+  foreach my $prime_nb (keys(%$rdec))
+  {
+    $nb*= $prime_nb**( $$rdec{$prime_nb} );
+  }
+  return $nb;
+}
+
 sub init_crible
 {
   my($arg)=@_;
@@ -284,9 +295,25 @@ sub all_divisors_no_larger
     }
   }
   return @divisors;
-  
 }
 
+# Calculate all decompositions, such : 12 = 2*6 = 3*4 = 2*2*3
+sub all_divisors_decompositions
+{
+  my($n)=@_;
+  die "TO BE IMPLEMENTED";
+  my( @list_of_decompositions)=();
+  my( %decomposition )= decompose( $n );
+  my(@divisors)=all_divisors_no_larger( \%decomposition, sqrt( $n  ) );
+  if( $#divisors <= 0 )
+  {
+    return ( [ $n ] );
+  }
+  else
+  {
+    my($big_div);
+  }
+}
 
 #Private functions - do not use
 sub find_next_prime
