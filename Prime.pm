@@ -4,6 +4,7 @@ use warnings;
 use Hashtools;
 use Data::Dumper;
 use POSIX qw/ceil/;
+use List::Util qw( max min );
 
 #Crible variables
 our($default_size_crible)=50000;
@@ -300,19 +301,47 @@ sub all_divisors_no_larger
 # Calculate all decompositions, such : 12 = 2*6 = 3*4 = 2*2*3
 sub all_divisors_decompositions
 {
-  my($n)=@_;
-  die "TO BE IMPLEMENTED";
-  my( @list_of_decompositions)=();
+  my($n,$limit)=@_;
+  $limit = $n unless(defined($limit));
+
+  
   my( %decomposition )= decompose( $n );
-  my(@divisors)=all_divisors_no_larger( \%decomposition, sqrt( $n  ) );
-  if( $#divisors <= 0 )
+  my( $max_prime ) = max( keys(%decomposition ));
+  my(@divisors)=all_divisors_no_larger( \%decomposition ) ;
+  
+  my( @list_of_decompositions);
+  if( $n <= $limit )
   {
-    return ( [ $n ] );
+    push( @list_of_decompositions, [ $n ] );
   }
-  else
+  
+  foreach my $div (@divisors)
   {
-    my($big_div);
+    next if $div == $n;
+    next if $div > $limit; 
+    next if $div < $max_prime ;
+    
+    
+    my( @other_div_dec ) = all_divisors_decompositions( $n/$div, $div );
+    foreach my $rother_dec (@other_div_dec)
+    {
+      my( @dec ) = ( $div , @$rother_dec );
+      push( @list_of_decompositions, \@dec);
+      }
   }
+  return @list_of_decompositions;
+  
+}
+
+sub all_divisors_decompositions_2
+{
+  
+}
+
+
+sub all_divisors_decompositions_2_internal
+{
+  
 }
 
 #Private functions - do not use
