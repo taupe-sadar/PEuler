@@ -264,6 +264,8 @@ sub all_divisors_no_larger
   {
     $test = 0;
   }
+  my(@keys) = keys(%$ref_hash);
+  return (1) if $#keys  < 0;
   my(@divisors)=();
   my(%hashcopy)=%{$ref_hash};
   my(@tabkeys)=keys(%hashcopy);
