@@ -5,6 +5,7 @@ use Hashtools;
 use Data::Dumper;
 use POSIX qw/ceil/;
 use List::Util qw( max min );
+use IrregularBase;
 
 #Crible variables
 our($default_size_crible)=50000;
@@ -337,13 +338,28 @@ sub all_divisors_decompositions
 
 sub all_divisors_decompositions_2
 {
+  my($n)=@_;
+  my( %decomposition )= decompose( $n );
+  my( @primes ) = keys(%decomposition);
+  my( @max_exp ) = map( $decomposition{$_}, @primes);
+  my( $r_all_decompositions_hash ) = all_divisors_decompositions_2_internal( \%decomposition, \@primes, \@max_exp );
+  my( @r_all_decompositions_divisors ) = ();
+  for( my($i)=0; $i <= $#$r_all_decompositions_hash; $i ++ )
+  {
+    my( @dec ) = map( dec_to_nb($_) , @$r_all_decompositions_hash[$i] );
+    push( @r_all_decompositions_divisors, \@dec );
+  }
+  return @r_all_decompositions_divisors;
   
 }
 
 
 sub all_divisors_decompositions_2_internal
 {
+  my( $rdecomposition, $rprimes, $rmax_exp );
   
+  
+  return ();
 }
 
 #Private functions - do not use
