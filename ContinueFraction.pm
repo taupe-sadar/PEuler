@@ -73,7 +73,7 @@ sub get_reduites
   return ($pn[0],$qn[0]);
 }
 
-#Solve equation x^2 - y^2 = +/-1
+#Solve equation x^2 - n . y^2 = +/-1
 sub solve_diophantine_equation
 {
   my( $sqrt_number, $sign, $limit_for_p)=@_;
