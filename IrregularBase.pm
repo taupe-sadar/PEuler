@@ -77,6 +77,19 @@ sub opposite
   return IrregularBase->new( $$this{"base"}, \@opposite ) ;
 }
 
+sub use_nb_as_base
+{
+  my( $this )=@_;
+  my( $base_max ) = $#{$$this{"base"}};
+  for(my($i)=$base_max;$i>= 0; $i--)
+  {
+    if( $$this{"nb"}[ $i ] == 0 )
+    {
+      
+    }
+  }
+}
+
 sub compare
 {
   my( $this, $other_irregular ) = @_;
@@ -88,5 +101,12 @@ sub compare
   }
   return 0;
 }
+
+sub clone
+{
+  my( $this ) = @_;
+  return IrregularBase->new( $$this{"base"}, $$this{"nb"} ) ;
+}
+
 
 1;

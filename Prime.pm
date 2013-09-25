@@ -330,7 +330,7 @@ sub all_divisors_decompositions
     {
       my( @dec ) = ( $div , @$rother_dec );
       push( @list_of_decompositions, \@dec);
-      }
+    }
   }
   return @list_of_decompositions;
   
@@ -344,40 +344,41 @@ sub all_divisors_decompositions_2
   return () if( $#primes < 0 );
   my( @max_exp ) = map( {$decomposition{$_}} @primes);
   
-  return all_divisors_decompositions_2_internal( \@primes, \@max_exp );
+  my( @base ) = map( { $_ + 1 } @max_exp );
+  my( $irr_number ) = IrregularBase->new( \@base, \@max_exp );
+  return all_divisors_decompositions_2_internal( \@primes, $irr_number, $irr_number->clone() );
 }
 
 
 sub all_divisors_decompositions_2_internal
 {
-  my( $rprimes, $rexp )=@_;
-  my( @base ) = map( { $_ + 1 } @$rexp );
-  my( $irr_number ) = IrregularBase->new( \@base, $rexp );
-  
+  my( $rprimes, $irr_number, $max_irr_number )=@_;
+ 
   sub regroup
   {
-    my($rp,$re)=@_;
+    my($rp,$irr_nb)=@_;
     my(%dec)=();
+    my(@re)=$irr_nb->get_nb();
     for(my $i = 0; $i <=$#$rp; $i ++ )
     {
-      $dec{ $$rp[$i] } = $$re[$i] ;
+      $dec{ $$rp[$i] } = $re[$i] ;
     }
     return \%dec;
   }
 
-  my( @decompositions ) =( [ dec_to_nb( regroup( $rprimes, $rexp ))  ] );
+  my( @decompositions ) =( [ dec_to_nb( regroup( $rprimes, $irr_number ))  ] );
 
-  
   while( $irr_number->uniterate() )
   {
+    print Dumper $irr_number;<STDIN>;
+    
+    
+    next if( $irr_number->compare( $max_irr_number ) > 0 );
+    
     my( $irr_dec_left ) = $irr_number->opposite();
-    last if( $irr_number->compare( $irr_dec_left ) < 0 );
-    my( @exp_left ) = $irr_dec_left->get_nb();
-    my( @all_decompositions_left ) = all_divisors_decompositions_2_internal( $rprimes, \@exp_left );
+    my( @all_decompositions_left ) = all_divisors_decompositions_2_internal( $rprimes, $irr_dec_left, $irr_number );
     
-    my( @array) = $irr_number->get_nb();
-    
-    my( $num ) = dec_to_nb( regroup( $rprimes,  \@array  ));
+    my( $num ) = dec_to_nb( regroup( $rprimes,  $irr_number  ));
         
     for( my($i)=0;$i<=$#all_decompositions_left;$i++ )
     {
