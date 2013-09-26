@@ -101,18 +101,14 @@ sub compare
 {
   my( $this, $other_irregular ) = @_;
   
-  my( $max_common_el ) = min( $#{$$this{"base"}}, $#{$$other_irregular{"base"}} ) ;
-  for( my($i)=$#{$$this{"base"}};$i> $max_common_el; $i-- )
-  {
-    return 1 if( $$this{"nb"}[$i] > 0 );
-  }
-  for( my($i)=$#{$$other_irregular{"base"}};$i> $max_common_el; $i-- )
-  {
-    return -1 if( $$other_irregular{"nb"}[$i] > 0 );
-  }  
+  my( $this_last, $other_last ) = ( $#{$$this{"base"}}, $#{$$other_irregular{"base"}} );
+  
+  my( $max_common_el ) = max( $this_last, $other_last ) ;
   
   for( my($i)=$max_common_el;$i>= 0; $i-- )
   {
+    return 1 if( $i > $other_last && $$this{"nb"}[$i] > 0 );
+    return -1 if( $i > $this_last && $$other_irregular{"nb"}[$i] > 0 );
     return 1 if $$this{"nb"}[$i] > $$other_irregular{"nb"}[$i];
     return -1 if $$this{"nb"}[$i]< $$other_irregular{"nb"}[$i];
   }

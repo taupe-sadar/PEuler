@@ -356,20 +356,20 @@ sub all_divisors_decompositions_2_internal
 {
   my( $rprimes, $irr_number, $max_irr_number )=@_;
  
-  sub regroup
+  sub build_nb_from_dec
   {
     my($rp,$irr_nb)=@_;
-    my(%dec)=();
+    my($nb)=1;
     my(@re)=$irr_nb->get_nb();
     for(my $i = 0; $i <=$#re; $i ++ )
     {
-      $dec{ $$rp[$i] } = $re[$i] ;
+      $nb*= $$rp[$i]**$re[$i];
     }
-    return \%dec;
+    return $nb;
   }
 
   my( @decompositions ) = ();
-  @decompositions =( [ dec_to_nb( regroup( $rprimes, $irr_number ))  ] ) unless( $irr_number->compare( $max_irr_number ) > 0 ); 
+  @decompositions =( [ build_nb_from_dec( $rprimes, $irr_number )  ] ) unless( $irr_number->compare( $max_irr_number ) > 0 ); 
 
   while( $irr_number->uniterate() )
   {
@@ -382,7 +382,7 @@ sub all_divisors_decompositions_2_internal
     $irr_dec_left->use_nb_as_base();
     my( @all_decompositions_left ) = all_divisors_decompositions_2_internal( $rprimes, $irr_dec_left, $irr_number );
     
-    my( $num ) = dec_to_nb( regroup( $rprimes,  $irr_number  ));
+    my( $num ) = build_nb_from_dec( $rprimes,  $irr_number  );
         
     for( my($i)=0;$i<=$#all_decompositions_left;$i++ )
     {
