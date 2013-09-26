@@ -346,8 +346,7 @@ sub all_divisors_decompositions_2
   return () if( $#primes < 0 );
   my( @max_exp ) = map( {$decomposition{$_}} @primes);
   
-  my( @base ) = map( { $_ + 1 } @max_exp );
-  my( $irr_number ) = IrregularBase->new( \@base, \@max_exp );
+  my( $irr_number ) = IrregularBase->new( \@max_exp, \@max_exp );
   return all_divisors_decompositions_2_internal( \@primes, $irr_number, $irr_number->clone() );
 }
 

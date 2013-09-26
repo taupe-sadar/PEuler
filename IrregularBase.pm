@@ -6,13 +6,12 @@ use List::Util qw( max min );
 
 sub new
 {
-  my ($class,$rbase,$rinit) = @_;
+  my ($class,$rmax,$rinit) = @_;
   my $this = {};
   bless($this, $class);
-  $this->{"base"} = [ @$rbase ];
-  $this->{"max"}  = [ map( {$_ - 1} @$rbase) ];
+  $this->{"max"}  = [ @$rmax ];
   $this->{"nb"}   = [ @$rinit ];
-  for(my($i)=$#$rinit+1;$i<=$#$rbase;$i++)
+  for(my($i)=$#$rinit+1;$i<=$#$rmax;$i++)
   {
     $$this{"nb"}[ $i ] = 0 ;
   }
@@ -70,38 +69,32 @@ sub opposite
   my( $this )=@_;
   my( @opposite ) = ();
   
-  for(my($i)=0;$i<= $#{$$this{"base"}}; $i++)
+  for(my($i)=0;$i<= $#{$$this{"max"}}; $i++)
   {
     $opposite[$i] = $$this{"max"}[$i] - $$this{"nb"}[$i];
   }
-  return IrregularBase->new( $$this{"base"}, \@opposite ) ;
+  return IrregularBase->new( $$this{"max"}, \@opposite ) ;
 }
 
 sub use_nb_as_base
 {
   my( $this )=@_;
-  my( $last_non_nul_idx ) = $#{$$this{"base"}};
+  my( $last_non_nul_idx ) = $#{$$this{"max"}};
    
   $last_non_nul_idx-- while( $$this{"nb"}[$last_non_nul_idx]  == 0);
-  if( $last_non_nul_idx < $#{$$this{"base"}} )
+  if( $last_non_nul_idx < $#{$$this{"max"}} )
   {
-    splice( @{$$this{"base"}}, $last_non_nul_idx + 1 );
     splice( @{$$this{"nb"}}, $last_non_nul_idx + 1 );
-    splice( @{$$this{"max"}}, $last_non_nul_idx + 1 );
   }
   
-  for(my($i)=$last_non_nul_idx;$i>= 0; $i--)
-  {
-    $$this{"base"}[$i] = $$this{"nb"}[$i] + 1;
-    $$this{"max"}[$i] = $$this{"nb"}[$i];
-  }
+  @{$$this{"max"}} = @{$$this{"nb"}};
 }
 
 sub compare
 {
   my( $this, $other_irregular ) = @_;
   
-  my( $this_last, $other_last ) = ( $#{$$this{"base"}}, $#{$$other_irregular{"base"}} );
+  my( $this_last, $other_last ) = ( $#{$$this{"max"}}, $#{$$other_irregular{"max"}} );
   
   my( $max_common_el ) = max( $this_last, $other_last ) ;
   
@@ -118,7 +111,7 @@ sub compare
 sub clone
 {
   my( $this ) = @_;
-  return IrregularBase->new( $$this{"base"}, $$this{"nb"} ) ;
+  return IrregularBase->new( $$this{"max"}, $$this{"nb"} ) ;
 }
 
 
