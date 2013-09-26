@@ -80,21 +80,38 @@ sub opposite
 sub use_nb_as_base
 {
   my( $this )=@_;
-  my( $base_max ) = $#{$$this{"base"}};
-  for(my($i)=$base_max;$i>= 0; $i--)
+  my( $last_non_nul_idx ) = $#{$$this{"base"}};
+   
+  $last_non_nul_idx-- while( $$this{"nb"}[$last_non_nul_idx]  == 0);
+  if( $last_non_nul_idx < $#{$$this{"base"}} )
   {
-    if( $$this{"nb"}[ $i ] == 0 )
-    {
-      
-    }
+    splice( @{$$this{"base"}}, $last_non_nul_idx + 1 );
+    splice( @{$$this{"nb"}}, $last_non_nul_idx + 1 );
+    splice( @{$$this{"max"}}, $last_non_nul_idx + 1 );
+  }
+  
+  for(my($i)=$last_non_nul_idx;$i>= 0; $i--)
+  {
+    $$this{"base"}[$i] = $$this{"nb"}[$i] + 1;
+    $$this{"max"}[$i] = $$this{"nb"}[$i];
   }
 }
 
 sub compare
 {
   my( $this, $other_irregular ) = @_;
-  my( $max_el ) = min( $#{$$this{"base"}}, $#{$$other_irregular{"base"}} ) ;
-  for( my($i)=$max_el;$i>= 0; $i-- )
+  
+  my( $max_common_el ) = min( $#{$$this{"base"}}, $#{$$other_irregular{"base"}} ) ;
+  for( my($i)=$#{$$this{"base"}};$i> $max_common_el; $i-- )
+  {
+    return 1 if( $$this{"nb"}[$i] > 0 );
+  }
+  for( my($i)=$#{$$other_irregular{"base"}};$i> $max_common_el; $i-- )
+  {
+    return -1 if( $$other_irregular{"nb"}[$i] > 0 );
+  }  
+  
+  for( my($i)=$max_common_el;$i>= 0; $i-- )
   {
     return 1 if $$this{"nb"}[$i] > $$other_irregular{"nb"}[$i];
     return -1 if $$this{"nb"}[$i]< $$other_irregular{"nb"}[$i];

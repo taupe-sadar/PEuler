@@ -309,6 +309,8 @@ sub all_divisors_decompositions
 
   
   my( %decomposition )= decompose( $n );
+  my( @primes ) = keys(%decomposition );
+  return () if( $#primes < 0 );
   my( $max_prime ) = max( keys(%decomposition ));
   my(@divisors)=all_divisors_no_larger( \%decomposition ) ;
   
@@ -359,32 +361,33 @@ sub all_divisors_decompositions_2_internal
     my($rp,$irr_nb)=@_;
     my(%dec)=();
     my(@re)=$irr_nb->get_nb();
-    for(my $i = 0; $i <=$#$rp; $i ++ )
+    for(my $i = 0; $i <=$#re; $i ++ )
     {
       $dec{ $$rp[$i] } = $re[$i] ;
     }
     return \%dec;
   }
 
-  my( @decompositions ) =( [ dec_to_nb( regroup( $rprimes, $irr_number ))  ] );
+  my( @decompositions ) = ();
+  @decompositions =( [ dec_to_nb( regroup( $rprimes, $irr_number ))  ] ) unless( $irr_number->compare( $max_irr_number ) > 0 ); 
 
   while( $irr_number->uniterate() )
   {
-    print Dumper $irr_number;<STDIN>;
-    
-    
+    last if( $irr_number->{"nb"}[-1] == 0 );
     next if( $irr_number->compare( $max_irr_number ) > 0 );
     
+    # print Dumper $irr_number;<STDIN>;
+    
     my( $irr_dec_left ) = $irr_number->opposite();
+    $irr_dec_left->use_nb_as_base();
     my( @all_decompositions_left ) = all_divisors_decompositions_2_internal( $rprimes, $irr_dec_left, $irr_number );
     
     my( $num ) = dec_to_nb( regroup( $rprimes,  $irr_number  ));
         
     for( my($i)=0;$i<=$#all_decompositions_left;$i++ )
     {
-      my($dec)= $all_decompositions_left[$i];
-      unshift( @$dec, $num );
-      push( @decompositions, $dec );
+      unshift( @{$all_decompositions_left[$i]}, $num );
+      push( @decompositions, $all_decompositions_left[$i] );
     }
   }
   return @decompositions ;
