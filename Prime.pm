@@ -304,42 +304,6 @@ sub all_divisors_no_larger
 # Calculate all decompositions, such : 12 = 2*6 = 3*4 = 2*2*3
 sub all_divisors_decompositions
 {
-  my($n,$limit)=@_;
-  $limit = $n unless(defined($limit));
-
-  
-  my( %decomposition )= decompose( $n );
-  my( @primes ) = keys(%decomposition );
-  return () if( $#primes < 0 );
-  my( $max_prime ) = max( keys(%decomposition ));
-  my(@divisors)=all_divisors_no_larger( \%decomposition ) ;
-  
-  my( @list_of_decompositions);
-  if( $n <= $limit )
-  {
-    push( @list_of_decompositions, [ $n ] );
-  }
-  
-  foreach my $div (@divisors)
-  {
-    next if $div == $n;
-    next if $div > $limit; 
-    next if $div < $max_prime ;
-    
-    
-    my( @other_div_dec ) = all_divisors_decompositions( $n/$div, $div );
-    foreach my $rother_dec (@other_div_dec)
-    {
-      my( @dec ) = ( $div , @$rother_dec );
-      push( @list_of_decompositions, \@dec);
-    }
-  }
-  return @list_of_decompositions;
-  
-}
-
-sub all_divisors_decompositions_2
-{
   my($n)=@_;
   my( %decomposition )= decompose( $n );
   my( @primes ) = keys(%decomposition);
@@ -347,11 +311,11 @@ sub all_divisors_decompositions_2
   my( @max_exp ) = map( {$decomposition{$_}} @primes);
   
   my( $irr_number ) = IrregularBase->new( \@max_exp, \@max_exp );
-  return all_divisors_decompositions_2_internal( \@primes, $irr_number, $irr_number->clone() );
+  return all_divisors_decompositions_internal( \@primes, $irr_number, $irr_number->clone() );
 }
 
 
-sub all_divisors_decompositions_2_internal
+sub all_divisors_decompositions_internal
 {
   my( $rprimes, $irr_number, $max_irr_number )=@_;
  
@@ -379,7 +343,7 @@ sub all_divisors_decompositions_2_internal
     
     my( $irr_dec_left ) = $irr_number->opposite();
     $irr_dec_left->use_nb_as_base();
-    my( @all_decompositions_left ) = all_divisors_decompositions_2_internal( $rprimes, $irr_dec_left, $irr_number );
+    my( @all_decompositions_left ) = all_divisors_decompositions_internal( $rprimes, $irr_dec_left, $irr_number );
     
     my( $num ) = build_nb_from_dec( $rprimes,  $irr_number  );
         
