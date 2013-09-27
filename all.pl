@@ -5,7 +5,22 @@ use Data::Dumper;
 my(%skip_hash)=(
  44 => 1,
  60 => 1
- );
+);
+
+my( %user_wanted ) = ();
+my( $custom ) = 0;
+for(my($i)=0;$i<=$#ARGV;$i++)
+{
+ if($ARGV[$i] =~m/^(\d+)$/)
+ {
+   $user_wanted{ $1 } = 1;
+   $custom = 1;
+ }
+ else
+ {
+   die "$ARGV[$i] is not a number";
+ }
+}
 
 opendir MYDIR, ".";
 my(@contents) = readdir MYDIR;
@@ -14,37 +29,37 @@ closedir MYDIR;
 my(@prev_results)=();
 read_results(\@prev_results);
 
-
 @contents = sort{ordre($a) <=> ordre($b)} @contents;
 
 my($prefix)="";
-if($ENV{"SHELL"} eq '/bin/bash')
+if(exists($ENV{"SHELL"}) && $ENV{"SHELL"} eq '/bin/bash')
 {
   $prefix='/usr/bin/';
 }
 
-my($i)=0;
-for($i=0;$i<=$#contents;$i++)
+for(my($i)=0;$i<=$#contents;$i++)
 {
   chomp($contents[$i]);
   if($contents[$i]=~m/^(\d+)\.pl$/)
   {
-  	print "".sprintf('%3s',$1)." : ";
-	
-	  if(!exists($skip_hash{$1}))
-	  {
-	    my($value)=`${prefix}perl $contents[$i]`;
+  	my( $num_pb ) = "".sprintf('%3s',$1)." : ";
+    
+	  if( $custom == 0 || exists($user_wanted{ $1 }))
+    {
+	    if(exists($skip_hash{$1}))
+      {
+        print "${num_pb}Skipping\n";
+        next;
+      }
+      
+      my($value)=`${prefix}perl $contents[$i]`;
 	    if(!defined($value))
 	    {
 		    $value="";
 	    }
 	    chomp($value);
 	    my($assert)=check_results($1,$value);
-	    print "$value$assert\n";
-    }
-    else
-    {
-	    print "Skipping\n";
+	    print "$num_pb$value$assert\n";
     }
   }
 }
@@ -52,7 +67,8 @@ for($i=0;$i<=$#contents;$i++)
 sub ordre
 {
 	my($order)=@_;
-	if($order=~m/^(\d+)\.pl$/)
+	
+  if($order=~m/^(\d+)\.pl$/)
 	{
 		return $1;
 	}
