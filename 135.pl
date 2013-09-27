@@ -22,7 +22,6 @@ use Permutations;
 my( $num_solutions ) = 10;
 my( $max_solutions ) = 10**6;
 
-
 my(@prime_patterns)=make_prime_patterns( $num_solutions );
 
 my($count)=0;
@@ -81,4 +80,14 @@ sub build_groups_of_exponents
   }
   return %groups_exponents;
   
+}
+
+sub loop_on_primes
+{
+  my( $rprimes, $nb_primes_to_loop, $fget_prime, $faction ) = @_;
+  my(@prime_array) = (0 .. $nb_primes_to_loop-1);
+  while( 1 )
+  {
+    my($result) = $faction( \@prime_array );  
+  }
 }
