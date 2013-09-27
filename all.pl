@@ -2,13 +2,10 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-my(@skip_longs)=(44,60);
-my(%skip_hash)=();
-
-for(my($i)=0;$i<=$#skip_longs;$i++)
-{
-    $skip_hash{$skip_longs[$i]}=1;
-}
+my(%skip_hash)=(
+ 44 => 1,
+ 60 => 1
+ );
 
 opendir MYDIR, ".";
 my(@contents) = readdir MYDIR;
@@ -23,33 +20,33 @@ read_results(\@prev_results);
 my($prefix)="";
 if($ENV{"SHELL"} eq '/bin/bash')
 {
-    $prefix='/usr/bin/';
+  $prefix='/usr/bin/';
 }
 
 my($i)=0;
 for($i=0;$i<=$#contents;$i++)
 {
-    chomp($contents[$i]);
-    if($contents[$i]=~m/^(\d+)\.pl$/)
-    {
-	print "".sprintf('%3s',$1)." : ";
+  chomp($contents[$i]);
+  if($contents[$i]=~m/^(\d+)\.pl$/)
+  {
+  	print "".sprintf('%3s',$1)." : ";
 	
-	if(!exists($skip_hash{$1}))
-	{
+	  if(!exists($skip_hash{$1}))
+	  {
 	    my($value)=`${prefix}perl $contents[$i]`;
 	    if(!defined($value))
 	    {
-		$value="";
+		    $value="";
 	    }
 	    chomp($value);
 	    my($assert)=check_results($1,$value);
 	    print "$value$assert\n";
-	}
-	else
-	{
-	    print "Skipping\n";
-	}
     }
+    else
+    {
+	    print "Skipping\n";
+    }
+  }
 }
 
 sub ordre
