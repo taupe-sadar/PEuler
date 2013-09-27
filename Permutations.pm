@@ -94,13 +94,10 @@ sub permutations_with_identical
 #Retoure le n-ieme arrangement. Un arrangement de 'k' chiffres parmi 'fact' 
 sub arrangement
 {
-  my($fact,$n,$k)=@_;
+  my($fact,$k,$n)=@_;
   my(@perm);
-  if(!defined($k))
+  if($fact==1)
   {
-    $k=$fact;
-  }
-  if($fact==1){
     @perm=(0);
   }
   elsif($k<=1)
@@ -111,7 +108,7 @@ sub arrangement
   {
     my($f)=factorielle($fact-1)/factorielle($fact-$k);
     my($first)=int($n/$f);
-    @perm=arrangement($fact-1,$n%$f,$k-1);
+    @perm=arrangement($fact-1,$k-1,$n%$f);
     my($i);
     for($i=0;$i<=$#perm;$i++)
     {

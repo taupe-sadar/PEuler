@@ -17,7 +17,7 @@ for(my($total)=13;$total<=19;$total++)
     {
 	for(my($p)=0;$p<24;$p++)
 	{
-	    my(@a)=Permutations::arrangement(4,$p,4);
+	    my(@a)=Permutations::arrangement(4,4,$p);
 	    my($string)=gon_ring_string($total,$list_of_terms[$n],\@a);
 	    $max =max($string,$max);
 	}

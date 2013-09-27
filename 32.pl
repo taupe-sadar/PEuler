@@ -15,7 +15,7 @@ for($i=0;$i<=$#a_possible;$i++)
     my($nb_arr)= 8 * 7 * 6;
     for($j=0;$j<$nb_arr;$j++)
     {
-	my(@arr)=Permutations::arrangement(8,$j,3);
+	my(@arr)=Permutations::arrangement(8,3,$j);
 	my($xstring)="";
 	my($xmod)=0;
 	
@@ -61,7 +61,7 @@ for($i=0;$i<=$#a_possible;$i++)
 	my($nb_arr)= 7 * 6;
 	for($j=0;$j<$nb_arr;$j++)
 	{
-	    my(@arr)=Permutations::arrangement(7,$j,2);
+	    my(@arr)=Permutations::arrangement(7,2,$j);
 	    my($xstring)="";
 	    my($xmod)=0;
 	    
