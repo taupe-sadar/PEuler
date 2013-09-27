@@ -89,6 +89,55 @@ sub nb_permutations_with_identical
   return $permutations;
 }
 
+#Returns all permuations where the ouput
+# is not fully ordered. Ex : considering a set with 7
+# elements, and with the "identical representation" 
+# is (2,3,2), the permuations :
+# ( 2,5,6,4,3,0,1 )
+# ( 5,2,6,4,3,0,1 )
+# ( 5,2,3,6,4,0,1 )
+# ( 5,2,3,6,4,1,0 )
+# are all considered equivalent, and count for one permutation.
+# * the "identical represenattion" (1,1,1,1,...,1), returns the standard permutation
+# * the "identical represenattion" ( n ), returns only one representation
+# * nb_permutations_with_identical() return the nb of such permutations
+# * idx parameter gives idx-th such permutation
+sub permutations_not_ordered
+{
+  my($ridenticals,$idx)=@_;
+  my( $n ) = sum( @$ridenticals);
+  my( $first_identicals, @others ) = @$ridenticals;
+  if( $#others < 0 )
+  {
+    return subset( $n , $first_identicals , $idx );
+  }
+  else
+  {  
+    my( $num_others ) = nb_permutations_with_identical( @others );
+    my( $first_idx, $others_idx ) = ( int($idx/$num_others) , $idx % $num_others );
+    my( @final_subset ) = subset( $n , $first_identicals, $first_idx );
+    
+    my( @unused_elts )=();
+    for(my($i,$first_idx)=(0,0);$i<$n;$i++)
+    {
+      if( $first_idx > $#final_subset || $i != $final_subset[ $first_idx ] )
+      {
+        push( @unused_elts, $i );
+      }
+      else
+      {
+        $first_idx++;
+      }
+    }
+    
+    my( @others_subset ) = permutations_not_ordered( \@others, $others_idx );
+    for(my($i)=0;$i<=$#others_subset;$i++)
+    {
+      push( @final_subset, $unused_elts[ $others_subset[ $i ] ] );
+    }
+    return @final_subset;
+  }
+}
 
 
 #Retoure le n-ieme arrangement. Un arrangement de 'k' chiffres parmi 'fact' 
