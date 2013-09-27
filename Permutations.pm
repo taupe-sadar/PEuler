@@ -76,7 +76,7 @@ sub cnk
 #returns the numbers of permutations in a given set, where some elements are identical
 # the input entry is the array of "identical elements.
 # Ex : the set { 1,2,1,5,6,3,5} may be represented by : the perl array ( 2,1,2,1,1).
-sub permutations_with_identical
+sub nb_permutations_with_identical
 {
   my(@identicals)=@_;
   my( $n )= sum( @identicals);

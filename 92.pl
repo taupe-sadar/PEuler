@@ -39,7 +39,7 @@ sub loop_on_ascending_numbers
     my($str_identical)=join("",sort(@identical_numbers));
     if( !exists($cnk_identicals{$str_identical}) )
     {
-	    $cnk_identicals{$str_identical} = Permutations::permutations_with_identical( @identical_numbers );
+	    $cnk_identicals{$str_identical} = Permutations::nb_permutations_with_identical( @identical_numbers );
     }
     if( $end_of_chain == 89 )
     {
