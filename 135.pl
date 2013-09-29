@@ -22,18 +22,24 @@ use Permutations;
 my( $num_solutions ) = 10;
 my( $max_solutions ) = 10**6;
 
+my(@primes)=();
+
+Prime::init_crible(10000);
+
 my(@prime_patterns)=make_prime_patterns( $num_solutions );
 
 my($count)=0;
 $count += nb_solution_arithmetic_progression_difference( $max_solutions,         0, 1  );
-# $count += nb_solution_arithmetic_progression_difference( int($max_solutions/4) , 0, 0  );
-# $count += nb_solution_arithmetic_progression_difference( int($max_solutions/16), 1, 0  );
+$count += nb_solution_arithmetic_progression_difference( int($max_solutions/4) , 0, 0  );
+$count += nb_solution_arithmetic_progression_difference( int($max_solutions/16), 1, 0  );
 
 print $count;
 
 sub nb_solution_arithmetic_progression_difference
 {
-  my( $max_integer, $allow_2_as_prime, $only_3_mod_4_odds ) =@_;
+  my( $max_integer, $allow_2_as_prime, $only_3_mod_4 ) =@_;
+  
+  my( $counting ) = 0;
   
   for( my($i)=0; $i<= $#prime_patterns; $i++ )
   {
@@ -46,8 +52,54 @@ sub nb_solution_arithmetic_progression_difference
     {
       my(@perm) =  Permutations::permutations_not_ordered( \@group_values, $j );
       
+      my($select_prime_function) = sub {
+        my( $idx ) = @_;
+        $idx ++ if( !$allow_2_as_prime );
+        
+        while( $#primes < $idx )
+        {
+          push( @primes  , Prime::next_prime(1) ) ;
+        }
+        return $primes[ $idx ];
+      };
+      
+      my( $faction ) = sub {
+        my( $rprimes ) = @_;
+        my( %prime_decomposition ) = ();
+        
+        
+        for( my($k)=0; $k <=  $#perm; $k++ )
+        {
+          $prime_decomposition{ $$rprimes[ $perm[$k] ] } = $prime_exponents[ $k ] ;
+        }
+        my( $nb ) = Prime::dec_to_nb( \%prime_decomposition );
+        return 0 if( $nb >= $max_integer );
+        
+        #Iterate to next
+        return 1 if( $only_3_mod_4 && $nb%4 != 3 );
+        
+        my( @divisors ) = Prime::all_divisors_no_larger( \%prime_decomposition );
+        my($count_condition)=0;
+        foreach my $n1 (@divisors)
+        {
+          if( $n1**2 < 3*$nb )
+          {
+            $count_condition++;
+          }
+        }
+        
+        if( $count_condition == $num_solutions )
+        {
+          $counting++;
+        }
+        return 1;
+        
+      };
+      
+      loop_on_primes( $#prime_exponents + 1 , $select_prime_function, $faction , $only_3_mod_4 );
     }
   }
+  return $counting;
 }
 
 sub make_prime_patterns
@@ -84,10 +136,36 @@ sub build_groups_of_exponents
 
 sub loop_on_primes
 {
-  my( $rprimes, $nb_primes_to_loop, $fget_prime, $faction ) = @_;
-  my(@prime_array) = (0 .. $nb_primes_to_loop-1);
+  my( $nb_primes_to_loop, $fget_prime, $faction ) = @_;
+  my(@prime_idxs) = (0 .. $nb_primes_to_loop-1);
   while( 1 )
   {
-    my($result) = $faction( \@prime_array );  
+    my( @primes ) = map( { &$fget_prime($_) } @prime_idxs );
+        
+    if( &$faction( \@primes ) )
+    {
+      $prime_idxs[-1]++;
+    }
+    else
+    {
+      my( $prime_cursor ) = $#prime_idxs - 1;
+      while( $prime_cursor >=0  ) 
+      {
+        if( $prime_idxs[ $prime_cursor ] +1 == $prime_idxs[ $prime_cursor + 1 ] )
+        {
+          $prime_cursor--;
+        }
+        else
+        {
+          $prime_idxs[ $prime_cursor ]++;
+          for( my($i) = $prime_cursor+1 ; $i <= $#prime_idxs; $i ++ )
+          {
+            $prime_idxs[ $i ] = $prime_idxs[ $i - 1 ] + 1;
+          }
+          last;
+        }
+      }
+      last if( $prime_cursor < 0 );
+    }
   }
 }
