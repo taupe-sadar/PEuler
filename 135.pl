@@ -25,7 +25,7 @@ my( $max_solutions ) = 10**6;
 my(@primes)=();
 
 Prime::init_crible(10000);
-
+Prime::reset_prime_index(1);
 my(@prime_patterns)=make_prime_patterns( $num_solutions );
 
 my($count)=0;
