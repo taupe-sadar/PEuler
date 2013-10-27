@@ -1,23 +1,17 @@
 package Prime;
 use strict;
 use warnings;
-use Hashtools;
+use PrimeC;
 use Data::Dumper;
-use POSIX qw/ceil/;
+use POSIX qw/floor ceil/;
 use List::Util qw( max min );
 use IrregularBase;
 
 #Crible variables
+my(@indexes)=(0);
 our($default_size_crible)=50000;
-our($crible_size)=10000;
-our($crible_start)=0;
-our($crible_end)=2;
-our(@crible)=($crible_start..$crible_end);
-our(@prime_list)=(2);
-our(%prime_hash)=();
-our($index_prime_hash_in_list)=-1;
-our($init)=0;
-our(@indexes)=(1);
+my($crible_size)=10000;
+
 
 sub protected_is_prime
 {
@@ -38,29 +32,17 @@ sub protected_is_prime
 sub fast_is_prime
 {
   my($n)=@_;
-  if($n<=$prime_list[-1])
-  {
-    return is_prime($n);
-  }
-  
   my($local_idx)=0;
   my($go_no_further)=sqrt($n);
-  my($p)=$prime_list[$local_idx];
+  my($p)= getNthPrime( $local_idx  );
   while($p<=$go_no_further)
   {
-    
     if(!($n%$p))
     {
       return 0;
     }
     $local_idx++;
-    while($#prime_list<$local_idx)
-    {
-      
-      find_next_prime();
-      
-    }
-    $p=$prime_list[$local_idx];
+    $p=getNthPrime( $local_idx  );
   }
   return 1;
 }
@@ -68,26 +50,50 @@ sub fast_is_prime
 sub is_prime
 {
   my($n)=@_;
-  if($index_prime_hash_in_list==-1)
+  my( $last_sieved ) = PrimeC::getHighestSievedValue();
+  
+  my($response)="";
+  #print "Priming!\n";
+  if( $last_sieved >= $n )
   {
-    $prime_hash{$prime_list[0]}=1;
-    $index_prime_hash_in_list++;
+    $response = dichotomy_is_prime( $n );
   }
-  if( $prime_list[$index_prime_hash_in_list]<$n)
+  else
   {
-    
-    do
-    {
-      while(($index_prime_hash_in_list+1)>$#prime_list)
-      {
-        find_next_prime();
-      }
-      $index_prime_hash_in_list++;
-      $prime_hash{$prime_list[$index_prime_hash_in_list]}=1;
-    }while($prime_list[$index_prime_hash_in_list]<$n);
+    $response = fast_is_prime( $n );
   }
   
-  return (exists($prime_hash{$n})?1:0);
+  #print "$n  => $response !\n"; <STDIN>;
+  
+  return $response;
+  
+}
+
+#Do not call with n superior to the maximum prime calculated in PRimeC.pm
+sub dichotomy_is_prime
+{
+  my($n)=@_;
+  my($min_idx,$max_idx)=(0,PrimeC::getNumCalculatedPrimes()-1);
+  
+  return 1 if( $n == 2 || $n == getNthPrime($max_idx) );
+  
+  while( ( $min_idx +1 ) <  $max_idx )
+  {
+    my( $idx ) = floor( $min_idx  + $max_idx ) / 2;
+    my( $middle_prime ) = PrimeC::getNthPrime($idx);
+    
+    return 1 if( $n == $middle_prime );
+    
+    if( $n > $middle_prime )
+    {
+      $min_idx = $idx;
+    }
+    else # $n < $middle_prime
+    {
+      $max_idx = $idx;
+    }
+  }
+  return 0;
   
 }
 
@@ -164,13 +170,12 @@ sub decompose
 {
   my($n)=@_;
   my(%hash)=();
-  
   my($go_no_further)=sqrt($n);
   init_crible($default_size_crible);
   my($prime)=next_prime();
+  
   while(($prime <= $go_no_further)&& ($prime>1))
   {
-    
     while( ($n % $prime)==0 && ($prime <= $go_no_further) && ($prime>1))
     {
       Hashtools::increment(\%hash,$prime);
@@ -200,30 +205,9 @@ sub dec_to_nb
 
 sub init_crible
 {
-  my($arg)=@_;
-  if($init==1)
-  {
-    reset_prime_index();
-    $crible_size = ($arg < 10)? 10 : $arg;
-  }
-  else
-  {
-    internal_init_crible($arg);
-  }
-  
+  reset_prime_index();
 }
 
-sub internal_init_crible
-{
-  my($arg)=@_;
-  $crible_size = ($arg < 10)? 5 : ceil($arg/2);
-  $crible_start = 0;
-  $crible_end = 1;
-  @crible = ($crible_start..$crible_end);
-  @prime_list = (2,3);
-  $init=1;
-  $indexes[0]=0;
-}
 
 sub reset_prime_index
 {
@@ -243,17 +227,21 @@ sub next_prime
   {
     $idx = 0;
   }
-  if(($#indexes<$idx) ||(!defined($indexes[$idx])))
+  my( $p ) = getNthPrime($indexes[$idx]);
+  $indexes[$idx] ++;
+  return $p;
+}
+
+sub getNthPrime
+{
+  my($nth)=@_;
+  
+  while( $nth >=  PrimeC::getNumCalculatedPrimes()  )
   {
-    $indexes[$idx]=0;
+    $crible_size*=2;
+    PrimeC::processSieve( $crible_size );
   }
-  while($indexes[$idx]>$#prime_list)
-  {
-    find_next_prime();
-  }
-  my($ret)=$prime_list[$indexes[$idx]];
-  $indexes[$idx]++;
-  return $ret;
+  return  PrimeC::getNthPrime( $nth );
 }
 
 
@@ -357,36 +345,6 @@ sub all_divisors_decompositions_internal
 }
 
 #Private functions - do not use
-sub find_next_prime
-{
-  if(!$init)
-  {
-    init_crible($default_size_crible);
-  }
-  
-  my($num)=($prime_list[-1]+1)/2;
-  while(1) #Soooo bad !
-  {
-    while( $num <= $crible_end )
-    {
-      if($crible[$num-$crible_start]!=0)
-      {
-        my(@t)=(2*$num+1);
-        remove_non_primes(\@t,\@crible,$crible_start,$crible_end);
-        push(@prime_list,2*$num+1);
-        return;
-      }
-      $num++;
-    }
-    #reinit sequel of crible
-    $crible_start=$crible_end+1;
-    $crible_end=$crible_start + $crible_size - 1;
-    @crible=($crible_start..$crible_end);
-    remove_non_primes(\@prime_list,\@crible,$crible_start,$crible_end);
-    
-  }
-  
-}
 
 sub remove_non_primes
 {
@@ -419,6 +377,5 @@ sub p_valuation
   
   return $pval;
 }
-
 1;
 
