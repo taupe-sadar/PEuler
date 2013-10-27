@@ -2,6 +2,7 @@ package Prime;
 use strict;
 use warnings;
 use PrimeC;
+use Hashtools;
 use Data::Dumper;
 use POSIX qw/floor ceil/;
 use List::Util qw( max min );
@@ -205,7 +206,9 @@ sub dec_to_nb
 
 sub init_crible
 {
+  my($n)=@_;
   reset_prime_index();
+  PrimeC::processSieve( $n );
 }
 
 
@@ -344,25 +347,6 @@ sub all_divisors_decompositions_internal
   return @decompositions ;
 }
 
-#Private functions - do not use
-
-sub remove_non_primes
-{
-  my($refprimes,$refcrible,$start,$end)=@_;
-  my($i,$m)=0;
-  my($first)=($$refprimes[0]==2)?1:0;
-  for($i=$first;$i<=$#{$refprimes};$i++)
-  {
-    my($p)=$$refprimes[$i];
-    my($k_start)=(ceil((2*$start+1-$p)/(2*$p))*2*$p+$p-1)/2;
-    my($stop)=$end-$start;
-    for($m=$k_start-$start;$m<=$stop;$m+=$p)
-    {
-      $$refcrible[$m]=0;
-    }
-  }
-}
-
 sub p_valuation
 {
   my( $n , $p ) = @_;
@@ -372,9 +356,7 @@ sub p_valuation
   {
     $pval++;
     $n= $n/$p;
-    
   }
-  
   return $pval;
 }
 1;
