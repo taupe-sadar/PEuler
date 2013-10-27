@@ -9,6 +9,7 @@ my($max_prime)=10**5;
 my($base)=10;
 
 Prime::init_crible($max_prime + 500);
+Prime::reset_prime_index(1);
 my($p)= Prime::next_prime(1);#2 not a facor
 $p    = Prime::next_prime(1);#3 not a facor
 $p    = Prime::next_prime(1);#5 not a facor
