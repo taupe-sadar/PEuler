@@ -13,7 +13,6 @@ my(@indexes)=(0);
 our($default_size_crible)=50000;
 my($crible_size)=10000;
 
-
 sub protected_is_prime
 {
   my($n)=@_;
@@ -238,13 +237,14 @@ sub next_prime
 sub getNthPrime
 {
   my($nth)=@_;
-  
-  while( $nth >=  PrimeC::getNumCalculatedPrimes()  )
+  my($p) = PrimeC::getNthPrime( $nth );
+  while( $p == 0  )
   {
     $crible_size*=2;
     PrimeC::processSieve( $crible_size );
+    $p = PrimeC::getNthPrime( $nth );
   }
-  return  PrimeC::getNthPrime( $nth );
+  return $p;
 }
 
 

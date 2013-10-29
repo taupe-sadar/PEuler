@@ -5,7 +5,7 @@ use strict;
 use Inline C => <<'END_C';
 
 #define MODULO     30
-#define PRIME_STOCK_SIZE 4096
+#define PRIME_STOCK_SIZE 65536
 
 int offsets[8] = { 1 , 7 , 11 , 13 , 17 ,19 , 23, 29 };
 
