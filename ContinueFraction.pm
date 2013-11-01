@@ -156,7 +156,7 @@ sub get_reduites_from_criteria
     
     
   }
-  return ($frac_idx,$pn[0],$qn[0]);
+  return ($pn[0],$qn[0]);
 }
 
 1;
