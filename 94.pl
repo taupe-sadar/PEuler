@@ -37,7 +37,7 @@ for(my($p)=0;$p<= $max_p_for_triangles; $p++ )
   $current_triangle += $p;
   if( $current_triangle%3 == 0 && exists( $triangles_numbers{$current_triangle/3 } ))
   {
-      push(@triangles_sols, $p );
+    push(@triangles_sols, $p );
   }
   $triangles_numbers{$current_triangle } = 1;
 }
@@ -51,9 +51,9 @@ ContinueFraction::save_state();
 
 while( $p1 <= $max_p_for_continued_fractions  )
 {
-    push(@fraccont_sols, $p1 );
-    ( $p1 , $q1 ) = ContinueFraction::solve_diophantine_equation( 3, 1 );
-    ContinueFraction::save_state();
+  push(@fraccont_sols, $p1 );
+  ( $p1 , $q1 ) = ContinueFraction::solve_diophantine_equation( 3, 1 );
+  ContinueFraction::save_state();
 }
 
 
@@ -61,6 +61,3 @@ my($sum_perimeters)=    sum( map { (2*$_)**2 } @fraccont_sols ) ;
 $sum_perimeters   += 2* sum( map {(2*$_ +1)**2} @triangles_sols ) ;
 
 print $sum_perimeters;
-
-
-
