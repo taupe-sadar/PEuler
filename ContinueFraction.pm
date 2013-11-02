@@ -165,6 +165,8 @@ sub diophantine_primitive_solution
 sub diophantine_solutions_from_primitives
 {
   my( $rprimitives_sols, $rfundamental_sol, $d , $max_for_p,$additional_sols ) = @_;
+  $additional_sols = 0 if( !defined( $additional_sols));
+  
   my( $p0, $q0 )= ( 1, 0 );
   my( @solutions ) = ();
   my($p,$q)=( 1, 0 );
