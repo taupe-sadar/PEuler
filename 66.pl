@@ -42,7 +42,8 @@ for(my($d)=2;$d<=$max;$d++)
     next;#1 solution deja trouvée #2 : pas de solution  
   }
   
-  my($x,$y)=ContinueFraction::solve_diophantine_equation($d,1);
+  my($sols)=ContinueFraction::solve_diophantine_equation2($d,1,0,1);
+  my($x)= $$sols[-1][0];
   if($x > $maximum_x )
   {
     $maximum_x = $x;

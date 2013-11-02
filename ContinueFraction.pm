@@ -101,7 +101,7 @@ sub solve_diophantine_equation
 # d not a square
 sub solve_diophantine_equation2
 {
-  my( $d, $K , $max_for_p ) = @_;
+  my( $d, $K , $max_for_p, $additional_sols ) = @_;
   
   die "Cannot solve diophantine equation with a square number" if is_perfect_square( $d );
   
@@ -178,7 +178,7 @@ sub solve_diophantine_equation2
  
   }
 
-  return diophantine_solutions_from_primitives( \@primitive_solutions, [$p_primitive, $q_primitive  ], $d, $max_for_p ); 
+  return diophantine_solutions_from_primitives( \@primitive_solutions, [$p_primitive, $q_primitive  ], $d, $max_for_p, $additional_sols ); 
 }
 
 
@@ -199,18 +199,24 @@ sub diophantine_primitive_solution
 
 sub diophantine_solutions_from_primitives
 {
-  my( $rprimitives_sols, $rfundamental_sol, $d , $max_for_p ) = @_;
+  my( $rprimitives_sols, $rfundamental_sol, $d , $max_for_p,$additional_sols ) = @_;
   my( $p0, $q0 )= ( 1, 0 );
   my( @solutions ) = ();
   my($p,$q)=( 1, 0 );
-  while( $p <= $max_for_p )
+  my($counting ) = 0;
+  while( $p <= $max_for_p || $counting < $additional_sols  )
   {
     for( my($i)=0;$i<= $#$rprimitives_sols; $i++ )
     {
       ( $p, $q ) = @{$$rprimitives_sols[$i]};
       ( $p, $q ) = next_equivalent_nb( $p, $q, $d, $p0, $q0 );
       
-      last if $p > $max_for_p;
+      if(  $p > $max_for_p )
+      {
+        last if( $counting >= $additional_sols );
+        
+        $counting ++;
+      };
       push ( @solutions, [$p,$q] );
     }
     ($p0, $q0 ) = next_equivalent_nb( $p0, $q0, $d, $$rfundamental_sol[0], $$rfundamental_sol[1] );
