@@ -46,14 +46,11 @@ my($max_p_for_continued_fractions)= floor( sqrt($max)/2 );
 
 my(@fraccont_sols)=();
 
-my( $p1 , $q1 ) = ContinueFraction::solve_diophantine_equation( 3, 1 );
-ContinueFraction::save_state();
+my( $rsolutions_cont_fraction ) = ContinueFraction::solve_diophantine_equation2( 3, 1 ,$max_p_for_continued_fractions );
 
-while( $p1 <= $max_p_for_continued_fractions  )
+for( my($i)=0; $i <= $#$rsolutions_cont_fraction; $i++ )
 {
-  push(@fraccont_sols, $p1 );
-  ( $p1 , $q1 ) = ContinueFraction::solve_diophantine_equation( 3, 1 );
-  ContinueFraction::save_state();
+  push( @fraccont_sols, $$rsolutions_cont_fraction[$i][0] );
 }
 
 
