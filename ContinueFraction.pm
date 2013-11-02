@@ -61,45 +61,10 @@ sub get_reduites
   return ($pn[0],$qn[0]);
 }
 
-#Solve equation x^2 - n . y^2 = +/-1
-sub solve_diophantine_equation
-{
-  my( $sqrt_number, $sign, $limit_for_p)=@_;
-  
-  #Case no limit_for_p specified : first non trivial solution is selected
-  if( !defined($limit_for_p) )
-  {
-    $limit_for_p = 0;
-  }
-  
-  my($parity);
-  if($sign == 1)
-  {
-    $parity = 0;
-  }
-  elsif( $sign == -1 )
-  {
-    $parity = 1;
-  }
-  else
-  {
-    die "Cannot solve diophantine with sign != +/-1"; 
-  }
-  my($criteria) = sub { 
-    my( $frac_idx , $p , $period ) =@_;
-    if( $frac_idx%($period+1) == 0 && $frac_idx%2 == $parity && $p > $limit_for_p )
-    {
-      return 1;
-    }
-    return 0;
-  };
-  return get_reduites_from_criteria( $sqrt_number,$criteria, [] );
-}
-
 # Solves equation p^2 - d * q^2 = K
 # p , q , d , K all integers,
 # d not a square
-sub solve_diophantine_equation2
+sub solve_diophantine_equation
 {
   my( $d, $K , $max_for_p, $additional_sols ) = @_;
   
@@ -232,35 +197,6 @@ sub next_equivalent_nb
   return ( $p*$p0 + $q*$q0*$d , $p*$q0 + $q*$p0);
 }
  
-sub get_reduites_from_criteria
-{
-  my( $number, $rstop_condition, $rargs)=@_;
-  
-  my($an);
-  
-  ( sqrt($number) =~m/\./) or die "$number is a perfect square";
-  my(@pn)=(Math::BigInt->new(1),Math::BigInt->new(0));
-  my(@qn)=(Math::BigInt->new(0),Math::BigInt->new(1));
-  my( @period) = integers_list( $number );
-  $an= $period[0];
-  (@pn)=fraction_cont( $an , @pn) ;
-  (@qn)=fraction_cont( $an , @qn) ;
-  
-  my($frac_idx)  = 1; 
-  $period[0]*=2;
-  
-  my(@ret);
-  while( ! &$rstop_condition($frac_idx , $pn[0], $#period))
-  {
-    $an=$period[ $frac_idx% ($#period + 1) ];
-    (@pn)=fraction_cont( $an , @pn) ;
-    (@qn)=fraction_cont( $an , @qn) ;
-    #print " $an $pn[0] $qn[0]\n";<STDIN>; 
-    $frac_idx++;	
-  }
-  return ($pn[0],$qn[0]);
-}
-
 sub is_perfect_square
 {
   my( $x ) = @_;
