@@ -124,12 +124,15 @@ sub solve_diophantine_equation
       my($p,$q)= @{$primitive_solutions[$i]};
       if( $K > 0 )
       {
+        next if( $q==0 );
         $q = -$q; 
       }
       else
       {
+        next if( $p==0 );
         $p = -$p;
       }
+      
       ( $p, $q ) = next_equivalent_nb( $p, $q , $d , $p_primitive, $q_primitive );
       
       
