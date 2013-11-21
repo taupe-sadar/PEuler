@@ -14,13 +14,13 @@ for( $b = 1; $b<100; $b++ )
     $r =1 ;
     my($a3)=$a**3;
     my($nn2);
-    do
+    while(1)
     {
       my($r2)=$r**2;
       my($n2) = $a3 * $r2 + $b2;
       
       $nn2 = $n2*$b2*$r2;
-      
+      last if( $nn2 > $limit);
       if( !(sqrt($n2) =~m/\./ ) )
       {
         my($n)= $b*$r*sqrt( $n2);
@@ -32,7 +32,5 @@ for( $b = 1; $b<100; $b++ )
       }
       $r++;    
     }
-    while( $nn2 < $limit);
-    
   }
 }
