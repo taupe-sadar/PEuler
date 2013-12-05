@@ -3,15 +3,83 @@ use warnings;
 use Data::Dumper;
 use Prime;
 use Permutations;
+use Math::BigInt;
+use Gcd;
 
-for( my($f)= 105; 1 ; $f+=2 )
+my( %square_components ) = ();
+
+for( my($i)=1;$i<1000;$i+=2 )
 {
-  my( @tab ) = get_divisors_prime_pairs( $f );
-  print "--------------\n$f\n";
-  print Dumper \@tab;
-  <STDIN>;
+  my($i4) = Math::BigInt->new($i)**4;
   
+  for( my($j)=1;$j<$i;$j+=2 )
+  {
+    next if( Gcd::pgcd( $i, $j ) > 1 );
+    
+    my($n) = ( $i4 + Math::BigInt->new($j)**4)/2;
+    my(%dec) = Prime::decompose( $n );
+    
+    my($squ_component)=1;
+    
+    foreach my $k (keys(%dec))
+    {
+      $squ_component *= $k if( $dec{$k} %2 == 1 );
+    }
+
+    print( "$i - $j -> $squ_component\n" );
+    
+    if( !exists( $square_components{ $squ_component } ) )
+    {
+      $square_components{ $squ_component } = [ [$i,$j] ];
+    }
+    else
+    {
+      push( @{$square_components{ $squ_component }} ,  [$i,$j] ) ;
+      print "$squ_component\n";
+      print Dumper $square_components{ $squ_component };
+     <STDIN>;      
+    }    
+  }
+}
+
+
+
+#First impl. Pourri !!!
+
+# "f = 141089 : 10853 13 141089 1";
+my($n) = (new Math::BigInt(10853)**4 + 13**4 + 141089**4 + 1)/4;
+print "$n ".(sqrt($n))." ".(new Math::BigInt(9953227201)**2)."\n";
+exit();
+
+for( my($f)= 15; 1 ; $f+=2 )
+{
+  my( @divisors_prime_pairs ) = get_divisors_prime_pairs( $f );
   
+  next if( $#divisors_prime_pairs <= 0);
+  
+  for( my($i)=0; $i < $#divisors_prime_pairs; $i++ )
+  {
+    my( $p , $q ) = max_then_min ( @{$divisors_prime_pairs[$i]} );
+    for( my($j)=$i+1; $j <= $#divisors_prime_pairs; $j++ )
+    {
+      my( $r , $s ) = max_then_min( @{$divisors_prime_pairs[$j]} );
+      print "f = $f : $p $q $r $s\n"; 
+      
+      my($n)= ($p**4 + $q**4 + $r**4 + $s**4)/4;
+      if( !(sqrt( $n ) =~m/\./ ) )
+      {
+        print "$n\n";<STDIN>;
+      }      
+    }
+  }
+  
+}
+
+sub max_then_min
+{
+  my( $a, $b ) = @_;
+  return ( $a, $b ) if ($a > $b );
+  return ( $b, $a )  
 }
 
 sub get_divisors_prime_pairs
