@@ -19,7 +19,7 @@ for( my($i)=1;$i<1000;$i+=2 )
     next if( Gcd::pgcd( $i, $j ) > 1 );
     
     my($n) = ( $i4 + Math::BigInt->new($j)**4)/2;
-    my(%dec2) = Prime::decompose( $n );
+    # my(%dec2) = Prime::decompose( $n );
     my(%dec) = decompose_with_primes_1_mod_8( $n );
     
     
@@ -85,7 +85,7 @@ sub get_prime_1_mod_8
   my($idx)=@_;
   while( $#primes_1_mod_8 < $idx )
   {
-    my($p)=Prime::next_prime();
+    my($p)=Prime::next_prime(1);
     push( @primes_1_mod_8 , $p ) if( $p %8 == 1 );
   }
   return $primes_1_mod_8[ $idx ];
