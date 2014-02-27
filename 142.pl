@@ -6,15 +6,17 @@ use Permutations;
 use Math::BigInt;
 use Gcd;
 
+
+
 my( @primes_1_mod_8) =();
 
 my( %square_components ) = ();
 
-for( my($i)=1;$i<1000;$i+=2 )
+for( my($i)=97;$i<1000;$i+=2 )
 {
   my($i4) = Math::BigInt->new($i)**4;
   
-  for( my($j)=1;$j<$i;$j+=2 )
+  for( my($j)=97;$j<$i;$j+=2 )
   {
     next if( Gcd::pgcd( $i, $j ) > 1 );
     
@@ -43,6 +45,20 @@ for( my($i)=1;$i<1000;$i+=2 )
       push( @{$square_components{ $squ_component }} ,  [$i,$j] ) ;
       print "$squ_component\n";
       print Dumper $square_components{ $squ_component };
+      
+      my($t,$w,$u,$v) = ( @{$square_components{ $squ_component }[0]} , @{$square_components{ $squ_component }[1]} );
+      my($p,$q,$r,$s) = ( $t*$u , $v*$w , $t*$v, $w*$u );
+      my( $b ,$c , $d, $e ,$f ) = ( ($p**2 + $q**2)/2 , ($p**2 - $q**2)/2, $p*$q, ($r**2 + $s**2)/2 , ($s**2 - $r**2)/2 );
+      my( $a ) =  sqrt( Math::BigInt->new($b)**2 + Math::BigInt->new($f)**2) ;
+      
+      my($x,$y,$z)=( ($a**2 + $b**2 - $c**2)/2,  ($a**2 + $c**2 - $b**2)/2, ($b**2 + $c**2 - $a**2)/2 );
+      
+      print "$p $q $r $s\n";
+      print "$a $b $c $d $e $f\n";
+      print "$x $y $z ".($x+$y+$z)."\n";
+      
+      
+      
       exit( 0 );
      <STDIN>;      
     }    
