@@ -229,6 +229,7 @@ sub next_prime
   {
     $idx = 0;
   }
+  $indexes[$idx] = 0 if( $#indexes < $idx );
   my( $p ) = getNthPrime($indexes[$idx]);
   $indexes[$idx] ++;
   return $p;
