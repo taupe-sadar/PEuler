@@ -44,9 +44,7 @@ sub nb_solution_arithmetic_progression_difference
   for( my($i)=0; $i<= $#prime_patterns; $i++ )
   {
     my( @prime_exponents ) = map( {$_ - 1}  sort( { $a <=> $b }   @{ $prime_patterns[ $i ] } ));
-    my( %groups ) = build_groups_of_exponents( @prime_exponents );
-    my( @group_keys ) =   keys  ( %groups );
-    my( @group_values ) = values( %groups );     
+    my( @group_values ) = build_groups_of_exponents( @prime_exponents );
     my( $num_permutations ) = Permutations::nb_permutations_with_identical( @group_values );
     for( my($j)=0; $j < $num_permutations; $j++ )
     {
@@ -116,21 +114,21 @@ sub make_prime_patterns
 sub build_groups_of_exponents
 {
   my( @prime_exponents ) = @_;
-  my(%groups_exponents)=();
+  my(@groups_exponents)=();
   my($current)= undef;
   for( my($i)=0; $i<= $#prime_exponents; $i++ )
   {
     if( !defined($current) || $prime_exponents[ $i ] != $current )
     {
       $current = $prime_exponents[ $i ];
-      $groups_exponents{ $current } = 1;
+      push( @groups_exponents, 1 );
     }
     else
     {
-      $groups_exponents{ $current } ++;
+      $groups_exponents[ -1 ] ++;
     }
   }
-  return %groups_exponents;
+  return @groups_exponents;
   
 }
 
