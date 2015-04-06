@@ -6,13 +6,13 @@ use IPC::Open2;
 
 my( $OS ) = "win32";
 my( $sudoku_command ) ="";
-if( $OS eq "win32" )
+if( $OS ne "win32" )
 {
-  $sudoku_command ="./sudoku";
+  $sudoku_command = "sudoku.exe";
 }
 else
 {
-  $sudoku_command ="sudoku.exe";
+  $sudoku_command ="./sudoku";
 }
 
 open(SUDOKUS, "96_sudoku.txt") or die "cannot open file";
