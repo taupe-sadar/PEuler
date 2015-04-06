@@ -4,6 +4,17 @@ use Data::Dumper;
 use FileHandle;
 use IPC::Open2;
 
+my( $OS ) = "win32";
+my( $sudoku_command ) ="";
+if( $OS eq "win32" )
+{
+  $sudoku_command ="./sudoku";
+}
+else
+{
+  $sudoku_command ="sudoku.exe";
+}
+
 open(SUDOKUS, "96_sudoku.txt") or die "cannot open file";
 my($line)="";
 my($sudoku_number)=-1;
@@ -94,14 +105,14 @@ sub try_hypothetical_solutions
 sub run_process_sudoku
 {
     my($input)=@_;
-    my($pid) = open2(*READER, *WRITER, "./sudoku") or die "Problem in double pipe";
+    my($pid) = open2(*READER, *WRITER, $sudoku_command) or die "Problem in double pipe";
     print WRITER $input;    
     my($line) = "";
     my(%candidates_not_alone)=();
     my($solution)="";
     while(defined($line = <READER> ))
     {
-	chomp($line);
+    msys_chomp( \$line );
 	my($idx,@candidats)=get_candidats( $line );
 	if( $#candidats > 0 )
 	{
@@ -158,4 +169,13 @@ sub replace_in_input
     my(@t)=split( //,$input);
     $t[$idx] = $val;
     return join("",@t);
+}
+
+sub msys_chomp
+{
+  my( $rline ) = @_;
+  while( $$rline =~ m/^(.*)(\r|\n)$/ )
+  {
+    $$rline = $1;
+  }
 }
