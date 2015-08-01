@@ -73,9 +73,11 @@ sub recursive_solve_sudoku
   {
     #take an undetermined candidate idx, try a solution
     my(@ks)=keys(%$rcandidats);
-    my(@candidats)=@{$$rcandidats{$ks[0]}};
 
-    $ret= try_hypothetical_solutions( $input , $ks[0], @candidats );
+    my($choice ) = $ks[0];
+    my(@candidats)=@{$$rcandidats{$choice}};
+
+    $ret= try_hypothetical_solutions( $input , $choice, @candidats );
   }
 
   return $ret;
@@ -158,10 +160,18 @@ sub get_candidats
 sub replace_in_input
 {
   my($input,$idx,$val)=@_;
-  $input=~s/\s//m;
   my(@t)=split( //,$input);
-  $t[$idx] = $val;
-  return join("",@t);
+  my($str)="";
+  my($count_digits)=0;
+  for( my($i)=0;$i<=$#t; $i++ )
+  {
+    if( $t[$i]=~m/^\d$/ )
+    {
+      $str.=( $count_digits == $idx )?$val:$t[$i];
+      $count_digits++;
+    }
+  }
+  return $str;
 }
 
 sub msys_chomp
