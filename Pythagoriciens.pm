@@ -20,96 +20,94 @@ use Gcd;
 
 sub primitive_triplets_from_min_value
 {
-    my($lowest_min,$highest_min)=@_;
+  my($lowest_min,$highest_min)=@_;
+  
+  my(@rettab)=();
+  
+  
+  my($l,$k);
+  #First part of the seeking set 
+  my($start_l1,$end_l1)=( ceil(sqrt($lowest_min*(sqrt(2)+1))) , $highest_min );
+  if($start_l1%2 == 0)
+  {
+    $start_l1++;
+  }
     
-    my(@rettab)=();
-    
-    
-    my($l,$k);
-    #First part of the seeking set 
-    my($start_l1,$end_l1)=( ceil(sqrt($lowest_min*(sqrt(2)+1))) , $highest_min );
-    if($start_l1%2 == 0)
+  for($l=$start_l1;$l<=$end_l1;$l+=2)
+  {
+    my($start_k,$end_k)=( ceil($lowest_min/$l) , min ( floor(sqrt($l**2 - 2*$lowest_min)) , floor($highest_min/$l)) );
+    if( $start_k%2 == 0)
     {
-	$start_l1++;
+      $start_k ++;
     }
-    
-    for($l=$start_l1;$l<=$end_l1;$l+=2)
+    for($k=$start_k;$k<=$end_k;$k+=2)
     {
-	my($start_k,$end_k)=( ceil($lowest_min/$l) , min ( floor(sqrt($l**2 - 2*$lowest_min)) , floor($highest_min/$l)) );
-	if( $start_k%2 == 0)
-	{
-	    $start_k ++;
-	}
-	for($k=$start_k;$k<=$end_k;$k+=2)
-	{
 	    #La on teste que l^k=1
 	    if(Gcd::pgcd($l,$k)!=1)
 	    {
-		next;
+        next;
 	    }
 	    push(@rettab,[$l,$k]);	    	    
-	}
     }
-    #Second part of the seeking set 
-    my($start_l2,$end_l2)=( ceil(sqrt($lowest_min+sqrt($lowest_min**2 + ($highest_min+1)**2 ))) , floor($highest_min+1/2) );
-    if($start_l2%2 == 0)
-    {
-	$start_l2++;
-    }
-    for($l=$start_l2;$l<=$end_l2;$l+=2)
-    {
+  }
+  #Second part of the seeking set 
+  my($start_l2,$end_l2)=( ceil(sqrt($lowest_min+sqrt($lowest_min**2 + ($highest_min+1)**2 ))) , floor($highest_min+1/2) );
+  if($start_l2%2 == 0)
+  {
+    $start_l2++;
+  }
+  for($l=$start_l2;$l<=$end_l2;$l+=2)
+  {
 	
-	my($start_k,$end_k)=( max( ceil(sqrt(max($l**2 - 2*$highest_min,0))) ,ceil(($highest_min+1)/$l)) , floor(sqrt($l**2 - 2*$lowest_min) ) );
-	if( $start_k%2 == 0)
-	{
-	    $start_k ++;
-	}
-	
-	for($k=$start_k;$k<=$end_k;$k+=2)
-	{
-	    #La on teste que l^k=1
-	    if(Gcd::pgcd($l,$k)!=1)
-	    {
-		next;
-	    }
-	    push(@rettab,[$l,$k]);	    	    
-	}
+    my($start_k,$end_k)=( max( ceil(sqrt(max($l**2 - 2*$highest_min,0))) ,ceil(($highest_min+1)/$l)) , floor(sqrt($l**2 - 2*$lowest_min) ) );
+    if( $start_k%2 == 0)
+    {
+      $start_k ++;
     }
-
+	
+    for($k=$start_k;$k<=$end_k;$k+=2)
+    {
+      #La on teste que l^k=1
+      if(Gcd::pgcd($l,$k)!=1)
+      {
+        next;
+      }
+      push(@rettab,[$l,$k]);	    	    
+    }
+  }
     
-    
-    return \@rettab;
+  return \@rettab;
 }
 
 sub primitive_triplets_from_perimeter
 {
-    my($max)=@_;
-    
-    my(@rettab)=();
+  my($max)=@_;
+  
+  my(@rettab)=();
 
-    my($limit_l)=sqrt($max);
-    my($l,$lk);
-    for($l=1;$l<=$limit_l;$l+=2)
+  my($limit_l)=sqrt($max);
+  my($l,$lk);
+  for($l=1;$l<=$limit_l;$l+=2)
+  {
+    my($limit_lk)=min($max/$l,2*$l-2);# Le maximum pour k est  l-2
+    for($lk=$l+1;$lk<=$limit_lk;$lk+=2)
     {
-	my($limit_lk)=min($max/$l,2*$l-2);# Le maximum pour k est  l-2
-	for($lk=$l+1;$lk<=$limit_lk;$lk+=2)
-	{
 	    #La on teste que l^lk=1
 	    if(Gcd::pgcd($l,$lk)!=1)
 	    {
-		next;
+        next;
 	    }
 	    push(@rettab,[$l,$lk-$l]);	    	    
-	}
     }
-    return \@rettab;
+  }
+  return \@rettab;
 }
 
 #return the triplet a, b ,c 
 sub value_triplet
 {
-    my($l,$k)=@_;
-    return (($l*$l-$k*$k)/2,$l*$k,($l*$l+$k*$k)/2);
+  my($l,$k)=@_;
+  return (($l*$l-$k*$k)/2,$l*$k,($l*$l+$k*$k)/2);
 }
 
 #return the perimeter a, b ,c 
