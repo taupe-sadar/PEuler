@@ -9,6 +9,12 @@ use Gcd;
 use POSIX qw/floor ceil/;
 use List::Util qw( max min );
 
+if( 1 )
+{
+
+exit(0);
+}
+
 if(0)
 {
 
