@@ -103,6 +103,21 @@ sub primitive_triplets_from_perimeter
   return \@rettab;
 }
 
+sub primitive_triplets_values
+{
+  my($max)=@_;
+  my(@pythas_elems) = primitive_triplets_from_perimeter( $max );
+  my(@pythas0)=@{$pythas_elems[0]};
+  my(@pythas) = ();
+  foreach my $p (@pythas0)
+  {
+    my(@triplet) = Pythagoriciens::value_triplet(@$p);
+    push(@pythas,\@triplet);
+  }
+  return @pythas;
+}
+
+
 #return the triplet a, b ,c 
 sub value_triplet
 {
