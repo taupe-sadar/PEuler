@@ -5,6 +5,21 @@ use POSIX qw/floor ceil/;
 
 use Pythagoriciens;
 
+# on utilise 
+#   x + y = a**2
+#   x + z = b**2
+#   y + z = c**2
+#   x - y = d**2
+#   x - z = e**2
+#   y - z = f**2
+#  on a les equations pythagoriciennes : 
+#   a**2 = b**2 + d**2
+#   a**2 = c**2 + e**2
+#   c**2 = b**2 + f**2
+#   d**2 = e**2 + f**2
+#  Parite : on a forcement a,d,f impairs et b,c,e pairs. 
+
+
 my($bound ) = 100000;
 my(@pythas) = Pythagoriciens::primitive_triplets_values( $bound );
 
