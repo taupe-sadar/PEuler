@@ -15,6 +15,8 @@ use POSIX qw/floor ceil/;
 # ( x, q, r ) = (p^2 + 3s^2)/4 , (p-3s)*(p+s)/4,  p*s  (1 <= s < p/3 ) p^s = 1 et p n'est pas multiple de 3
 #  
 
+my(%single_sum)=();
+
 my( %store ) =();
 
 my($bound) = 120000; 
@@ -100,8 +102,13 @@ sub find_qr
         my($add)= $q + $r + $other;
         if( $add <= $bound )
         {
-          print "".($q + $r + $other)."\n";
-          $sum += $q + $r + $other;
+          my($s)=$q + $r + $other;
+          if( !exists($single_sum{$s}) )
+          {
+            $single_sum{$s} = 1;
+            print "$s\n";
+            $sum += $s;
+          }
         }
       }
     }
