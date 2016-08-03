@@ -106,7 +106,6 @@ sub find_qr
           if( !exists($single_sum{$s}) )
           {
             $single_sum{$s} = 1;
-            print "$s\n";
             $sum += $s;
           }
         }
