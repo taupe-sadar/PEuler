@@ -3,7 +3,7 @@ use warnings;
 use Data::Dumper;
 use GD;
 
-my($write_png)=1;
+my($write_png)=0;
 my(@gdDim)=(1500,2400,750,1200,90);
 
 my($a,$b)= (5,10);
