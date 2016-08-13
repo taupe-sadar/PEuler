@@ -2,6 +2,7 @@ package Bezout;
 use strict;
 use warnings;
 use Data::Dumper;
+use Gcd;
 
 # Bezout algorithm : let  a > b > 0 
 # there exists a unique ( m, n) such that  
@@ -46,3 +47,23 @@ sub znz_inverse
 }
 
 1;
+
+sub congruence_solve
+{
+  my( %modulo_values ) = @_;
+  my(@modulos)=keys(%modulo_values);
+  my($big)= 1;
+  for(my($i)=0; $i<= $#modulos; $i++ )
+  {
+    $big *= $modulos[$i];
+  }
+  my($sol) = 0;
+  for(my($i)=0; $i<= $#modulos; $i++ )
+  {
+    my( $other ) = $big/$modulos[$i];
+    die "congruence_solve must be used with prime themselves numbers" if( Gcd::pgcd($other, $modulos[$i])!=1);
+    $sol += znz_inverse( $other, $modulos[$i] ) * $other * $modulo_values{$modulos[$i]};;
+  }
+  return $sol % $big;;
+}
+
