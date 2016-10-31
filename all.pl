@@ -4,7 +4,8 @@ use Data::Dumper;
 
 my(%skip_hash)=(
  44 => 1,
- 60 => 1
+ 60 => 1,
+ 146 => 1
 );
 
 my( %user_wanted ) = ();
