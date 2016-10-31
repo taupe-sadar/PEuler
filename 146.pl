@@ -3,14 +3,12 @@ use warnings;
 use Data::Dumper;
 use Bezout;
 use Prime;
+use integer;
+use Chinois;
 
-my(%stat_ok)=();
-my(%stat_no)=();
+my($max)= 150*10**6;
 
-my($max)= 3*10**6;
-
-Prime::init_crible($max*2);
-
+Prime::init_crible(2*$max);
 my(@offsets) = (1,3,7,9,13,27);
 
 my(%possible_congruences) =  (
@@ -42,8 +40,6 @@ for( my($i)=0; $i<= $#set_of_congruence; $i++ )
   push( @list_of_shift, Bezout::congruence_solve(%sol));
 }
 
-print "List : ".($#list_of_shift+1)."\n";
-
 my($product)=1;
 for( my($j)=0; $j<= $#mods; $j++ )
 {
@@ -51,8 +47,6 @@ for( my($j)=0; $j<= $#mods; $j++ )
 }
 
 @list_of_shift=sort({$a<=>$b}(@list_of_shift));
-
-print "Prod : $product\n";
 
 my($bound) = 0;
 my($sum)=0;
@@ -65,11 +59,9 @@ while( $bound < $max )
     if( test_primality($n) )
     {
       $sum+=$n;
-      print "Found $n\n";
     }
   }
   $bound += $product;
-  print "------- $bound\n";
 }
 
 print $sum;
@@ -79,11 +71,27 @@ sub test_primality
   my($n)=@_;
   my($n2)=$n*$n;
   my($test1)=1;
+  
   for( my($i)=0;$i<= $#offsets; $i++ )
   {
-    return 0 if( !Prime::fast_is_prime($n2+$offsets[$i]) );
+    return 0 if( !Chinois::chinoisPrime($n2+$offsets[$i]) );
   }
-  return  !Prime::fast_is_prime($n2+21); 
+  
+  if( Chinois::chinoisPrime($n2+21) )
+  {
+    return 0 if(Prime::fast_is_prime($n2+21));
+  }
+  
+  #Comment here for high speed !
+  
+  for( my($i)=0;$i<= $#offsets; $i++ )
+  {
+    if( !Prime::fast_is_prime($n2+$offsets[$i]) )
+    {
+      return 0;
+    }
+  }
+  return 1;
 }
 
 sub build_set
@@ -109,4 +117,3 @@ sub build_set
   }
   return @tab;
 }
-
