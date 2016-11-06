@@ -119,33 +119,6 @@ sub s1
   return $x*($x+1)/2;
 }
 
-sub s1_h
-{
-  my($x,$half)=@_;
-  if( $half )
-  {
-    return ($x*$x)/2;
-  }
-  else
-  {
-    return s1($x);
-  }
-}
-
-
-sub s2_h
-{
-  my($x,$half)=@_;
-  if( $half )
-  {
-    return s1($x)*($x-1)*2/3 + $x/4;
-  }
-  else
-  {
-    return s2($x);
-  }
-}
-
 sub s2
 {
   my($x)=@_;
