@@ -96,41 +96,17 @@ sub dij
     }
   }
   
-  
-  for( my($x)= 1;$x < $i; $x ++ )
+  for( my($x)= 1;$x <= $i; $x ++ )
   {
-    my($n_limit2) = 2*( ($i - $x));
-    my($X)=$n_limit2+1;
+    my($n_limit3) = 2*( ($i - $x)-$j);
     
+    $count += $j*(2*$j*$j+1)/3;
     
-    my($even)= 0;
-    my($x_offset)= -$n_limit2/2 +$j - 1;
-    my($x_offset2) = $n_limit2/2 +1;
-    
-    
-    if( $n_limit2 > 2*$j )
+    if( $n_limit3 <= 0 )
     {
-      $count += $j*(2*$j*$j+1)/3;
-    }
-    else
-    {
-      my( $subcount)= -($n_limit2 + 1)*($n_limit2+1) - 2*$j*(-$n_limit2/2 - 1);
-      $subcount +=  -$j*$j*2 + ( $n_limit2 - 2*$j + 2)*($n_limit2-2*$j +2)/2;
-      $subcount +=  ($n_limit2-2*$j +2)/4;
-      $subcount +=  -(-$n_limit2/2 +$j-1)*(-$n_limit2/2 +$j-2)*2/3;
-      $subcount +=  (1+4*$n_limit2/3)*( $n_limit2/2 +$j+2)/2;
-      $subcount +=  2*(-(4/6*$n_limit2)-5/6-1/4+( $j+1)*( $j+1)*2/3);
-      $subcount +=  -8/3*$j;
-      
-      $count+= ( $n_limit2 - 2*$j)/2*$subcount;
-      
-      $count += -$j*($j+1)/2*(4*$j-1)/3;
-      $count += (2*$j)*(-5/6-1/4+( $j+1)*( $j+1)*2/3);
-      $count += (2*$j)*-4/3*$j;
-      $count += ( $j+1)*( $j+1)/2;
-      
-      $count +=      -1/2;
-      # ($x+1)*($x)*($x-1)/3 + $x/4
+      my( $subcount)= ($n_limit3)*(-1/2  -$j  -$n_limit3/3);
+      $subcount +=  -$j + 1/3;
+      $count+= ( $n_limit3)/2*$subcount;
     }
   
   }
