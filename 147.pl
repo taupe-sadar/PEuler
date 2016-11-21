@@ -4,75 +4,29 @@ use Data::Dumper;
 use Sums;
 use List::Util qw(max min);
 
+# Ici on compte :
+# La somme des rectangles "droits", faciles a compter rij = sum( i ) * sum( j )
+# Et la somme des rectangles "obliques" plus difficile a compter : dij
+# L'idee est de prendre les huit types differents :
+# - largeur pair/imapair
+# - longueur pair/imapair
+# - debut sur le bord / sur la premiere demi moitie
+# et on compte le nombre de translations valides.
+#
+# On trouve que rij = s( i-1, j-1) + 5*s( i, j ) + s( i, j-1) + s( i-1, j) 
+# avec S( a,b ) = m*(m+1)*(m-1)*(2M-m)/12. avec m = min(a,b) et M = max( a,b )
+#
+# Ca se calcule = rij = (2M - m )*m * (4m^2 - 1) - m/2
+# 
+# Apres il faut tout sommer. C'est long et chiant et ca fait une formule enorme.
 
-# my($pol) = newPol(1,5,7);
-# print Dumper $pol;
-# print evalPol($pol,3,11);
-# print "\n";<STDIN>;
-
-
-# exit(0);
-
-test(3,2);
-test(5,5);
-test(7,4);
-test(4,7);
-test(10,6);
-
-sub test
-{
-  my($i,$j)=@_;
-  my($v1) = rij($i,$j) + bf_dij($i,$j);
-  my($v2) = rij($i,$j) + dij($i,$j);
-  print "($i,$j) ";
-  if( $v1 != $v2 )
-  {
-    print "*** Erreur ***: $v1 != $v2\n";
-  }
-  else
-  {
-    print "$v1\n";
-  }
-}
-
+my($x,$y)=(43,47);
+print (sum_rij($x,$y) + sum_dij_calc($x,$y));
 
 sub rij
 {
   my($i,$j)=@_;
   return Sums::int_sum($i)*Sums::int_sum($j);
-}
-
-sub bf_dij
-{
-  my($i,$j)=@_;
-  
-  my($count)=0;
-  
-  for( my($x)= 0;$x <= $i; $x += 0.5 )
-  {
-    my($even)= (2*$x)%2 == 0;
-    my($start_y)=  $even?1:0.5;
-    for( my($y)= $start_y; $y <= $j; $y ++ )
-    {
-      
-      for( my($n)= 1; ; $n ++ )
-      {
-        my($top)= $y - $n/2;
-        
-        
-        last if( $top < 0 );
-      
-        for( my($m)= 1; ; $m ++ )
-        {
-          my($right)= $x + ($m + $n)/2;
-          my($bottom)= $y + $m/2;
-          last if( $right > $i || $bottom > $j ); 
-          $count++;
-        }
-      }
-    }
-  }
-  return $count;
 }
 
 sub dij
@@ -81,48 +35,68 @@ sub dij
   
   my($count)=0;
  
-  for( my($x)= 0;$x <= $i; $x ++ )
-  {
-    my($n_limit3) = 2*( ($i - $x)-$j);
-    
-    $count +=  $j *($j+1)*($j-1)*2/3 ;
-    
-    if( $n_limit3 <= 0 )
-    {
-      my($subcount)=  (-2+3*$j);
-      $subcount+= ($n_limit3 )*( -$n_limit3 + 3/2  -3*$j);
-      
-      $count += ($n_limit3 )*$subcount/6;
-    }
-  }
+  my($M)= max($j,$i);
+  my($m)= min($j,$i);
   
-  for( my($x)= 1;$x <= $i; $x ++ )
-  {
-    my($n_limit3) = 2*( ($i - $x)-$j);
-    
-    $count += $j*(2*$j*$j+1)/3;
-    
-    if( $n_limit3 <= 0 )
-    {
-      my( $subcount)= ($n_limit3)*(-1/2  -$j  -$n_limit3/3);
-      $subcount +=  -$j + 1/3;
-      $count+= ( $n_limit3)/2*$subcount;
-    }
+  $count += -$m/2;
+  $count += (2*$M  - $m)*(-1 + 4*$m*$m)*$m/6 ;
   
-  }
+  
   return $count;
 }
 
-sub s1
+sub dij_calc
 {
-  my($x)=@_;
-  return $x*($x+1)/2;
+  my($i,$j)=@_;
+  
+  return sab($i-1,$j-1) + 5*sab($i,$j) + sab($i+1,$j) + sab($i,$j+1)
 }
 
-sub s2
+sub sum_dij_bf
 {
-  my($x)=@_;
-  return $x*($x+1)*(2*$x+1)/6;
+  my($i,$j)=@_;
+  my($sum)=0;
+  for(my($a)=0;$a<=$i;$a++)
+  {
+    for(my($b)=0;$b<=$j;$b++)
+    {
+      $sum+=dij($a,$b);
+    }
+  }
+  return $sum;
 }
 
+sub sum_dij_calc
+{
+  my($i,$j)=@_;
+
+  my($M)= max($j,$i);
+  my($m)= min($j,$i);
+  
+  my($sum)= $m*($m+1)*($m-1)*(2*$m*$m*$m+6*$m*$m+7*$m+1)/30;
+  
+  my($subsum)= $M*(2*$m*$m+2*$m-1)/6;
+  $subsum += ($m-1)*(2*$m*$m+10*$m+17)/30;
+  
+  $sum+= ($M-$m)*$m*($m+1)/2 * $subsum;
+  
+  return $sum;
+}
+
+
+sub sum_rij
+{
+  my($i,$j)=@_;
+  return ($i*($i+1)*($i+2)/6 )*($j*($j+1)*($j+2)/6 )
+  
+}
+
+
+sub sab
+{
+  my($i,$j)=@_;
+  my($M)= max($j,$i);
+  my($m)= min($j,$i);
+  return $m*($m+1)*($m-1)*(2*$M - $m)/12;
+}
 
