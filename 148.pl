@@ -12,64 +12,15 @@ use POSIX qw/floor ceil/;
 
 my($p)= 7;
 
-my($size)=Math::BigInt->new(100);
+my($size)=SmartMult::smart_mult(Math::BigInt->new(10),9);
 
-test(6);
-test(7);
-test(8);
-test(13);
-test(14);
-test(15);
-test(48);
-test(49);
-test(50);
-test(100);
-test(200);
-test(340);
-test(342);
-test(343);
-test(344);
-test(764);
-
-print numPascalDivs($size);
+print numPascalDivs($size-1);
 
 sub numPascalDivs
 {
   my($n)=@_;
-  return ($n+2)/2*($n+1)/2 - numPascalNonDivs($n);
+  return numPascalNonDivs($n);
 }
-
-sub test
-{
-  my($limit)=@_;
-  my($sum)=0;
-  for(my($x)=0;$x<=$limit;$x++)
-  {
-    $sum+=lineNonPascal($x);
-  }
-  my($bf)= numPascalNonDivs($limit);
-  if( $sum == $bf)
-  {
-    print "$limit : $sum\n";
-  }
-  else
-  {
-    print "**** $limit Error : $bf != $sum ****\n";
-  }  
-}
-
-sub lineNonPascal
-{
-  my($x)=@_;
-  my(@d)= decBase( $x );
-  my($prod)=1;
-  for(my($i)=0;$i<=$#d;$i++)
-  {
-    $prod *= $d[$i]+1;
-  }
-  return $prod;
-}
-
 
 sub numPascalNonDivs
 {
