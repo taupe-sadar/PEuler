@@ -2,6 +2,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+
 my($modulo)=2**20;
 my($modulo_div2)=$modulo/2;
 
@@ -9,60 +10,68 @@ my($size)=1000;
 my($triangle_size)=$size*($size+1)/2;
 
 my(@array)=(0)x $triangle_size;
+my(@array_cumul)=(0)x $triangle_size;
+my(@sum_current)=(0)x $triangle_size;
+
+
+my($min)=$modulo;
+my($reached)=$modulo;
 
 my($current)=0;
-for(my($i)=0;$i<$triangle_size;$i++)
+my($cumul)=0;
+my($idx)=0;
+for(my($row)=0;$row<$size;$row++)
 {
-  $current = next_val( $current );
-  $array[$i]=$current;
-}
-
-my(@sums)=();
-my($max)=-$modulo;
-my($first_idx)=mapping($size-1,0);
-for(my($i)=0;$i<$size;$i++)
-{
-  my($val)=$array[$first_idx+$i];
-  $sums[$i] = [[$val,0]];
-  $max = $val if( $val > $max);
-}
-
-for(my($row)=$size-2;$row>=0;$row--)
-{
-  print "$row\n";
-  my($idx_first)=mapping($row,0);
-  for(my($idx)=0;$idx<=$row;$idx++)
+  for(my($i)=0;$i<=$row;$i++)
   {
-    # print Dumper \@sums;
+    $current = next_val( $current );
+    $array[$idx]=$current;
+    $sum_current[$idx]=$current;
     
-    my($array_idx)= $idx_first + $idx;
-    my($val)=$array[$array_idx];
-    my($rsums)=$sums[$idx];
-    my($rsums_1)=$sums[$idx+1];
-    my(@newtab)=([$val,0]);
-    $max = $val if( $val > $max);
-    for(my($larger)=0;$larger<=$#$rsums;$larger++)
-    {
-      my($newval)= $val + $$rsums[$larger][0] + $$rsums_1[$larger][0] - $$rsums_1[$larger][1];
-      # print "($row,$idx) : $newval\n";
-      # if( $idx ==0 && $row == 0)
-      # {
-        # print "$val $$rsums[$larger][0] $$rsums_1[$larger][0] $$rsums_1[$larger][1]\n";<STDIN>;
-      # }
-      
-      
-      push(@newtab,[$newval,$$rsums[$larger][0]]);
-      $max = $newval if( $newval > $max);
-    }
+    $cumul+= $current;
+    $array_cumul[$idx]=$cumul;
     
-    $sums[$idx]=\@newtab;
+    $min = $current if( $current > $min );
+    
+    $idx++;
   }
-  pop(@sums);
+  $cumul = 0;
 }
 
-print Dumper \@array;
-print $max;
+# print_triangle(\@array);
+# print_triangle(\@array_cumul);
 
+for(my($trisize)=1;$trisize<$size;$trisize++)
+{
+  print "-- $trisize\n";
+  
+  my($counter)=0;
+  for(my($row)=0;$row<($size-$trisize);$row++)
+  {
+    my($row_base)=mapping($row+$trisize,0);
+    my($idx1,$idx2)=($row_base-1,$row_base+$trisize);
+    for(my($idx)=0;$idx<=$row;$idx++)
+    {
+      my($bigsum)=$sum_current[$counter];
+      $bigsum+= $array_cumul[$idx2];
+      $bigsum-= $array_cumul[$idx1] if($idx>0);
+      
+      # print " $row - $idx : $bigsum\n";
+      
+      $sum_current[$counter] = $bigsum;
+      $reached = "".($trisize+1)." - $row - $idx" if( $bigsum < $min );
+      $min = $bigsum if( $bigsum < $min );
+      
+      $idx1++;
+      $idx2++;
+      $counter++;
+    }
+  }
+  
+  # print_triangle(\@sum_current);<STDIN>;
+}
+
+print "$min - reached : $reached\n";
 
 sub next_val
 {
@@ -74,4 +83,26 @@ sub mapping
 {
   my($row,$idx)=@_;
   return ($row+1)*$row/2 + $idx;
+}
+
+sub print_triangle
+{
+  my($rarray)=@_;
+  my($ml)=0;
+  for(my($i)=0; $i < $triangle_size; $i++ )
+  {
+    $ml = length($$rarray[$i]) if( length($$rarray[$i]) > $ml );
+  }
+  
+  my($counter)=0;
+  for(my($row)=0; $row < $size; $row++ )
+  {
+    for(my($idx)=0; $idx <= $row; $idx++ )
+    {
+      print sprintf("%".($ml+1)."s",$$rarray[$counter]);
+      $counter++;
+    }
+    print "\n";
+  }
+  
 }
