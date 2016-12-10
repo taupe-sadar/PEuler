@@ -10,28 +10,45 @@ my($size)=1000;
 my($triangle_size)=$size*($size+1)/2;
 
 my(@array)=(0)x $triangle_size;
-my(@array_cumul)=(0)x $triangle_size;
-my(@sum_current)=(0)x $triangle_size;
+my(@cumul_down)=(0)x $triangle_size;
+my(@cumul_diag_left)=(0)x $triangle_size;
+my(@cumul_diag_right)=(0)x $triangle_size;
 
+my(@sum_current)=(0)x $triangle_size;
 
 my($min)=$modulo;
 my($reached)=$modulo;
 
-my($current)=0;
+my($t_current)=0;
+
+
 my($cumul)=0;
 my($idx)=0;
 for(my($row)=0;$row<$size;$row++)
 {
   for(my($i)=0;$i<=$row;$i++)
   {
-    $current = next_val( $current );
+    $t_current = next_val( $t_current );
+    my($current)=$t_current-$modulo_div2;
     $array[$idx]=$current;
     $sum_current[$idx]=$current;
     
     $cumul+= $current;
-    $array_cumul[$idx]=$cumul;
+    $cumul_down[$idx]=$cumul;
     
-    $min = $current if( $current > $min );
+    $min = $current if( $current < $min );
+    
+    if( $i < $row )
+    {
+      $cumul_diag_left[$idx] += $cumul_diag_left[$idx - $row];
+    }
+    $cumul_diag_left[$idx] += $array[$idx];
+
+    if( $i > 0 )
+    {
+      $cumul_diag_right[$idx] += $cumul_diag_right[$idx - $row - 1];
+    }
+    $cumul_diag_right[$idx] += $array[$idx];
     
     $idx++;
   }
@@ -39,11 +56,50 @@ for(my($row)=0;$row<$size;$row++)
 }
 
 # print_triangle(\@array);
-# print_triangle(\@array_cumul);
+# print_triangle(\@cumul_diag_right);
+# print_triangle(\@cumul_diag_left);
+# print_triangle(\@cumul_down);
 
-for(my($trisize)=1;$trisize<$size;$trisize++)
+my($whole_sum)=0;
+my($last_line_idx) = mapping($size-1,0);
+for(my($i)=0;$i<$size;$i++)
 {
+  $whole_sum += $cumul_diag_left[$last_line_idx++];
+}
+$min = $whole_sum if( $whole_sum < $min );
+$sum_current[0] = $whole_sum;
+
+for(my($trisize)=$size-1;$trisize>=1;$trisize--)
+{
+  last if( -$min*2 > $trisize*($trisize+1)*$modulo_div2 );
+  
   print "-- $trisize\n";
+  
+  my($last_row)=$size-$trisize;
+  my($counter_0)= mapping($last_row,0);
+  my($map_idx1)=mapping($size-1,0);
+  my($map_idx2)=mapping($size-1-($trisize+1),0);
+  
+  for(my($idx)=0;$idx<=$last_row;$idx++)
+  {
+    my($bigsum) =  ($idx == 0)? $sum_current[$counter_0 - $last_row] : $sum_current[$counter_0 - $last_row -1];
+    if( $idx == 0 )
+    {
+      $bigsum -= $cumul_diag_right[$map_idx1 + $trisize];
+    }
+    else
+    {
+      $bigsum -= $cumul_diag_left[$map_idx1];
+      $bigsum += $cumul_diag_left[$map_idx2] if($idx < $last_row);
+      $map_idx1++;
+      $map_idx2++;
+    }
+    $min = $bigsum if( $bigsum < $min );
+    $sum_current[$counter_0] = $bigsum;
+    $counter_0++;
+    
+    # print "Sum : $bigsum ($trisize - $last_row - $idx)\n";
+  }
   
   my($counter)=0;
   for(my($row)=0;$row<($size-$trisize);$row++)
@@ -53,13 +109,14 @@ for(my($trisize)=1;$trisize<$size;$trisize++)
     for(my($idx)=0;$idx<=$row;$idx++)
     {
       my($bigsum)=$sum_current[$counter];
-      $bigsum+= $array_cumul[$idx2];
-      $bigsum-= $array_cumul[$idx1] if($idx>0);
+      
+      $bigsum-= $cumul_down[$idx2];
+      $bigsum+= $cumul_down[$idx1] if($idx>0);
       
       # print " $row - $idx : $bigsum\n";
       
       $sum_current[$counter] = $bigsum;
-      $reached = "".($trisize+1)." - $row - $idx" if( $bigsum < $min );
+      $reached = "".($trisize)." - $row - $idx" if( $bigsum < $min );
       $min = $bigsum if( $bigsum < $min );
       
       $idx1++;
@@ -68,7 +125,9 @@ for(my($trisize)=1;$trisize<$size;$trisize++)
     }
   }
   
-  # print_triangle(\@sum_current);<STDIN>;
+  
+  #last row must be done from previous calculation 
+  
 }
 
 print "$min - reached : $reached\n";
@@ -76,7 +135,7 @@ print "$min - reached : $reached\n";
 sub next_val
 {
   my($x)=@_;
-  return ((615949*$x+797807)%$modulo-$modulo_div2);
+  return (615949*$x+797807)%$modulo;
 }
 
 sub mapping
