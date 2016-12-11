@@ -73,8 +73,6 @@ for(my($trisize)=$size-1;$trisize>=1;$trisize--)
 {
   last if( -$min*2 > $trisize*($trisize+1)*$modulo_div2 );
   
-  print "-- $trisize\n";
-  
   my($last_row)=$size-$trisize;
   my($counter_0)= mapping($last_row,0);
   my($map_idx1)=mapping($size-1,0);
@@ -97,8 +95,6 @@ for(my($trisize)=$size-1;$trisize>=1;$trisize--)
     $min = $bigsum if( $bigsum < $min );
     $sum_current[$counter_0] = $bigsum;
     $counter_0++;
-    
-    # print "Sum : $bigsum ($trisize - $last_row - $idx)\n";
   }
   
   my($counter)=0;
@@ -113,10 +109,7 @@ for(my($trisize)=$size-1;$trisize>=1;$trisize--)
       $bigsum-= $cumul_down[$idx2];
       $bigsum+= $cumul_down[$idx1] if($idx>0);
       
-      # print " $row - $idx : $bigsum\n";
-      
       $sum_current[$counter] = $bigsum;
-      $reached = "".($trisize)." - $row - $idx" if( $bigsum < $min );
       $min = $bigsum if( $bigsum < $min );
       
       $idx1++;
@@ -124,13 +117,9 @@ for(my($trisize)=$size-1;$trisize>=1;$trisize--)
       $counter++;
     }
   }
-  
-  
-  #last row must be done from previous calculation 
-  
 }
 
-print "$min - reached : $reached\n";
+print $min;
 
 sub next_val
 {
