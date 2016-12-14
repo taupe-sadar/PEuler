@@ -4,11 +4,12 @@ use Data::Dumper;
 use List::Util qw( sum );
 use Gcd;
 use Math::BigInt;
+use Fraction;
 
 my(%all_probas)=();
 
 
-my(%states)=( "1-1-1-1" => [Math::BigInt->new(1),(1)] );
+my(%states)=( "1-1-1-1" => Fraction->new(Math::BigInt->new(1),(1)) );
 
 while(keys(%states))
 {
@@ -19,17 +20,15 @@ while(keys(%states))
     my(%next_states)= nextPiecesState($e);
     foreach my $new_e (keys(%next_states))
     {
-      my($f)=$next_states{$new_e};
-      $$f[0]*= $states{$e}[0];
-      $$f[1]*= $states{$e}[1];
+      my($f)= $next_states{$new_e} * $states{$e};
       
       if( !exists( $new_states{$new_e} ))
       {
-        $new_states{$new_e} = addAndReduce( $f );
+        $new_states{$new_e} = $f;
       }
       else
       {
-        $new_states{$new_e} = addAndReduce( $new_states{$new_e}, $f );
+        $new_states{$new_e} = $new_states{$new_e} + $f;
       }
     }
   }
@@ -37,7 +36,7 @@ while(keys(%states))
   %all_probas = (%all_probas,%states);
 }
 
-my($final_proba)=addAndReduce( $all_probas{"0-0-1-0"}, $all_probas{"0-1-0-0"}, $all_probas{"1-0-0-0"} );
+my($final_proba)= $all_probas{"0-0-1-0"} + $all_probas{"0-1-0-0"} + $all_probas{"1-0-0-0"};
 
 print crapyround( $final_proba,6 );
 
@@ -51,7 +50,7 @@ sub crapyround
   {
     $exp*=10 ;
   }
-  my($val)=$$f[0]*10*$exp/$$f[1];
+  my($val)=$f->{"numerator"}*10*$exp/$f->{"denominator"};
   my($strval)=$val->bstr();
   my($last_digit)= $strval % 10;
   my($round)=( $last_digit >= 5 )?1:0;
@@ -104,7 +103,7 @@ sub nextPiecesState
     {
       $new_pieces[$j]=$pieces[$j]+1;
     }
-    $probas{join('-',@new_pieces)} = [ $pieces[$i], $all_sum ];
+    $probas{join('-',@new_pieces)} = Fraction->new( $pieces[$i], $all_sum );
   }
   return %probas;
 }
