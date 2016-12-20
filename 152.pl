@@ -6,7 +6,7 @@ use Prime;
 use Bezout;
 use Fraction;
 
-my($max_integer)=80;
+my($max_integer)=45;
 
 my(@primes)=(Prime::next_prime());
 while($primes[-1]<$max_integer)
@@ -60,7 +60,7 @@ sub analyze_with_p_factors
   {
     if( exists( $known_restrictions{ $nb } ))
     {
-      if( $known_restrictions{ $nb } ne "NONE" )
+      if( $known_restrictions{ $nb }{"type"} ne "NONE" )
       {
         retrieve_concern_hypothesis( $nb, \%previous_hypothesis);
       }
@@ -81,21 +81,24 @@ sub analyze_with_p_factors
   $nb=$pexp;
   for( my($k)=1;$k<=$highest_factor;$k++)
   {
-    $known_restrictions{ $nb } = "NONE";
+    $known_restrictions{ $nb } = {"type" => "NONE"};
     $nb+=$pexp;
   }
   
   if( $#sols >= 0 )
   {
-    # print "--- $pexp ---\n";
-    # print "Factors : ".join(" ",@factors)."\n";
-    # for( my($i)=0;$i<=$#sols;$i++)
-    # {
-      # print " $i : ".join(" ",@{$sols[$i]{"idxs"}})."\n";
-    # }
-    
-    # print Dumper \@sols; 
-    # <STDIN>;
+    if( $pexp == 5 )
+    {
+      print "--- $pexp ---\n"; 
+      print "Factors : ".join(" ",@factors)."\n";
+      for( my($i)=0;$i<=$#sols;$i++)
+      {
+        print " $i : ".join(" ",@{$sols[$i]{"idxs"}})."\n";
+      }
+      
+      # print Dumper \@sols;
+      <STDIN>;
+    }
     
     my($cool_id)="Hypo-$pexp";
     $cool_additions{$cool_id} = [];
@@ -113,28 +116,98 @@ sub analyze_with_p_factors
       my($previous_hypos_vals)=$hypo_vals{$hypo_val};
       for(my($i)=0;$i<=$#$previous_hypos_vals;$i++)
       {
-        my($x)=retrieve_hypo_frac($$previous_hypos_vals[$i]{"hypos"});
-        print "*** $x ***\n";
-        print "***  ".($x+$frac)." ***\n";
+        my($new_frac)=retrieve_hypo_frac($$previous_hypos_vals[$i]{"hypos"});
+        # print "*** $x ***\n";
+        # print "***  ".($x+$frac)." ***\n";
+        my(%new_sol_numbers)=();
+        foreach my $k1 (keys(%sol_numbers))
+        {
+          $new_sol_numbers{$k1}=1;
+        }
+        foreach my $k2 (keys(%{$$previous_hypos_vals[$i]{"numbers"}}))
+        {
+          $new_sol_numbers{$k2}=1;
+        }
+        
+        # if( $pexp <= 7 )
+        # {
+          # print "".join(" ",(keys(%new_sol_numbers)) )." ".($frac + $new_frac)."\n";<STDIN>;
+        # }
+        
         
         push( @{$cool_additions{$cool_id}}, 
         {
-          "numbers" => \%sol_numbers,
-          "value" => $frac
+          "numbers" => \%new_sol_numbers,
+          "value" => ($frac + $new_frac)
         });
-        foreach  my $k (keys(%sol_numbers))
-        {
-          $known_restrictions{$k}=$cool_id;
-        }
-        
       }
     }
     
-    if( $pexp == 5 )
+    rebuild_restrictions();
+  }
+  
+  foreach my $cool_id2 (keys(%cool_additions))
+  {
+    my($class)=$cool_additions{$cool_id2};
+    my(@new_hypos)=();
+    my(@concerned)=();
+    for( my($i)=0;$i<=$#$class;$i++ )
     {
-      print Dumper \%known_restrictions;<STDIN>;
+      if( !exists($previous_hypothesis{$cool_id2."_$i"}) )
+      {
+        push(@new_hypos,$$class[$i]);
+      }
+    }
+    $cool_additions{$cool_id2} = \@new_hypos;
+  }
+  
+  if( $pexp <= 9 )
+  {
+    print "--- $pexp ---\n";
+    foreach my $cool_id (keys(%cool_additions))
+    {
+      my($id_additions)=$cool_additions{$cool_id};
+      for(my($i)=0;$i<=$#$id_additions;$i++)
+      {
+        print sprintf("%-12s",$cool_id."-$i");
+        print sprintf("%-16s","".$$id_additions[$i]{"value"});
+        my($id_add)=$$id_additions[$i]{"numbers"};
+        foreach my $nb (sort({$a<=>$b}keys(%$id_add)))
+        {
+          print "$nb ";
+        }
+        print "\n";
+      }
+    }
+    <STDIN>;
+  }
+}
+
+sub rebuild_restrictions
+{
+  foreach my $k (keys(%known_restrictions))
+  {
+    $known_restrictions{$k}{"type"}="NONE";
+  }
+  
+  foreach my $cool_id (keys(%cool_additions))
+  {
+    my($id_additions)=$cool_additions{$cool_id};
+    my(@restrictions)=();
+    for(my($i)=0;$i<=$#$id_additions;$i++)
+    {
+      my($id_add)=$$id_additions[$i]{"numbers"};
       
-      print Dumper $cool_additions{"Hypo-7"};<STDIN>;
+      foreach my $nb (keys(%$id_add))
+      {
+        my($super_cool_id)=$cool_id."_$i";
+        if( !exists($known_restrictions{$nb}) || $known_restrictions{$nb}{"type"} eq "NONE" )
+        {
+          $known_restrictions{$nb}{"type"} = "available";
+          $known_restrictions{$nb}{"hypos"} = [];
+        }
+        push( @{$known_restrictions{$nb}{"hypos"}}, $super_cool_id );
+      }
     }
   }
 }
@@ -156,14 +229,10 @@ sub retrieve_concern_hypothesis
 {
   my($nb,$rhash)=@_;
   
-  my($cool_id)=$known_restrictions{ $nb };
-  my($rhypos)=$cool_additions{$cool_id};
-  for(my($i)=0;$i<=$#$rhypos;$i++)
+  my($rarray_cool_ids)=$known_restrictions{ $nb }{"hypos"};
+  for(my($j)=0;$j<=$#$rarray_cool_ids;$j++)
   {
-    if( exists($$rhypos[$i]{"numbers"}{$nb}) )
-    {
-      $$rhash{$cool_id."_$i"}=1;
-    }
+    $$rhash{$$rarray_cool_ids[$j]}=1;
   }
 }
 
@@ -173,6 +242,11 @@ sub browse_hypothesis
   
   my(@hypos)=(keys(%$rhypos));
   my(@combined)=loop_hypos(@hypos);
+  
+  if( $pexp == 3 )
+  {
+    print $#combined + 1; <STDIN>;
+  }
   
   my(%values_hypos)=();
   my($p2)=$p*$p;
@@ -207,6 +281,7 @@ sub browse_hypothesis
 sub loop_hypos
 {
   my(@hypos)=@_;
+  
   if( $#hypos < 0)
   {
     return ({"numbers" => {},"hypos"=> []});
