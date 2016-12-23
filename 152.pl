@@ -6,7 +6,7 @@ use Prime;
 use Bezout;
 use Fraction;
 
-my($max_integer)=45;
+my($max_integer)=65;
 
 my(@primes)=(Prime::next_prime());
 while($primes[-1]<$max_integer)
@@ -55,6 +55,7 @@ sub analyze_with_p_factors
   my($nb)=$pexp;
   
   my(%previous_hypothesis)=();
+  my(%not_used_hypos)=();
   
   for( my($k)=1;$k<=$highest_factor;$k++)
   {
@@ -74,6 +75,7 @@ sub analyze_with_p_factors
   }
   
   my(%hypo_vals)=browse_hypothesis(\%previous_hypothesis,$pexp,$p);
+  
   
   my(@inverses)=map({Bezout::znz_inverse($_,$p2)} @squares);
   my(@sols)=packsack_solutions( \@inverses, $p2, \%hypo_vals );
@@ -153,7 +155,7 @@ sub analyze_with_p_factors
     my(@concerned)=();
     for( my($i)=0;$i<=$#$class;$i++ )
     {
-      if( !exists($previous_hypothesis{$cool_id2."_$i"}) )
+      if( !exists($previous_hypothesis{$cool_id2}) || !exists($previous_hypothesis{$cool_id2}{$i})) 
       {
         push(@new_hypos,$$class[$i]);
       }
@@ -227,21 +229,25 @@ sub retrieve_hypo_frac
 
 sub retrieve_concern_hypothesis
 {
-  my($nb,$rhash)=@_;
+  my($nb,$rhash,$rnot_used)=@_;
   
   my($rarray_cool_ids)=$known_restrictions{ $nb }{"hypos"};
   for(my($j)=0;$j<=$#$rarray_cool_ids;$j++)
   {
-    $$rhash{$$rarray_cool_ids[$j]}=1;
+    my($main,$idx)=split("_",$$rarray_cool_ids[$j]);
+    if( !exists($$rhash{$main}))
+    {
+      $$rhash{$main}={};
+    }
+    $$rhash{$main}{$idx}=$cool_additions{$main}[$idx];
   }
 }
 
 sub browse_hypothesis
 {
-  my($rhypos,$pexp,$p)=@_;
+  my($rfetched_hypos,$pexp,$p)=@_;
   
-  my(@hypos)=(keys(%$rhypos));
-  my(@combined)=loop_hypos(@hypos);
+  my(@combined)=loop_hypos($rfetched_hypos);
   
   if( $pexp == 3 )
   {
@@ -254,7 +260,6 @@ sub browse_hypothesis
   for(my($i)=0;$i<=$#combined;$i++)
   {
     my($rhypos)=$combined[$i]{"hypos"};
-    
     my($frac)=retrieve_hypo_frac($rhypos);
     
     my($denom)=$frac->{"denominator"};
@@ -280,52 +285,67 @@ sub browse_hypothesis
 
 sub loop_hypos
 {
-  my(@hypos)=@_;
-  
-  if( $#hypos < 0)
+  my($rhypos)=@_;
+  #TODO la ou ca compile pas
+  my(@keys)=(keys(%$rhypos));
+  if( $#keys < 0)
   {
     return ({"numbers" => {},"hypos"=> []});
   }
   else
   {
-    my($hypothesis)=getIdxHypo($hypos[0]);
+    my($myhypo)=$keys[0];
+    my($rhyps)=$$rhypos{$myhypo};
     
-    my(@others)=@hypos[1..$#hypos];
-    my(@sols_others)=loop_hypos(@others);
+    my(%others)=();
+    for(my($i)=1;$i<=$#keys;$i++)
+    {
+      $others{$keys[$i]} = $$rhypos{$keys[$i]};
+    }    
+    
+    my(@sols_others)=loop_hypos(\%others);
     
     my(@new_sols)=();
-    for( my($a)=0;$a<=$#sols_others;$a++)
+    foreach my $hypothesis (keys(%$rhyps))
     {
-      my($rused)=$sols_others[$a]{"numbers"};
-      my($valid)=1;
-      foreach my $n (keys( %{$$hypothesis{"numbers"}} ))
+      my($hyp_numbers)=$$rhyps{$hypothesis}{"numbers"};
+      for( my($a)=0;$a<=$#sols_others;$a++)
       {
-        if( exists($$rused{$n}))
-        {
-          $valid = 0;
-          last;
-        }
-      }
-      if( $valid )
-      {
+        my($rused)=$sols_others[$a]{"numbers"};
+        my($valid)=1;
         my(%new_numbers)=();
-        my(@new_hypos)=($hypos[0], @{$sols_others[$a]{"hypos"}});
-        foreach my $n (keys( %{$$hypothesis{"numbers"}} ))
+        foreach my $n (keys( %$hyp_numbers ))
         {
+          if( exists($$rused{$n}))
+          {
+            $valid = 0;
+            last;
+          }
           $new_numbers{$n}=1;
         }
-        foreach my $n (keys( %$rused ))
+        if( $valid )
         {
-          $new_numbers{$n}=1;
-        }
-        my($nsol)={"numbers" => \%new_numbers,"hypos"=> \@new_hypos};
-        if(!does_hypo_already_exists( $nsol , \@sols_others ))
-        {
-          push(@new_sols,$nsol);
+          my(@new_hypos)=($myhypo.'_'.$hypothesis, @{$sols_others[$a]{"hypos"}});
+          foreach my $n (keys( %$rused ))
+          {
+            $new_numbers{$n}=1;
+          }
+          my($nsol)={"numbers" => \%new_numbers,"hypos"=> \@new_hypos};
+          if(!does_hypo_already_exists( $nsol , \@sols_others ))
+          {
+            push(@new_sols,$nsol);
+          }
+          else
+          {
+            print "Seriously ???\n"; 
+            print Dumper $nsol;
+            <STDIN>;
+          }
+          
+          
         }
       }
     }
-    
     return (@sols_others,@new_sols);
   }
 }
@@ -410,64 +430,64 @@ sub packsack_solutions
   }
   
   
-  my(@reduced)=reduce_sols(@sols);
+  # my(@reduced)=reduce_sols(@sols);
   # for( my($i)=0;$i<= $#reduced; $i++ )
   # {
     # print "".join(" ",@{$reduced[$i]{"idxs"}})." - ".$reduced[$i]{"hypo_val"}."\n";
   # }
   
   
-  return @reduced;
+  return @sols;
 }
 
-sub reduce_sols
-{
-  my(@sols)=@_;
-  my(@hashes)=();
-  for(my($i)=0;$i<=$#sols;$i++)
-  {
-    my(%h)=();
-    for(my($j)=0;$j<=$#{$sols[$i]{"idxs"}};$j++)
-    {
-      $h{$sols[$i]{"idxs"}[$j]}=1;
-    }
-    push(@hashes,\%h);
-  }
+# sub reduce_sols
+# {
+  # my(@sols)=@_;
+  # my(@hashes)=();
+  # for(my($i)=0;$i<=$#sols;$i++)
+  # {
+    # my(%h)=();
+    # for(my($j)=0;$j<=$#{$sols[$i]{"idxs"}};$j++)
+    # {
+      # $h{$sols[$i]{"idxs"}[$j]}=1;
+    # }
+    # push(@hashes,\%h);
+  # }
   
-  my(@smallers)=();
-  for(my($i)=0;$i<=$#hashes;$i++)
-  {
-    my(@keys_i)=(keys(%{$hashes[$i]}));
-    my($is_redondant)=0;
-    for(my($j)=0;$j<=$#hashes;$j++)
-    {
-      next if( $i == $j );
-      next if( $sols[$j]{"hypo_val"} != 0 );
-      my(@keys_j)=(keys(%{$hashes[$j]}));
-      next if( $#keys_i < $#keys_j );
-      my($j_is_included_in_i)=1;
-      foreach my $k (@keys_j)
-      {
-        if( !exists($hashes[$i]{$k}) )
-        {
-          $j_is_included_in_i = 0;
-          last;
-        }
-      }
-      if( $j_is_included_in_i )
-      {
-        $is_redondant = 1;
-        last;
-      }
-    }
-    if( !$is_redondant )
-    {
-      push(@smallers,$sols[$i]);
-    }
-  }
-  return  @smallers;
+  # my(@smallers)=();
+  # for(my($i)=0;$i<=$#hashes;$i++)
+  # {
+    # my(@keys_i)=(keys(%{$hashes[$i]}));
+    # my($is_redondant)=0;
+    # for(my($j)=0;$j<=$#hashes;$j++)
+    # {
+      # next if( $i == $j );
+      # next if( $sols[$j]{"hypo_val"} != 0 );
+      # my(@keys_j)=(keys(%{$hashes[$j]}));
+      # next if( $#keys_i < $#keys_j );
+      # my($j_is_included_in_i)=1;
+      # foreach my $k (@keys_j)
+      # {
+        # if( !exists($hashes[$i]{$k}) )
+        # {
+          # $j_is_included_in_i = 0;
+          # last;
+        # }
+      # }
+      # if( $j_is_included_in_i )
+      # {
+        # $is_redondant = 1;
+        # last;
+      # }
+    # }
+    # if( !$is_redondant )
+    # {
+      # push(@smallers,$sols[$i]);
+    # }
+  # }
+  # return  @smallers;
   
-}
+# }
 
 sub dec_2
 {
