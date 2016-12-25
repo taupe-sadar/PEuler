@@ -8,50 +8,100 @@ use Fraction;
 
 my($max_integer)=65;
 
-my(@primes)=(Prime::next_prime());
-while($primes[-1]<$max_integer)
-{
-  push(@primes,Prime::next_prime());
-}
-pop(@primes);
 
 my(%cool_additions)=();
 
 my(%known_restrictions)=();
 
+my($rworking_divisors)=build_working_divisors();
 
-for( my($i)=$#primes;$i>=1;$i--)
+for( my($i)=0;$i<=$#$rworking_divisors;$i++ )
 {
-  look_for_valid_solutions($primes[$i]);
+  analyze_with_p_factors( $$rworking_divisors[$i] );
 }
 
-sub look_for_valid_solutions
+
+sub build_working_divisors
 {
-  my($p)=@_;
-  my($pf)=$p;
+  my(@primes)=(Prime::next_prime());
+  while($primes[-1]<=$max_integer)
+  {
+    push(@primes,Prime::next_prime());
+  }
+  pop(@primes);
   
-  my(@values)=();
-  while( $pf <= $max_integer )
+  my(@working_divisors)=();
+  
+  
+  my(%used)=();
+  
+  my($is_higher_than_sqrt_prime)=1;
+  
+  for( my($i)=$#primes;$i>=1;$i--)
   {
-    push(@values,$pf);
-    $pf*=$p;
+    my($p)=$primes[$i];
+    my($p2)=$p*$p;
+    
+    if( $is_higher_than_sqrt_prime && $p*$p <= $max_integer )
+    {
+      $is_higher_than_sqrt_prime = 0;
+    }
+    
+    my(@exps)=();
+    {
+      my($prod)=$p;
+      while( $prod  <= $max_integer )
+      {
+        unshift( @exps, $prod );
+        $prod*=$p;
+      }
+    }
+    
+    for( my($j)=0;$j <= $#exps; $j++ )
+    {
+      my($pexp)=$exps[$j];
+      my($nb)=$pexp;
+      my(@factors)=();
+      for( my($k)=1;$k<= floor( $max_integer/$pexp); $k++ )
+      {
+        if( !exists($used{$nb}))
+        {
+          $used{$nb}=1;
+          push(@factors,$k);
+        }
+        $nb+=$pexp;
+      }
+      
+      my($dopush)=1;
+      if( $is_higher_than_sqrt_prime )
+      {
+        my(@inverses)=map({Bezout::znz_inverse($_*$_,$p2)} @factors);
+        my(@sols)=packsack_solutions( \@inverses, $p2, { 0 => 1 } );
+        
+        $dopush = 0 if( $#sols < 0 );
+      }
+      if( $dopush )
+      {
+        my($entry)={ "modulo" => $pexp, "prime" => $p, "factors" => \@factors };
+        push( @working_divisors, $entry );
+      }
+    }
   }
-  for(my($i)=$#values;$i>=0;$i--)
-  {
-    analyze_with_p_factors($p,$i+1,$values[$i]);
-  }
+  return \@working_divisors;
 }
 
 sub analyze_with_p_factors
 {
-  my($p,$exp,$pexp)=@_;
+  my($rworking_numbers)=@_;
+  
+  my($p) = $$rworking_numbers{"prime"};
+  my($pexp) = $$rworking_numbers{"modulo"};
+  my($rfactors)= $$rworking_numbers{"factors"};
   
   my($pexp2)=$pexp*$pexp;
   my($p2)=$p*$p;
   
   my($highest_factor)= floor( $max_integer/$pexp );
-  my(@factors)=();
-  my(@squares)=();
   my($nb)=$pexp;
   
   my(%previous_hypothesis)=();
@@ -66,18 +116,13 @@ sub analyze_with_p_factors
         retrieve_concern_hypothesis( $nb, \%previous_hypothesis);
       }
     }
-    else
-    {
-      push(@factors,$k);
-      push(@squares,$k*$k);
-    }
     $nb+=$pexp;
   }
   
   my(%hypo_vals)=browse_hypothesis(\%previous_hypothesis,$pexp,$p);
   
   
-  my(@inverses)=map({Bezout::znz_inverse($_,$p2)} @squares);
+  my(@inverses)=map({Bezout::znz_inverse($_*$_,$p2)} @$rfactors);
   my(@sols)=packsack_solutions( \@inverses, $p2, \%hypo_vals );
   
   $nb=$pexp;
@@ -92,7 +137,7 @@ sub analyze_with_p_factors
     if( $pexp == 5 )
     {
       print "--- $pexp ---\n"; 
-      print "Factors : ".join(" ",@factors)."\n";
+      print "Factors : ".join(" ",@$rfactors)."\n";
       for( my($i)=0;$i<=$#sols;$i++)
       {
         print " $i : ".join(" ",@{$sols[$i]{"idxs"}})."\n";
@@ -107,10 +152,14 @@ sub analyze_with_p_factors
     for( my($i)=0;$i<=$#sols;$i++)
     {
       my(%sol_numbers)=();
+      
+      
       for(my($j)=0;$j<=$#{$sols[$i]{"idxs"}};$j++)
       {
-        $sol_numbers{$factors[$sols[$i]{"idxs"}[$j]]*$pexp}=1;
+        $sol_numbers{$$rfactors[$sols[$i]{"idxs"}[$j]]*$pexp}=1;
       }
+      
+      
       
       my($frac)= build_hypo_frac( $pexp/$p, \%sol_numbers);
       
