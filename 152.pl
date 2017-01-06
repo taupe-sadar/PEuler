@@ -4,6 +4,7 @@ use Data::Dumper;
 use POSIX qw/floor ceil/;
 use Prime;
 use Bezout;
+use Gcd;
 use Fraction;
 
 my($max_integer)=45;
@@ -110,50 +111,45 @@ sub analyze_with_p_factors
   
   @cool_additions = ();
   
-  if( $#sols >= 0 )
+  for( my($i)=0;$i<=$#sols;$i++)
   {
-    for( my($i)=0;$i<=$#sols;$i++)
+    my(%sol_numbers)=();
+
+    for(my($j)=0;$j<=$#{$sols[$i]{"idxs"}};$j++)
     {
-      my(%sol_numbers)=();
-      
-      
-      for(my($j)=0;$j<=$#{$sols[$i]{"idxs"}};$j++)
+      $sol_numbers{$$rfactors[$sols[$i]{"idxs"}[$j]]*$pexp}=1;
+    }
+    
+    my($frac)= build_hypo_frac( $pexp/$p, \%sol_numbers);
+    
+    my($hypo_val)= $sols[$i]{"hypo_val"};
+    my($previous_hypos_vals)=$hypo_vals{$hypo_val};
+    for(my($i)=0;$i<=$#$previous_hypos_vals;$i++)
+    {
+      my($new_frac)=$$previous_hypos_vals[$i]{"value"};
+      my(%new_sol_numbers)=();
+      foreach my $k1 (keys(%sol_numbers))
       {
-        $sol_numbers{$$rfactors[$sols[$i]{"idxs"}[$j]]*$pexp}=1;
+        $new_sol_numbers{$k1}=1;
+      }
+      foreach my $k2 (keys(%{$$previous_hypos_vals[$i]{"numbers"}}))
+      {
+        $new_sol_numbers{$k2}=1;
       }
       
-      my($frac)= build_hypo_frac( $pexp/$p, \%sol_numbers);
-      
-      my($hypo_val)= $sols[$i]{"hypo_val"};
-      my($previous_hypos_vals)=$hypo_vals{$hypo_val};
-      for(my($i)=0;$i<=$#$previous_hypos_vals;$i++)
+      push( @cool_additions, 
       {
-        my($new_frac)=$$previous_hypos_vals[$i]{"value"};
-        my(%new_sol_numbers)=();
-        foreach my $k1 (keys(%sol_numbers))
-        {
-          $new_sol_numbers{$k1}=1;
-        }
-        foreach my $k2 (keys(%{$$previous_hypos_vals[$i]{"numbers"}}))
-        {
-          $new_sol_numbers{$k2}=1;
-        }
-        
-        push( @cool_additions, 
-        {
-          "numbers" => \%new_sol_numbers,
-          "value" => ($frac + $new_frac)
-        });
-      }
+        "numbers" => \%new_sol_numbers,
+        "value" => ($frac + $new_frac)
+      });
     }
   }
-  
+
   if( $pexp <= 27 )
   {
     print "--- $pexp ---\n";
     for( my($i)=0;$i<= $#cool_additions;$i++)
     {
-        # print sprintf("%-12s",$cool_id."-$i");
         print sprintf("%-10s","$pexp-$i");
         print sprintf("%-16s","".$cool_additions[$i]{"value"});
         my($id_add)=$cool_additions[$i]{"numbers"};
@@ -179,14 +175,10 @@ sub browse_hypothesis
     my($frac)=$$rallhypos[$i]{"value"};
     
     my($denom)=$frac->{"denominator"};
-    my($boost)=1;
-    while( $denom %$pexp2 != 0 )
-    {
-      $boost *= $p;
-      $denom *= $p;
-    }
+    my($d)=Gcd::pgcd($denom,$pexp2);
+    my($boost)=$pexp2/$d;
     
-    my($val) = $frac->{"numerator"}*$boost* Bezout::znz_inverse($denom/$pexp2,$p2);
+    my($val) = $frac->{"numerator"}*$boost* Bezout::znz_inverse($denom/$d,$p2);
     $val = $val%$p2;
     
     if( !exists($values_hypos{$val}) )
