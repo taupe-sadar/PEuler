@@ -51,7 +51,7 @@ sub plus
     my($n)= $a->{"numerator"}*$b->{"denominator"} + $b->{"numerator"}*$a->{"denominator"};
     if($n==0)
     {
-	return 0;
+	return Fraction->new(0/1);
     }
     my($d)= $a->{"denominator"}*$b->{"denominator"};
     my($gcd)=Gcd::pgcd($n,$d);
@@ -65,7 +65,7 @@ sub multiply
     assertFracton(\$b);
     if($a->{"numerator"}==0 || $b->{"numerator"}==0  )
     {
-	return 0;
+	return Fraction->new(0/1);
     }
     my($gcd1)= Gcd::pgcd($a->{"numerator"},$b->{"denominator"});
     my($gcd2)= Gcd::pgcd($b->{"numerator"},$a->{"denominator"});
