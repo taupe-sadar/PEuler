@@ -80,7 +80,7 @@ sub build_working_divisors
         my(@inverses)=map({Bezout::znz_inverse($_*$_,$p2)} @factors);
         my(@sols)=packsack_solutions( \@inverses, $p2, { 0 => 1 } );
         
-        $dopush = 0 if( $#sols < 0 );
+        $dopush = 0 if( $#sols <= 0 );
       }
       if( $dopush )
       {
@@ -105,27 +105,13 @@ sub analyze_with_p_factors
   
   my(%hypo_vals)=browse_hypothesis(\@cool_additions,$pexp,$p);
   
- 
-  
   my(@inverses)=map({Bezout::znz_inverse($_*$_,$p2)} @$rfactors);
   my(@sols)=packsack_solutions( \@inverses, $p2, \%hypo_vals );
   
+  @cool_additions = ();
+  
   if( $#sols >= 0 )
   {
-    if( $pexp == 5 )
-    {
-      print "--- $pexp ---\n"; 
-      print "Factors : ".join(" ",@$rfactors)."\n";
-      for( my($i)=0;$i<=$#sols;$i++)
-      {
-        print " $i : ".join(" ",@{$sols[$i]{"idxs"}})."\n";
-      }
-      
-      # print Dumper \@sols;
-      <STDIN>;
-    }
-    
-    @cool_additions = ();
     for( my($i)=0;$i<=$#sols;$i++)
     {
       my(%sol_numbers)=();
@@ -143,8 +129,6 @@ sub analyze_with_p_factors
       for(my($i)=0;$i<=$#$previous_hypos_vals;$i++)
       {
         my($new_frac)=$$previous_hypos_vals[$i]{"value"};
-        # print "*** $x ***\n";
-        # print "***  ".($x+$frac)." ***\n";
         my(%new_sol_numbers)=();
         foreach my $k1 (keys(%sol_numbers))
         {
@@ -154,12 +138,6 @@ sub analyze_with_p_factors
         {
           $new_sol_numbers{$k2}=1;
         }
-        
-        # if( $pexp <= 7 )
-        # {
-          # print "".join(" ",(keys(%new_sol_numbers)) )." ".($frac + $new_frac)."\n";<STDIN>;
-        # }
-        
         
         push( @cool_additions, 
         {
@@ -185,7 +163,7 @@ sub analyze_with_p_factors
         }
         print "\n";
     }
-    <STDIN>;
+    # <STDIN>;
   }
 }
 
@@ -237,7 +215,7 @@ sub packsack_solutions
   my($rarray,$modulo,$rhypos)=@_;
   
   my(@allsums)=(0);
-  my(@sols)=();
+  my(@sols)=({"idxs"=>[],"hypo_val"=>0});
   
   for(my($i)=0;$i<=$#$rarray;$i++)
   {
