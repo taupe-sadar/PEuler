@@ -7,8 +7,8 @@ use Bezout;
 use Gcd;
 use Fraction;
 
-my($max_integer)=45;
-
+my($max_integer)=80;
+my($expected_frac)=Fraction->new(1,2);
 
 my(@cool_additions)=(
 {
@@ -23,6 +23,46 @@ for( my($i)=0;$i<=$#$rworking_divisors;$i++ )
   analyze_with_p_factors( $$rworking_divisors[$i] );
 }
 
+#Dealing with 2
+my(@powers2)=();
+my($p)=2;
+while( $p < $max_integer )
+{
+  push(@powers2,Fraction->new(1,$p*$p));
+  $p*=2;
+}
+
+my(@allfracs)=(Fraction->new(0,1));
+for(my($i)=0;$i<=$#powers2;$i++)
+{
+  my(@thisfrac)=();
+  for(my($j)=0;$j<=$#allfracs;$j++)
+  {
+    push(@thisfrac,$powers2[$i]+$allfracs[$j]);
+  }
+  push(@allfracs,@thisfrac);
+}
+
+my(%final_possible_values)=();
+
+for(my($j)=0;$j<=$#allfracs;$j++)
+{
+  my($f)=($expected_frac - $allfracs[$j]);
+  $final_possible_values{"$f"}=1;
+}
+
+my($count)=0;
+for(my($i)=0;$i<=$#cool_additions;$i++)
+{
+  my($f)=$cool_additions[$i]{"value"};
+  if( exists($final_possible_values{$f}) )
+  {
+    $count++;
+  }
+}
+
+print "\n";
+print $count;
 
 sub build_working_divisors
 {
@@ -143,23 +183,6 @@ sub analyze_with_p_factors
         "value" => ($frac + $new_frac)
       });
     }
-  }
-
-  if( $pexp <= 27 )
-  {
-    print "--- $pexp ---\n";
-    for( my($i)=0;$i<= $#cool_additions;$i++)
-    {
-        print sprintf("%-10s","$pexp-$i");
-        print sprintf("%-16s","".$cool_additions[$i]{"value"});
-        my($id_add)=$cool_additions[$i]{"numbers"};
-        foreach my $nb (sort({$a<=>$b}keys(%$id_add)))
-        {
-          print "$nb ";
-        }
-        print "\n";
-    }
-    # <STDIN>;
   }
 }
 
