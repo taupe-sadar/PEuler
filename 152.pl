@@ -61,7 +61,6 @@ for(my($i)=0;$i<=$#cool_additions;$i++)
   }
 }
 
-print "\n";
 print $count;
 
 sub build_working_divisors
