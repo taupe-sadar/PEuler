@@ -13,7 +13,6 @@ sub calc_divs
 {
   my($num,$param)=@_;
   my($s)=0;
-  my($c)=2;
   my($k)=1;
   while(1)
   {
