@@ -3,55 +3,61 @@ use warnings;
 use Data::Dumper;
 use Prime;
 use POSIX qw/floor ceil/;
+use List::Util qw( sum );
 
-my($max_nb)=10**6;
-Prime::init_crible($max_nb);
+use Divisors;
 
-my(%squares)=();
+my($max)=10**8;
 
-my($max_root) = sqrt($max_nb);
+# Heuristic 0
+# Divisors::calc_all_until($max);
+# my($rlist)=Divisors::get_list();
+# print sum(@$rlist[1..$#$rlist])."\n";
 
-for(my($i)=1;$i<=$max_root;$i++)
+# print Dumper $rlist;
+
+# Heuristic 1
+# my($s)=0;
+# my($c)=1;
+# my($k)=1;
+# while($c>0)
+# {
+  # $c= floor($max/$k)*$k;
+  # $s += $c;
+  # $k++;
+# }
+
+# print "-> $s\n";
+
+# Heuristic 2
+
+my($s2)= calc_divs($max,10000);
+
+print "--> $s2\n";
+
+sub calc_divs
 {
-  $squares{$i*$i}=$i;
-}
-
-my(@primes)=();
-while($#primes < 0 || $primes[-1]<=$max_nb)
-{
-  my($p)=Prime::next_prime();
-  if( $p %4 == 1 )
+  my($num,$param)=@_;
+  my($s)=0;
+  my($c)=2;
+  my($k)=1;
+  while(1)
   {
-    my($first)=floor(sqrt($p-1)/2);
-    my($last)=ceil(sqrt($p-1));
+    my($f)= floor($num/$k);
     
-    my($found)=0;
+    last if( $f <$param );
     
-    for(my($j)=$first;$j<=$last;$j++)
-    {
-      my($maybe_square)= $p - $j*$j;
-      if( exists($squares{$maybe_square}))
-      {
-        my($root)=$squares{$maybe_square};
-        
-        if( $root == $first )
-        {
-          print "First reach : $root^2 + $j^2 = $p\n";<STDIN>;
-        }
-        if( $root == $last )
-        {
-          print "Last reach : $root^2 + $j^2 = $p\n";<STDIN>;
-        }
-        
-        $found=1;
-        last;
-      }
-    }
-    if(!$found)
-    {
-      print "ERROR : not found for $p\n"; <STDIN>;
-    }
+    $s += $f*$k;
+    $k++;
   }
   
-  push(@primes,$p);
+  my($last_bound)=$num;
+  for(my($i)=2;$i<=$param;$i++)
+  {
+    my($bound)= floor($num/$i);
+    $s+= sum_of_integers($bound+1,$last_bound) * ($i-1);
+    $last_bound = $bound;
+  }
+  
+  return $s;
 }
