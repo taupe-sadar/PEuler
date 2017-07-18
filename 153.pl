@@ -34,3 +34,9 @@ sub calc_divs
   
   return $s;
 }
+
+sub sum_of_integers
+{
+  my($a,$b)=@_;
+  return ($b-$a+1)*($a+$b)/2;
+}
