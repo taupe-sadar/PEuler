@@ -43,26 +43,26 @@ my($cand);
 my($num_60)=0;
 foreach $cand (keys(%direct_candidates_59))
 {
-  my($s)=$cand;
   my($prod)=1;
-  my($num_digits_left)=sum(split(//,$cand));
-  while(length($s)>0)
+  
+  my(@digits)=split(//,$cand);
+  my($num_digits_left)=sum(@digits);
+  
+  for(my($i)=$#digits;$i>=0;$i--)
   {
-    $s=~m/^(.*)(.)$/;
-    #Cas du 0/1
-    if( length($s)==length($cand))
+    my($d)=$digits[$i];
+    if( ($i + 1)==length($cand))
     {
-       #Il faut ajouter autant de zero que de 1, mais ne pas compter le cas ou les zeros sont devant
-        my($count_zero_ones_may_be_first)= ( Permutations::cnk( $num_digits_left ,$2)*( 2** $2) );
-        my($count_first_one_is_zero) = ( Permutations::cnk( $num_digits_left-1 ,$2-1)*( 2** ($2-1) ));
-        $prod*=( $count_zero_ones_may_be_first - $count_first_one_is_zero);
+     #Il faut ajouter autant de zero que de 1, mais ne pas compter le cas ou les zeros sont devant
+      my($count_zero_ones_may_be_first)= ( Permutations::cnk( $num_digits_left ,$d)*( 2** $d) );
+      my($count_first_one_is_zero) = ($d==0) ? 0 :( Permutations::cnk( $num_digits_left-1 ,$d-1)*( 2** ($d-1) ));
+      $prod*=( $count_zero_ones_may_be_first - $count_first_one_is_zero);
     }
     else
     {
-        $prod*=Permutations::cnk( $num_digits_left , $2);
+      $prod*=Permutations::cnk( $num_digits_left , $d);
     }
-    $s=$1;
-    $num_digits_left -= $2;
+    $num_digits_left -= $d;
   }
   $num_60+=$prod;
 } 
