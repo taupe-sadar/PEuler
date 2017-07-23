@@ -99,35 +99,40 @@ sub read_results
 sub check_results
 {
   my($no,$output)=@_;
-  my($number);
   if($output eq "")
   {
     return "";
   }
   if($output=~m/^\s*((-|)\d*(\.\d*|))\s*$/)
   {
-    $number=$1;
-  }
-  else
-  {
-    return ""; #mauvaise valeur de retour de n.pl
-  }
-  
-  if(defined($prev_results[$no]))
-  {
-    if($prev_results[$no]==$number)
+    my($number)=$1;
+    if(defined($prev_results[$no]))
     {
-      return "";#OK meme valeur qu'avant
+      if($prev_results[$no]==$number)
+      {
+        return "";#OK meme valeur qu'avant
+      }
+      else
+      {
+        return " => Error : old value = $prev_results[$no]";
+      }
     }
     else
     {
-      return " => Error : old value = $prev_results[$no]";#OK meme valeur qu'avant
+      open RESULT, ">> results.txt";
+      print RESULT "".sprintf('%3s',$no)." : $number\n";
+      return " => New value. Archiving ...";
     }
   }
   else
   {
-    open RESULT, ">> results.txt";
-    print RESULT "".sprintf('%3s',$no)." : $number\n";
-    return " => New value. Archiving ...";
+    if(defined($prev_results[$no]))
+    {
+      return " => Error in script (Expected : $prev_results[$no])\n" ;
+    }
+    else
+    {
+      return " => Error in script\n" ;
+    }
   }
 }
