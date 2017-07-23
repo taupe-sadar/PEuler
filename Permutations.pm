@@ -58,6 +58,7 @@ sub subset
 sub cnk
 {
   my($n,$k)=@_;
+  return 0 if( $k < 0 || $k > $n);
   my($key)="$n-$k";
   if( !exists( $cache_cnk{$key}))
   {
