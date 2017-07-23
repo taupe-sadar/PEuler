@@ -2,8 +2,8 @@ use strict;
 use warnings;
 use Data::Dumper;
 use POSIX qw/floor ceil/;
-
-my($max)=5;
+use Gcd;
+my($max)=10**8;
 
 my($sum)= calc_divs($max,floor(sqrt($max)));
 print "--> $sum\n";
@@ -58,16 +58,7 @@ sub calc_all_divs_complex
 sub calc_divs_diago_45
 {
   my($num)=@_;
-  my($a)=1;
-  my($s)=0;
-  while(1)
-  {
-    my($p)=$a*$a*2;
-    last if($p>$num);
-    $s += floor($num/$p) * $a *2;
-    $a++;
-  }
-  return $s;
+  return  sum_of_contributors( $num, 2 ) * 2;
 }
 
 sub calc_divs_complex
@@ -78,10 +69,43 @@ sub calc_divs_complex
   my($s)=0;
   while(1)
   {
-    my($p)=$a*$a + $b2;
-    last if($p>$num);
-    $s += floor($num/$p) * ($a+$b) *2;
+    if( Gcd::pgcd($a,$b) == 1 )
+    {
+      my($p)=$a*$a + $b2;
+      last if($p>$num);
+      my($x)= sum_of_contributors( $num, $p ) * 2 * ($a+$b);
+      
+      # print "$a $b ($p): $x\n";
+      $s+=$x;
+    }
     $a++;
+  }
+  return $s;
+}
+
+sub sum_of_contributors
+{
+  my($num,$div)=@_;
+  # print "__ : $div\n";
+  my($s)=0;
+  my($k) = 1;
+  
+  my($limit)= ceil( sqrt($num/$div) );
+  
+  while(1)
+  {
+    my($val) = floor($num/($k*$div));
+    last if($val < $limit);
+    $s+= $k * $val;
+    $k++;    
+  }
+  # print "S1 : $s\n";
+  my($last_bound)=floor($num/$div);
+  for(my($i)=2;$i<=$limit;$i++)
+  {
+    my($bound)= floor($num/($div*$i));
+    $s+= sum_of_integers($bound+1,$last_bound) * ($i-1);
+    $last_bound = $bound;
   }
   return $s;
 }
