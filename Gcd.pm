@@ -15,16 +15,26 @@ sub pgcd
 	my($ar1,$ar2)=@_;
 	if($ar1 == 0 || $ar2 == 0)
 	{
-	    return 1;
+	  return 1;
 	}
 	my($b,$a)=sort(abs($ar1),abs($ar2));
-	my($r)=$b;
+	return optim_pgcd($a,$b);
+}
+
+##Assumes that $a > $b > 0
+## needed for performance
+sub optim_pgcd
+{
+  my($a,$b)=@_;
+  my($r)=$b;
 	while($r>0)
 	{
-	    $r=$a%$b;
-	    $a=$b;
-	    $b=$r;
+	  $r=$a%$b;
+	  $a=$b;
+	  $b=$r;
 	}
 	return $a;
+
 }
+
 1;
