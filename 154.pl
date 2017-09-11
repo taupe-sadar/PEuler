@@ -5,53 +5,64 @@ use List::Util qw( max min );
 
 
 my($p)=5;
-my($n)=200000;
+my($nb)=200000;
 
-my($ndecomposed)=dec_base( $n, $p );
+my($ndecomposed)=dec_base( $nb, $p );
+
+my(%cache_num_triplets_5)=();
 
 # my($target_div)=12;
 
-my(%hash)=();
+list_divisors_pascal_pyramid( $ndecomposed, $p );
 
-for(my($i)=0; $i < 1000; $i++ )
-{
-  my($rdec)=dec_base($i,10);
- 
-  my($x)=0;
-  for( my($j)=0; $j<= $#$rdec ; $j++)
-  {
-    $x+= $$rdec[ $j ]; 
-  }
-  
-  $hash{$x} =  0 if(!exists($hash{$x}));
-  $hash{$x}++;
-} 
-
-
-
-for( my($i)=-3; $i <= 30 ; $i++ )
-{
-  $hash{$i} =  0 if(!exists($hash{$i}));
-  print "$i $hash{$i} ".num_triplets_terms($i,0,9)."\n";
-}
 
 sub list_divisors_pascal_pyramid
 {
   my($ndec,$base)=@_;
   
+  my(%states)=(0=>{0=>0},1=>{},2=>{});
+  
   for( my($i)=0;$i<= $#$ndec; $i++ )
   {
+    my(%current_state)=%states;
+    %states=(0=>{},1=>{},2=>{});
+    
     my($max_carry)=($i==0)?0:2;
     for( my($k)=0; $k<= $max_carry; $k++ )
     {
+      my($rstate)=$current_state{$k};
+        
       my($max_carry_end)=($i==$#$ndec)?0:2;
       for( my($m)=0; $m<= $max_carry_end; $m++ )
       {
-        my($num)= num_triplets_terms( $m * $base - $k, 0 , $base -1 );
+        my($num)= cache_nt5( $m * $base - $k );
+        
+        foreach my $ncarry (keys(%$rstate))
+        {
+          my($carr)= $ncarry + $k;
+          if( !exists($states{$m}{$carr}) )
+          {
+            $states{$m}{$carr} = 0;
+          }
+          $states{$m}{$carr} += $num + $$rstate{$ncarry};
+        }
+        
       }
     }
+    print Dumper \%states;<STDIN>;
   }
 }
+
+sub cache_nt5
+{
+  my($n)=@_;
+  if( !exists($cache_num_triplets_5{$n}  ))
+  {
+    $cache_num_triplets_5{$n} = num_triplets_terms( $n, 0, 4 );
+  }
+  return $cache_num_triplets_5{$n};
+}
+
 
 sub num_triplets_terms
 {
@@ -68,7 +79,7 @@ sub num_triplets_terms
   my($num)=0;
   $num+= max( 0, $l0_1 - $l_min + 1 ) * ($l_min - ($n - 2*$high) + 1 +  $l0_1 -($n -2*$high) + 1  ) /2;
   $num+= max( 0, $l_max - $l0_2 + 1 ) * (($n - 2*$low) - $l_max + 1 + ($n -2*$low) - $l0_2+ 1  ) /2;
-  return $num # A tester
+  return $num;
 }
 
 sub dec_base
