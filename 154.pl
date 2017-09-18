@@ -3,8 +3,6 @@ use warnings;
 use Data::Dumper;
 use List::Util qw( max min );
 
-
-my($p)=2;
 my($nb)=200000;
 
 my($ndecomposed_5)=dec_base( $nb, 5 );
@@ -17,7 +15,6 @@ my($target_div)=12;
 
 my($nodiv_5,$div_5)= list_divisors_pascal_pyramid( $ndecomposed_5, 5 );
 my($nodiv_2,$div_2)= list_divisors_pascal_pyramid( $ndecomposed_2, 5 );
-
 
 sub list_divisors_pascal_pyramid
 {
@@ -61,7 +58,7 @@ sub list_divisors_pascal_pyramid
   {
     if( $k < $target_div )
     {
-      $s_inf+=$states{0}{$k};
+      $num_nodiv+=$states{0}{$k};
     }
     else
     {
