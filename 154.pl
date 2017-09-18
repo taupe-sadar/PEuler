@@ -4,23 +4,28 @@ use Data::Dumper;
 use List::Util qw( max min );
 
 
-my($p)=5;
+my($p)=2;
 my($nb)=200000;
 
-my($ndecomposed)=dec_base( $nb, $p );
+my($ndecomposed_5)=dec_base( $nb, 5 );
+my($ndecomposed_2)=dec_base( $nb, 2 );
 
 my(%cache_num_triplets_5)=();
+my(%cache_num_triplets_2)=();
 
-# my($target_div)=12;
+my($target_div)=12;
 
-list_divisors_pascal_pyramid( $ndecomposed, $p );
+my($nodiv_5,$div_5)= list_divisors_pascal_pyramid( $ndecomposed_5, 5 );
+my($nodiv_2,$div_2)= list_divisors_pascal_pyramid( $ndecomposed_2, 5 );
 
 
 sub list_divisors_pascal_pyramid
 {
   my($ndec,$base)=@_;
   
-  my(%states)=(0=>{0=>0},1=>{},2=>{});
+  my($cache)={"min" => 0, "max"=> $base-1,"values" => []};
+  
+  my(%states)=(0=>{0=>1},1=>{},2=>{});
   
   for( my($i)=0;$i<= $#$ndec; $i++ )
   {
@@ -35,7 +40,7 @@ sub list_divisors_pascal_pyramid
       my($max_carry_end)=($i==$#$ndec)?0:2;
       for( my($m)=0; $m<= $max_carry_end; $m++ )
       {
-        my($num)= cache_nt5( $m * $base - $k );
+        my($num) = cache_nt( $cache, $m * $base + $$ndec[$i] - $k );
         
         foreach my $ncarry (keys(%$rstate))
         {
@@ -44,14 +49,38 @@ sub list_divisors_pascal_pyramid
           {
             $states{$m}{$carr} = 0;
           }
-          $states{$m}{$carr} += $num + $$rstate{$ncarry};
+          $states{$m}{$carr} += $num * $$rstate{$ncarry};
         }
         
       }
     }
-    print Dumper \%states;<STDIN>;
   }
+  
+  my($num_nodiv,$num_div)=(0,0);
+  foreach my $k (keys(%{$states{0}}))
+  {
+    if( $k < $target_div )
+    {
+      $s_inf+=$states{0}{$k};
+    }
+    else
+    {
+      $num_div+=$states{0}{$k};
+    }
+  }
+  return  ($num_nodiv,$num_div);
 }
+
+sub cache_nt
+{
+  my($cache, $n)=@_;
+  if( !exists($$cache{$n}  ))
+  {
+    $$cache{$n} = num_triplets_terms( $n, $$cache{"min"}, $$cache{"max"} );
+  }
+  return $$cache{$n};
+}
+
 
 sub cache_nt5
 {
@@ -93,61 +122,4 @@ sub dec_base
     $n=$n/$p;
   }
   return \@dec;
-}
-
-# print_pascal(22);
-
-sub print_pascal
-{
-  my($n)=@_;
-  my(@rtab)=([1]);
-
-  for(my($rec)=0;$rec<$n;$rec++)
-  {
-    push(@rtab,[1]); #new  = [$rec+1][-1] + [rec][0]
-    for(my($k)=1;$k<=$rec;$k++)
-    {
-      push(@{$rtab[$k]},$rtab[$rec+1-$k][$k-1] + $rtab[$rec-$k][$k] );
-    }
-    push(@{$rtab[0]},$rtab[0][$rec]);
-    
-    for(my($j)=$rec;$j>0;$j--)
-    {
-      for(my($k)=$rec-$j;$k>0;$k--)
-      {
-        $rtab[$j][$k] += $rtab[$j-1][$k] + $rtab[$j][$k - 1];
-      }
-      $rtab[$j][0] += $rtab[$j-1][0] ;
-    }
-    
-    for(my($k)=$rec;$k>0;$k--)
-    {
-      $rtab[0][$k] += $rtab[0][$k - 1];
-    }
-  }
-
-  #printing
-  my($max_length)=0;
-  for(my($j)=0;$j<=$#rtab;$j++)
-  {
-    for(my($k)=0;$k<=$#{$rtab[$j]};$k++)
-    {
-      if( length($rtab[$j][$k]) > $max_length)
-      {
-        $max_length = length($rtab[$j][$k]);
-      }
-    }
-  }
-
-  for(my($j)=$#rtab;$j>=0;$j--)
-  {
-    for(my($k)=0;$k<=$#{$rtab[$j]};$k++)
-    {
-      print sprintf("%$max_length"."s",$rtab[$j][$k])." ";
-    }
-    print "\n";
-  }
-  
-  
-  
 }
