@@ -16,6 +16,134 @@ my($target_div)=12;
 my($nodiv_5,$div_5)= list_divisors_pascal_pyramid( $ndecomposed_5, 5 );
 my($nodiv_2,$div_2)= list_divisors_pascal_pyramid( $ndecomposed_2, 5 );
 
+
+my($cnk_div_5)=calc_cnk_div($ndecomposed_5,5,5,12);
+
+
+sub calc_cnk_div
+{
+  my($ndec,$p,$min_requiered_exp,$max_requiered_exp)=@_;
+  my($size)=$#ndec+1;
+  my($val)=0;
+  my($current_state)=[0]x($size);
+  my($current_carry)=[0]x($size+1);
+  my($current_num_carry)=0;
+  
+  get_next_state(  ); 
+  
+  return {};
+}
+
+sub get_next_state
+{
+  my($ndec, $st, $car, $min, $max, $p )=@_;
+  
+  increment_state( $st, $p );
+  my($sum_carry) = update_carry( $ndec, $st, $car );
+  
+  my( $missing_carry ) = $sum_carry - $min;
+  my( $exedent_carry ) = $max - $sum_carry;
+  
+  if( $missing_carry > 0 )
+  {
+    $sum_carry = next_more_carry( $ndec, $st, $car, $missing_carry, $p );
+  }
+  elsif( $exedent_carry > 0 )
+  {
+    $sum_carry = next_less_carry( $ndec, $st, $car, $exedent_carry, $p )
+  }
+  
+  my($increased)= $ncar < $min;
+  if( $need_reach_min )
+  {
+    my($idx)=1;
+    while( $ncar < $min )
+    {
+      if( $$st[$idx] == 0 )
+      {
+        $$st[$idx++] = 1;
+        $ncar++;
+      }
+    }
+  }
+  
+  if( !$increased )
+  {
+  
+  }
+  
+  
+  if( $increased )
+  {
+    #Having lowest
+    my($new_st)=[0]x($#$st+1);
+    
+    for( my($i)=0; $i<=$#$st; $i++ )
+    {
+      my($target)= $$car[$i+1] * $p + $$st[$i] - $$car[$i];
+      
+      #TODO move elsewhere, better
+      my(@array_bourrin)=(0,0,0,0,0,1,2,3,4,-1); #sentinel, for both  cases -1 and 2p-1 
+      
+      $$new_st[$i] = $array_bourrin[$target]; 
+      if( $$new_st[$i] < 0 )
+      {
+        #Argh : find next carry iteration
+      }
+      
+    }
+    return $new_st;
+  }
+}
+
+sub next_more_carry
+{
+  my($ndec, $st, $car, $missing_carry, $p ) = @_;
+  
+  
+}
+
+sub next_less_carry
+{
+  my($ndec, $st, $car, $exedent_carry, $p ) = @_;
+  
+  
+}
+
+sub increment_state
+{
+  my($rstate, $p)=@_;
+  $$rstate[0]++;
+  for( my($i)=0; $i <= $#$rstate; $i++ )
+  {
+    if( $rstate[$i] == $p )
+    {
+      $rstate[$i] = 0;
+      $rstate[$i+1]++;
+    }
+    else
+    {
+      last;
+    }
+  }
+}
+
+sub update_carry
+{
+  my( $ndec, $rstate, $car )=@_;
+  $$car[0]=0;
+  my($count)=0;
+  for( my($i)=0; $i <= $#$rstate; $i++ )
+  {
+    if( $$ndec[$i] < ($$rstate[$i]+ $$car[$i]) )
+    {
+      $$car[$i+1] = 1;
+      $count++;
+    }
+  }
+  return $count;
+}
+
 sub list_divisors_pascal_pyramid
 {
   my($ndec,$base)=@_;
