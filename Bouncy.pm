@@ -31,11 +31,11 @@ sub count_descending
   {
     if( $n <= 1 )
     {
-	    $cache_descending_power10{$n} = 0;
+      $cache_descending_power10{$n} = 0;
     }
     else
     {
-	    $cache_descending_power10{$n} = Permutations::cnk( $n + 9 , 9 ) - 10 + count_descending( $n-1 ); 
+      $cache_descending_power10{$n} = Permutations::cnk( $n + 9 , 9 ) - 10 + count_descending( $n-1 ); 
     }
   }
   return $cache_descending_power10{$n}
@@ -238,7 +238,7 @@ sub split_in_bouncy_parts
   {
     if($previous eq "" )
     {
-	    $type = '='; #for constant
+      $type = '='; #for constant
     }
     elsif( $type eq '=' && $previous != $d )
     {

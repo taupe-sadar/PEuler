@@ -13,28 +13,28 @@ my(%occurences)=();
 
 foreach my $final_shot (@tab_double)
 {
-    #Case two zeros
-    Hashtools::increment( \%occurences, $final_shot );
-    for( my($i)=0;$i<=$#all;$i++)
+  #Case two zeros
+  Hashtools::increment( \%occurences, $final_shot );
+  for( my($i)=0;$i<=$#all;$i++)
+  {
+    #Case one zero
+    my($value)= $final_shot + $all[$i];
+    Hashtools::increment( \%occurences, $value );
+    for( my($j)=0;$j<=$i;$j++)
     {
-	#Case one zero
-	my($value)= $final_shot + $all[$i];
-	Hashtools::increment( \%occurences, $value );
-	for( my($j)=0;$j<=$i;$j++)
-	{
-	    my($value2)=$value + $all[$j];
-	    Hashtools::increment( \%occurences, $value2 );
-	}
+      my($value2)=$value + $all[$j];
+      Hashtools::increment( \%occurences, $value2 );
     }
+  }
 }
 
 my($sum)=0;
 foreach my $checkout (keys(%occurences))
 {
-    if($checkout < $select_checkout_less_than )
-    {
-	$sum+= $occurences{$checkout};
-    }
+  if($checkout < $select_checkout_less_than )
+  {
+    $sum+= $occurences{$checkout};
+  }
 }
 print $sum;
 

@@ -5,21 +5,21 @@ use Data::Dumper;
 
 sub insert_sorted_set
 {
-	my($reftab,$num)=@_;
-	my($idx)=0;
-	for($idx=0;$idx<=$#{$reftab};$idx++)
-	{
-		if($$reftab[$idx]==$num)
-		{
-			return;
-		}
-		elsif($$reftab[$idx]>$num)
-		{
-			last;
-		}
-	}
-	splice(@{$reftab},$idx,0,$num);
-	
+  my($reftab,$num)=@_;
+  my($idx)=0;
+  for($idx=0;$idx<=$#{$reftab};$idx++)
+  {
+    if($$reftab[$idx]==$num)
+    {
+      return;
+    }
+    elsif($$reftab[$idx]>$num)
+    {
+      last;
+    }
+  }
+  splice(@{$reftab},$idx,0,$num);
+  
 }
 
 sub list_divisors
@@ -39,12 +39,12 @@ sub list_divisors
     my(@ret)=@sublist_divisors;
     for(my($a)=0;$a<=$#sublist_divisors;$a++)
     {
-	    my($f)=1;
-	    for(my($b)=1;$b<=$n;$b++)
-	    {
+      my($f)=1;
+      for(my($b)=1;$b<=$n;$b++)
+      {
         $f*=$p;
         push(@ret,$f*$sublist_divisors[$a])
-	    }
+      }
       
     }
     return @ret;
@@ -140,7 +140,7 @@ sub investigating_continude_fractions
     print "X$count = $a + 1/X".($count+1)."\n";
     my($div)="";
     $q2[2]*=($q2[1]**2);
-	$q2[1]=1;
+  $q2[1]=1;
     
     die "Invalid quad A = $a , q = ".join(" ",@q) if(($q2[2]-$q2[0]**2)%$q2[3] != 0 );
     print "X".($count+1)." = ".quad_to_string(@q2)."\n";

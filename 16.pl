@@ -14,6 +14,6 @@ my($result)=0;
 my($i)=0;
 for($i=0;$i<=$#tab;$i++)
 {
-	$result+=$tab[$i];
+  $result+=$tab[$i];
 }
 print $result;

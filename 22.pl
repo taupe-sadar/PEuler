@@ -11,7 +11,7 @@ my($i);
 my($final_score);
 for($i=0;$i<=$#NAMES;$i++)
 {
-	$final_score+=Words::score($NAMES[$i])*($i+1);
+  $final_score+=Words::score($NAMES[$i])*($i+1);
 }
 print $final_score;
 

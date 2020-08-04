@@ -31,10 +31,10 @@ sub calc_all_until
     my($pow) = 1;
     for( my($i)=1; $i <= $last_prime_power; $i ++ )
     {
-	    $pow*=$p;
-	    $divisor_sum = $divisor_sum + $pow;
-	    $power_primes_and_divisor_sum{ $p }[ $i ] = $divisor_sum;
-	    $list_divisors[ $pow ] = $divisor_sum;
+      $pow*=$p;
+      $divisor_sum = $divisor_sum + $pow;
+      $power_primes_and_divisor_sum{ $p }[ $i ] = $divisor_sum;
+      $list_divisors[ $pow ] = $divisor_sum;
     }
   }
   
@@ -70,11 +70,11 @@ sub calc_all_until
       
       push( @new_already_calculated, $already_calculated[$a] );
       
-	    for( my($powprime)= $p; $new_nb <= $limit ;$new_nb*=$p,$powprime *=$p )
-	    {
+      for( my($powprime)= $p; $new_nb <= $limit ;$new_nb*=$p,$powprime *=$p )
+      {
         push( @new_already_calculated, $new_nb );
         $list_divisors[ $new_nb ] = $list_divisors[ $powprime ]* $list_divisors[ $already_calculated[$a]];
-	    }
+      }
     }
     
     @already_calculated=@new_already_calculated;
@@ -103,7 +103,7 @@ sub calc_until_not_so_bad
   {
     for(my($multiple)=$i; $multiple<= $limit; $multiple += $i )
     {
-	    $list_divisors[$multiple]+= $i;
+      $list_divisors[$multiple]+= $i;
     }
   }
   
@@ -111,8 +111,8 @@ sub calc_until_not_so_bad
 
 sub get_sum_prop_div
 {
-	my($number)=@_;
-	return get_sum_div($number)-$number;
+  my($number)=@_;
+  return get_sum_div($number)-$number;
 }
 
 sub get_sum_div
