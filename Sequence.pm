@@ -34,16 +34,15 @@ sub calc
   my($this,$idx)=@_;
   for( my($i) = $#{$$this{'cache'}}+1; $i <= $idx; $i++ )
   {
-     my($val)=0;
-     for( my($j) = 0; $j <= $#{$$this{'coeff'}}; $j++ )
-     {
-       $val += $$this{'cache'}[$i - $j - 1 ] * $$this{'coeff'}[$j];
-     }
-     $$this{'cache'}[$i] = $val;
+    my($val)=0;
+    for( my($j) = 0; $j <= $#{$$this{'coeff'}}; $j++ )
+    {
+      $val += $$this{'cache'}[$i - $j - 1 ] * $$this{'coeff'}[$j];
+    }
+    $$this{'cache'}[$i] = $val;
   }
-    
-  return $$this{'cache'}[$idx];
   
+  return $$this{'cache'}[$idx];
 }
 
 sub calc_shift

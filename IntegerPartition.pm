@@ -47,7 +47,7 @@ sub calculate_next_partition
     my($pentagonal)= $pentagonal_pool[$k];
     if( $pentagonal > $n)
     {
-	    last;
+      last;
     }
     my($pentagonal2)= $pentagonal + $k + 1;
     
@@ -55,19 +55,19 @@ sub calculate_next_partition
     
     if( $negative_test )
     {
-	    $val-= $partitions[$n - $pentagonal ];
-	    if( $pentagonal2<= $n )
-	    {
+      $val-= $partitions[$n - $pentagonal ];
+      if( $pentagonal2<= $n )
+      {
         $val-= $partitions[$n - $pentagonal2 ];
-	    }
+      }
     }
     else
     {
-	    $val+= $partitions[$n - $pentagonal ];
-	    if( $pentagonal2<= $n )
-	    {
+      $val+= $partitions[$n - $pentagonal ];
+      if( $pentagonal2<= $n )
+      {
         $val+= $partitions[$n - $pentagonal2 ];
-	    }
+      }
     }
   }
   if( defined($mod))
@@ -124,7 +124,7 @@ sub calculate_prime_partition
     my( $left ) = $n - $p;
     if( exists($partitions_with_primes[$left]{ $p })  )
     {
-	    $partitions_with_primes[$n]{ $p } += $partitions_with_primes[$left]{ $p };
+      $partitions_with_primes[$n]{ $p } += $partitions_with_primes[$left]{ $p };
     }
     $sum+=$partitions_with_primes[$n]{ $p };
     $pm1 = $p;
@@ -137,7 +137,7 @@ sub calculate_prime_partition
     push(@prime_table,Prime::next_prime()); #Future next prime;
   }
   return $sum;
-	
+  
 }
 
 

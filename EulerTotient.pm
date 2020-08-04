@@ -26,14 +26,14 @@ sub sum_phi
     {
       
       if( $e > $limit )
-	    {
+      {
         delete $moebius{$e};
         next;
-	    }
-	    my($newp)=$p*$e;
-	    $moebius{$newp}= -$moebius{$e};
-	    $sum_of_phi+= int($max/$newp)**2 * $moebius{$newp};
-	    
+      }
+      my($newp)=$p*$e;
+      $moebius{$newp}= -$moebius{$e};
+      $sum_of_phi+= int($max/$newp)**2 * $moebius{$newp};
+      
     }
     
     $moebius{$p}= -1;
@@ -76,19 +76,19 @@ sub sum_phi_x
     my(@keys)=keys(%moebius);
     foreach $e (@keys)
     {
-	    
-	    if( $e > $limit )
-	    {
+      
+      if( $e > $limit )
+      {
         delete $moebius{$e};
         next;
-	    }
-	    my($newp)=$p*$e;
-	    $moebius{$newp}= -$moebius{$e};
-	    
-	    $sum_of_phi_div+=  Sums::sum_integer_div_by( int($max/$newp),$m)* $moebius{$newp};
-	    
+      }
+      my($newp)=$p*$e;
+      $moebius{$newp}= -$moebius{$e};
+      
+      $sum_of_phi_div+=  Sums::sum_integer_div_by( int($max/$newp),$m)* $moebius{$newp};
+      
     }
-	
+  
     $moebius{$p}= -1;
     
     $sum_of_phi_div-= Sums::sum_integer_div_by( $limit,$m);
@@ -98,8 +98,8 @@ sub sum_phi_x
   #On peut sauter la derniere etape car  $m > 1;
   #while($p<=$max) #Ici $p >$max/2 le tableau est vide donc $limit = $max/p < 2
   #{
-  #	$sum_of_phi -= sum_integer_div_by( 1,$m);
-  #	$p=Prime::next_prime();
+  #  $sum_of_phi -= sum_integer_div_by( 1,$m);
+  #  $p=Prime::next_prime();
   #}
   
   # Attention on retourne 1/m dans le calcul

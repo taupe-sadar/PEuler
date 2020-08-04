@@ -21,45 +21,47 @@ my($a,$b);
 my($sum)=$mult_28_years*12*4;
 for($a=0;$a<12;$a++)
 {
-	my(@seq)=start_of_month_sequence($first_day,$a,\@offset,\@offset_leap);
-	for($b=0;$b<$years_left;$b++)
-	{
-		if($seq[$b]==$target_day)
-		{
-			$sum++;
-		}
-	}
+  my(@seq)=start_of_month_sequence($first_day,$a,\@offset,\@offset_leap);
+  for($b=0;$b<$years_left;$b++)
+  {
+    if($seq[$b]==$target_day)
+    {
+      $sum++;
+    }
+  }
 }
 
 print $sum;
 
-sub calc_offsets{
-	my(@months)=@_;
-	my(@ret)=(0);
-	my($i);
-	for($i=0;$i<($#months-1);$i++)
-	{
-		push(@ret,$ret[$i]+$months[$i]+(($i==1)?$months[-1]:0));
-	}
-	return @ret;
+sub calc_offsets
+{
+  my(@months)=@_;
+  my(@ret)=(0);
+  my($i);
+  for($i=0;$i<($#months-1);$i++)
+  {
+    push(@ret,$ret[$i]+$months[$i]+(($i==1)?$months[-1]:0));
+  }
+  return @ret;
 }
 
-sub start_of_month_sequence{
-	my($first_day,$month,$roffsets,$roffsets_leap)=@_;
-	my(@sequence)=();
-	my($i);
-	for($i=1;$i<=28;$i++)
-	{
-		if(($i%4)==0)
-		{
-			push(@sequence,($first_day+$$roffsets_leap[$month])%7);
-			$first_day+=2;
-		}
-		else
-		{	
-			push(@sequence,($first_day+$$roffsets[$month])%7);
-			$first_day++;
-		}		
-	}
-	return @sequence;
+sub start_of_month_sequence
+{
+  my($first_day,$month,$roffsets,$roffsets_leap)=@_;
+  my(@sequence)=();
+  my($i);
+  for($i=1;$i<=28;$i++)
+  {
+    if(($i%4)==0)
+    {
+      push(@sequence,($first_day+$$roffsets_leap[$month])%7);
+      $first_day+=2;
+    }
+    else
+    {  
+      push(@sequence,($first_day+$$roffsets[$month])%7);
+      $first_day++;
+    }    
+  }
+  return @sequence;
 }

@@ -8,7 +8,7 @@ my($n)=0;
 
 while($solution > 0)
 {
-    $n++;
-    $solution  = IntegerPartition::partition($n,1000000 );
+  $n++;
+  $solution  = IntegerPartition::partition($n,1000000 );
 }
 print $n;

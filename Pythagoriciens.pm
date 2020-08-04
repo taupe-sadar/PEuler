@@ -42,12 +42,12 @@ sub primitive_triplets_from_min_value
     }
     for($k=$start_k;$k<=$end_k;$k+=2)
     {
-	    #La on teste que l^k=1
-	    if(Gcd::pgcd($l,$k)!=1)
-	    {
+      #La on teste que l^k=1
+      if(Gcd::pgcd($l,$k)!=1)
+      {
         next;
-	    }
-	    push(@rettab,[$l,$k]);	    	    
+      }
+      push(@rettab,[$l,$k]);
     }
   }
   #Second part of the seeking set 
@@ -58,13 +58,13 @@ sub primitive_triplets_from_min_value
   }
   for($l=$start_l2;$l<=$end_l2;$l+=2)
   {
-	
+  
     my($start_k,$end_k)=( max( ceil(sqrt(max($l**2 - 2*$highest_min,0))) ,ceil(($highest_min+1)/$l)) , floor(sqrt($l**2 - 2*$lowest_min) ) );
     if( $start_k%2 == 0)
     {
       $start_k ++;
     }
-	
+  
     for($k=$start_k;$k<=$end_k;$k+=2)
     {
       #La on teste que l^k=1
@@ -72,7 +72,7 @@ sub primitive_triplets_from_min_value
       {
         next;
       }
-      push(@rettab,[$l,$k]);	    	    
+      push(@rettab,[$l,$k]);
     }
   }
     
@@ -92,12 +92,12 @@ sub primitive_triplets_from_perimeter
     my($limit_lk)=min($max/$l,2*$l-2);# Le maximum pour k est  l-2
     for($lk=$l+1;$lk<=$limit_lk;$lk+=2)
     {
-	    #La on teste que l^lk=1
-	    if(Gcd::pgcd($l,$lk)!=1)
-	    {
+      #La on teste que l^lk=1
+      if(Gcd::pgcd($l,$lk)!=1)
+      {
         next;
-	    }
-	    push(@rettab,[$l,$lk-$l]);	    	    
+      }
+      push(@rettab,[$l,$lk-$l]);
     }
   }
   return \@rettab;
@@ -128,8 +128,8 @@ sub value_triplet
 #return the perimeter a, b ,c 
 sub value_perimeter
 {
-    my($l,$k)=@_;
-    return $l*($l+$k);
+  my($l,$k)=@_;
+  return $l*($l+$k);
 }
 
 1;

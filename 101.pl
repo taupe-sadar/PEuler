@@ -15,34 +15,34 @@ my($max_order)= 10;
 my($bop_sum)=0;
 for( my($d)= 1; $d<= $max_order; $d++ )
 {
-    my( $potential_fit)= first_incorrect_term( $d );
-    if($potential_fit != function_to_interpolate( $d+1) )
-    {
-	$bop_sum += $potential_fit;
-    }
-    else
-    {
-	die "The BOP $d : $potential_fit as not trivial FIT\n";
-    }
+  my( $potential_fit)= first_incorrect_term( $d );
+  if($potential_fit != function_to_interpolate( $d+1) )
+  {
+    $bop_sum += $potential_fit;
+  }
+  else
+  {
+    die "The BOP $d : $potential_fit as not trivial FIT\n";
+  }
 }
 print $bop_sum;
 
 
 sub first_incorrect_term
 {
-    my($order)=@_;
-    my($fit)=0;
-    for( my($i)=1;$i<=$order; $i++ )
-    {
-	my( $sign)= (($order - $i)%2 == 0) ? 1 : -1 ;
-	$fit += Permutations::cnk($order, $i -1 ) * function_to_interpolate( $i ) * $sign ; 
-    }
-    return $fit;
+  my($order)=@_;
+  my($fit)=0;
+  for( my($i)=1;$i<=$order; $i++ )
+  {
+    my( $sign)= (($order - $i)%2 == 0) ? 1 : -1 ;
+    $fit += Permutations::cnk($order, $i -1 ) * function_to_interpolate( $i ) * $sign ; 
+  }
+  return $fit;
 }
 
 
 sub function_to_interpolate
 {
-    my($n)=@_;
-    return ( ( $n**10 -1)/($n+1)*$n +1);
+  my($n)=@_;
+  return ( ( $n**10 -1)/($n+1)*$n +1);
 }

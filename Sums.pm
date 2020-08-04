@@ -2,8 +2,8 @@ package Sums;
 
 sub int_sum
 {
-	my($last)=@_;
-	return ($last)*($last+1)/2;
+  my($last)=@_;
+  return ($last)*($last+1)/2;
 }
 
 sub int_sum_offset
@@ -52,8 +52,8 @@ sub side_sum
 
 sub int_square_sum
 {
-	my($last)=@_;
-	return int_sum($last)*(2*$last+1)/3;
+  my($last)=@_;
+  return int_sum($last)*(2*$last+1)/3;
 }
 
 #return sum of int(n/d)

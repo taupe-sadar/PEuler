@@ -12,7 +12,7 @@ my($nextn)=1;
 my($max)=10**6;
 while($nextn<$max)
 {
-    $n=$nextn;
-    $nextn*=Prime::next_prime();
+  $n=$nextn;
+  $nextn*=Prime::next_prime();
 }
 print $n;

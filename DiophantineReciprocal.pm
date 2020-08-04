@@ -24,46 +24,44 @@ my(@prime_tab)=();
 
 sub set_max_for_odd_product
 {
-    my($stop_at_first_ocuurence_of)=@_;
-    $max_for_odd_product=( $stop_at_first_ocuurence_of )*2 -1;
+  my($stop_at_first_ocuurence_of)=@_;
+  $max_for_odd_product=( $stop_at_first_ocuurence_of )*2 -1;
 }
 
 sub init_prime_arrays
 {
-    my($num_primes)=@_;
-    Prime::init_crible(20000);
-    my($p)= Prime::next_prime();
-    @prime_tab=($p);
-    @prime_prod_cumulated=($p);
+  my($num_primes)=@_;
+  Prime::init_crible(20000);
+  my($p)= Prime::next_prime();
+  @prime_tab=($p);
+  @prime_prod_cumulated=($p);
     
-    
-    while( $#prime_tab+1 < $num_primes )
-    {
-	$p= Prime::next_prime();
-	push( @prime_tab, $p);
-	push( @prime_prod_cumulated, $p * $prime_prod_cumulated[-1] );
-    }
-
+  while( $#prime_tab+1 < $num_primes )
+  {
+    $p= Prime::next_prime();
+    push( @prime_tab, $p);
+    push( @prime_prod_cumulated, $p * $prime_prod_cumulated[-1] );
+  }
 }
 
 sub number_solutions_diophantine_reciprocal( )
 {
-    my($num_primes)=ceil( log($max_for_odd_product)/log(3) );
-    
-    if($#prime_tab +1 < $num_primes)
-    {
-	init_prime_arrays($num_primes);
-    }
-    my(@kis)=();
-    for(my($i)=0;$i<$num_primes;$i++)
-    {
-	$kis[$i]=0;
-    }
-    
-    my($best_prod)= Math::BigInt->new($prime_prod_cumulated[-1]);
-    recursive_solve_PROB( $#kis-1, 0  , \@kis,  Math::BigInt->new(1), \$best_prod  );  
-    
-    return $best_prod;
+  my($num_primes)=ceil( log($max_for_odd_product)/log(3) );
+  
+  if($#prime_tab +1 < $num_primes)
+  {
+    init_prime_arrays($num_primes);
+  }
+  my(@kis)=();
+  for(my($i)=0;$i<$num_primes;$i++)
+  {
+    $kis[$i]=0;
+  }
+  
+  my($best_prod)= Math::BigInt->new($prime_prod_cumulated[-1]);
+  recursive_solve_PROB( $#kis-1, 0  , \@kis,  Math::BigInt->new(1), \$best_prod  );  
+  
+  return $best_prod;
 }
 
 sub recursive_solve_PROB
@@ -86,7 +84,6 @@ sub recursive_solve_PROB
     }
     else
     {
-      
       $$rbestprod = $current_prod * ($prime_prod_cumulated[ $idx ] ** ($min_ki - $base_ki) );
       return 1;
     }
@@ -96,13 +93,13 @@ sub recursive_solve_PROB
     $current_prod*= $prime_prod_cumulated[ $idx ] ** ($max_ki - $base_ki);
     for(my($ki)=$max_ki;$ki>=$base_ki;$ki--)
     {
-        for(my($j)=0;$j<=$idx;$j++)
-        {
-          $$rkis[$j] = $ki;
-        }
-        
-        recursive_solve_PROB( $idx - 1, $ki, $rkis, $current_prod, $rbestprod ); 
-        $current_prod/= $prime_prod_cumulated[ $idx ];
+      for(my($j)=0;$j<=$idx;$j++)
+      {
+        $$rkis[$j] = $ki;
+      }
+      
+      recursive_solve_PROB( $idx - 1, $ki, $rkis, $current_prod, $rbestprod ); 
+      $current_prod/= $prime_prod_cumulated[ $idx ];
     }
   }
 }
@@ -115,31 +112,30 @@ sub calc_max_ki
 
 sub prime_for_kis
 {
-    my($rkis,$rprimes_cumulated)=@_;
-    my($product)=1;
-    my($step)=0;
-    for(my($i)=$#$rkis;$i>=0;$i--)
+  my($rkis,$rprimes_cumulated)=@_;
+  my($product)=1;
+  my($step)=0;
+  for(my($i)=$#$rkis;$i>=0;$i--)
+  {
+    if( $$rkis[$i] == $step)
     {
-      if( $$rkis[$i] == $step)
-      {
-          next;
-      }
-      $product*=($$rprimes_cumulated[$i])**($$rkis[$i] - $step);
-      $step+=$$rkis[$i];
+      next;
     }
-    return $product;
+    $product*=($$rprimes_cumulated[$i])**($$rkis[$i] - $step);
+    $step+=$$rkis[$i];
+  }
+  return $product;
 }
 
 sub prod_kis
 {
-    my($rkis)=@_;
-    my($product)=1;
-    for(my($i)=0;$i<=$#$rkis;$i++)
-    {
-	    $product*=(2*$$rkis[$i]+1); 
-    }
-    return $product;
+  my($rkis)=@_;
+  my($product)=1;
+  for(my($i)=0;$i<=$#$rkis;$i++)
+  {
+    $product*=(2*$$rkis[$i]+1); 
+  }
+  return $product;
 }
-
 
 1;

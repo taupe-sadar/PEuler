@@ -110,7 +110,7 @@ my($sum)=0;
 my($i)=0;
 for($i=0;$i<=$#ARRAY;$i++)
 {
-	$sum+=$ARRAY[$i];
+  $sum+=$ARRAY[$i];
 }
 $sum=~m/^(\d{10})/;
 

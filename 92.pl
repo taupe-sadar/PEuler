@@ -39,19 +39,19 @@ sub loop_on_ascending_numbers
     my($str_identical)=join("",sort(@identical_numbers));
     if( !exists($cnk_identicals{$str_identical}) )
     {
-	    $cnk_identicals{$str_identical} = Permutations::nb_permutations_with_identical( @identical_numbers );
+      $cnk_identicals{$str_identical} = Permutations::nb_permutations_with_identical( @identical_numbers );
     }
     if( $end_of_chain == 89 )
     {
-	    $count_89 += $cnk_identicals{$str_identical};
+      $count_89 += $cnk_identicals{$str_identical};
     }
     elsif( $end_of_chain == 1)
     {
-	    $count_1 += $cnk_identicals{$str_identical};
+      $count_1 += $cnk_identicals{$str_identical};
     }
     elsif( $end_of_chain != 0 ) # 0 will be reach the first time
     {
-	    die "Not forseen end of chain $end_of_chain\n";
+      die "Not forseen end of chain $end_of_chain\n";
     }
   }
 }
