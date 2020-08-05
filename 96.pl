@@ -3,6 +3,7 @@ use warnings;
 use Data::Dumper;
 use FileHandle;
 use IPC::Open2;
+use MsysChomp;
 
 my( $OS ) = "win32";
 my( $sudoku_command ) ="";
@@ -112,7 +113,7 @@ sub run_process_sudoku
   my($solution)="";
   while(defined($line = <READER> ))
   {
-    msys_chomp( \$line );
+    MsysChomp::chomp( \$line );
     my($idx,@candidats)=get_candidats( $line );
     if( $#candidats > 0 )
     {
@@ -172,13 +173,4 @@ sub replace_in_input
     }
   }
   return $str;
-}
-
-sub msys_chomp
-{
-  my( $rline ) = @_;
-  while( $$rline =~ m/^(.*)(\r|\n)$/ )
-  {
-    $$rline = $1;
-  }
 }

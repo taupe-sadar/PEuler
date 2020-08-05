@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use MsysChomp;
 
 my($saved_chars)=0;
 
@@ -8,7 +9,7 @@ open( FILE, "89_roman.txt" );
 my($line)="";
 while( defined($line=<FILE>))
 {
-  chomp($line);
+  MsysChomp::chomp(\$line);
   $saved_chars+=calc_saved( $line );
 }
 
