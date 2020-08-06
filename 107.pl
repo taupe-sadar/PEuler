@@ -2,13 +2,14 @@ use strict;
 use warnings;
 use Data::Dumper;
 use List::Util qw( sum min max );
+use MsysChomp;
 
 open( FILE, "107_network.txt" );
 my($line)="";
 my(@network)=();
 while(defined($line=<FILE>))
 {
-  chomp($line);
+  MsysChomp::chomp(\$line);
   my(@array)=split(',',$line);
   push(@network,\@array);
 }
