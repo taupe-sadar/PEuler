@@ -5,11 +5,15 @@ use FileHandle;
 use IPC::Open2;
 use MsysChomp;
 
-my( $OS ) = "win32";
+my( $OS ) = "cygwin";
 my( $sudoku_command ) ="";
-if( $OS ne "win32" )
+if( $OS eq "win32" )
 {
   $sudoku_command = "sudoku.exe";
+}
+elsif( $OS eq "cygwin" )
+{
+  $sudoku_command ="./sudoku.exe";
 }
 else
 {
@@ -25,7 +29,7 @@ my($count_rows)=0;
 my($grid_number)=-1;
 while(defined($line = <SUDOKUS>))
 {
-  chomp($line);
+  MsysChomp::chomp(\$line);
   if($line =~ m/Grid (\d+)$/)
   {
     $input_string = "";
