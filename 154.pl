@@ -31,38 +31,23 @@ for(my($k)=0;$k<=$n;$k++)
   my($c2)=count_remainders(\@k2,\@n2);
   my($c5)=count_remainders(\@k5,\@n5);
   
-  # print "$k ($c2 $c5)\n";
-  
-  
-  ####
-  my(@m5)=(0)x($#pows5+1);
-  my(@m2)=(0)x($#pows2+1);
-  
-  
   my($need)=($multiple - $c5);
-  
-  if( $c5 >= 5 && $k >= $pows5[$need- 1] )
+  if( ($need - 1) <= $#pows5 && $k >= $pows5[$need- 1] )
   {
     my($count)=0;
+
     my($start)=(2*$k<$n)?0:(2*$k-$n);
-    for(my($m)=$start;2*$m<=$k;$m++)
+ 
+    my($is_multiple_2)=$c2<$multiple;
+    if(0 && $is_multiple_2)
     {
-      my($d5)=count_remainders(\@m5,\@k5);
-      
-      list_increment(\@m5,\@pows5);
-      
-      my($d2)=0;
-      if($c2<$multiple)
-      {
-        $d2 = count_remainders(\@m2,\@k2);
-        list_increment(\@m2,\@pows2);
-      }
-      
-      $count ++ if(($c2 + $d2 >= 12)  && ($c5 + $d5 >= 12));
-      
-      # print "2 : $c2 + $d2 / 5 : $c5 + $d5\n";
+      $count += brute_force_implem($start,$k,\@k5,\@k2,$c5,$c2,$is_multiple_2);
     }
-    
+    else
+    {
+      $count += brute_force_implem($start,$k,\@k5,\@k2,$c5,$c2,$is_multiple_2);
+    }
+
     if( $count > 0 )
     {
       print "$k ($c2): $count \n";
@@ -79,6 +64,35 @@ for(my($k)=0;$k<=$n;$k++)
 
   print "2 : $count2, 5 : $count5\n";
 
+sub brute_force_implem
+{
+  my($start,$k,$rk5,$rk2,$c5,$c2,$is_multiple_2)=@_;
+  my($count)=0;
+  my(@m5)=remainder($start,\@pows5);
+  my(@m2)=remainder($start,\@pows2);
+  for(my($m)=$start;2*$m<=$k;$m++)
+  {
+    my($d5)=count_remainders(\@m5,$rk5);
+    
+    list_increment(\@m5,\@pows5);
+    
+    my($d2)=0;
+    if($is_multiple_2)
+    {
+      $d2 = count_remainders(\@m2,$rk2);
+      list_increment(\@m2,\@pows2);
+    }
+    
+    $count ++ if(($c2 + $d2 >= 12)  && ($c5 + $d5 >= 12));
+  }
+  return $count;
+}
+
+sub simple_case_implem
+{
+  my($start,$k,$rk5,$rk2,$c5,$c2,$is_multiple_2)=@_;
+  
+}
 
 sub count_remainders
 {
