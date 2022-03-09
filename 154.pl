@@ -38,10 +38,10 @@ for(my($k)=0;$k<=$n;$k++)
 
     my($start)=(2*$k<$n)?0:(2*$k-$n);
  
-    my($is_multiple_2)=$c2<$multiple;
+    my($is_multiple_2)=$c2>=$multiple;
     if(0 && $is_multiple_2)
     {
-      $count += brute_force_implem($start,$k,\@k5,\@k2,$c5,$c2,$is_multiple_2);
+      $count += simple_case_implem($start,$k,\@k5,$c5);
     }
     else
     {
@@ -90,8 +90,32 @@ sub brute_force_implem
 
 sub simple_case_implem
 {
-  my($start,$k,$rk5,$rk2,$c5,$c2,$is_multiple_2)=@_;
-  
+  my($start,$k,$rk5,$c5)=@_;
+  my($pow5_idx)=$#pows5;
+  while($pow5_idx >=0 && $pows5[$pow5_idx] > $k )
+  {
+    $pow5_idx--;
+  }
+  return simple_case_implem_rec($start,$k,$rk5,$c5,$pow5_idx);
+}
+
+
+sub simple_case_implem_rec
+{
+  my($start,$k,$rk5,$c5,$pow5_idx)=@_;
+  if( $pow5_idx < 0 )
+  {
+    return 0;
+  }
+  else
+  {
+    #TODO : manage start, for now assume its 0
+    #TODO : manage end, for now assume its k
+    my($mod)=$$rk5[$pow5_idx];
+    my($rem)=$k%$mod;
+    my($num)=int($k/$mod);
+    return $num * simple_case_implem_rec(0,$k,$rk5,$c5,$pow5_idx) + ($num+1) * simple_case_implem_rec($rem,$k,$rk5,$c5,$pow5_idx - 1);
+  }
 }
 
 sub count_remainders
