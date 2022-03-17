@@ -27,7 +27,6 @@ print Dumper \@pows5; <STDIN>;
 
 for(my($k)=0;$k<=$n;$k++)
 {
-  
   my($c2)=count_remainders(\@k2,\@n2);
   my($c5)=count_remainders(\@k5,\@n5);
   
@@ -37,15 +36,15 @@ for(my($k)=0;$k<=$n;$k++)
     my($count)=0;
 
     my($start)=(2*$k<$n)?0:(2*$k-$n);
- 
+    my($end)= int($k/2);
     my($is_multiple_2)=$c2>=$multiple;
-    if(0 && $is_multiple_2)
+    if($is_multiple_2)
     {
-      $count += simple_case_implem($start,$k,\@k5,$c5);
+      $count += simple_case_implem($start,$end,\@k5,$c5);
     }
     else
     {
-      $count += brute_force_implem($start,$k,\@k5,\@k2,$c5,$c2,$is_multiple_2);
+      $count += brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2,$is_multiple_2);
     }
 
     if( $count > 0 )
@@ -66,18 +65,18 @@ for(my($k)=0;$k<=$n;$k++)
 
 sub brute_force_implem
 {
-  my($start,$k,$rk5,$rk2,$c5,$c2,$is_multiple_2)=@_;
+  my($start,$end,$rk5,$rk2,$c5,$c2,$is_multiple_2)=@_;
   my($count)=0;
   my(@m5)=remainder($start,\@pows5);
   my(@m2)=remainder($start,\@pows2);
-  for(my($m)=$start;2*$m<=$k;$m++)
+  for(my($m)=$start;$m<=$end;$m++)
   {
     my($d5)=count_remainders(\@m5,$rk5);
     
     list_increment(\@m5,\@pows5);
     
     my($d2)=0;
-    if($is_multiple_2)
+    if(!$is_multiple_2)
     {
       $d2 = count_remainders(\@m2,$rk2);
       list_increment(\@m2,\@pows2);
@@ -90,31 +89,102 @@ sub brute_force_implem
 
 sub simple_case_implem
 {
-  my($start,$k,$rk5,$c5)=@_;
+  my($start,$end,$rk5,$c5)=@_;
   my($pow5_idx)=$#pows5;
-  while($pow5_idx >=0 && $pows5[$pow5_idx] > $k )
-  {
-    $pow5_idx--;
-  }
-  return simple_case_implem_rec($start,$k,$rk5,$c5,$pow5_idx);
+  # while($pow5_idx >=0 && $pows5[$pow5_idx] > $end )
+  # {
+    # $pow5_idx--;
+  # }
+  # print Dumper $rk5;
+  # <STDIN>;
+  return simple_case_implem_rec($start,$end,$rk5,$multiple - $c5,$pow5_idx);
 }
 
 
 sub simple_case_implem_rec
 {
-  my($start,$k,$rk5,$c5,$pow5_idx)=@_;
-  if( $pow5_idx < 0 )
+  my($start,$end,$rk5,$need5,$pow5_idx)=@_;
+  
+  # my($ss)=" "x(6-$pow5_idx);
+  if( $pow5_idx >=-1 )
   {
+    # print "$ss$start,$end,$need5,$pow5_idx\n"; 
+    # <STDIN>;
+  }
+  
+  if( $pow5_idx + 1 < $need5 )
+  {
+    # print "$ss==> 0\n";
     return 0;
+  }
+  elsif($need5 == 0)
+  {
+    # print "$ss==> ".($end-$start+1)."\n";
+    return $end-$start+1;
+    
   }
   else
   {
-    #TODO : manage start, for now assume its 0
-    #TODO : manage end, for now assume its k
-    my($mod)=$$rk5[$pow5_idx];
-    my($rem)=$k%$mod;
-    my($num)=int($k/$mod);
-    return $num * simple_case_implem_rec(0,$k,$rk5,$c5,$pow5_idx) + ($num+1) * simple_case_implem_rec($rem,$k,$rk5,$c5,$pow5_idx - 1);
+    my($mod)=$pows5[$pow5_idx];
+    my($rem)=$$rk5[$pow5_idx];
+    
+    my($idx_start)=int($start/$mod);
+    my($idx_end)=int($end/$mod);
+    
+    my($pos_start)=$start%$mod;
+    my($pos_end)=$end%$mod;
+    
+    my($count)=0;
+    if($idx_start < $idx_end)
+    {
+      my($full_intervals) = $idx_end - $idx_start - 1;
+      my($multiples_intervals)= $full_intervals;
+      my($no_multiples_intervals)= $full_intervals;;
+      
+      if($pos_start <= $rem)
+      {
+        $no_multiples_intervals++;
+        $count+= simple_case_implem_rec($pos_start,$rem,$rk5,$need5,$pow5_idx-1);
+      }
+      else
+      {
+        $count+= simple_case_implem_rec($pos_start,$mod-1,$rk5,$need5-1,$pow5_idx-1);
+      }
+      
+      if($pos_end <= $rem)
+      {
+        $count+= simple_case_implem_rec(0,$pos_end,$rk5,$need5,$pow5_idx-1);
+      }
+      else
+      {
+        $multiples_intervals++;
+        $count+= simple_case_implem_rec($rem+1,$pos_end,$rk5,$need5-1,$pow5_idx-1);
+      }
+      
+      $count+= $multiples_intervals * simple_case_implem_rec(0,$rem,$rk5,$need5,$pow5_idx-1);
+      $count+= $no_multiples_intervals * simple_case_implem_rec($rem+1,$mod-1,$rk5,$need5-1,$pow5_idx-1);
+      
+      # print "$ss==> $count ($multiples_intervals, $no_multiples_intervals)\n";
+    }    
+    else
+    {
+      if($pos_end <= $rem)
+      {
+        $count+= simple_case_implem_rec($pos_start,$pos_end,$rk5,$need5,$pow5_idx-1);
+      }
+      elsif($pos_start > $rem)
+      {
+        $count+= simple_case_implem_rec($pos_start,$pos_end,$rk5,$need5-1,$pow5_idx-1);
+      }
+      else
+      {
+        $count+= simple_case_implem_rec($pos_start,$rem,$rk5,$need5,$pow5_idx-1);
+        $count+= simple_case_implem_rec($rem+1,$pos_end,$rk5,$need5-1,$pow5_idx-1);
+      }
+      
+      # print "$ss==> $count(1)\n";
+    }
+    return $count
   }
 }
 
