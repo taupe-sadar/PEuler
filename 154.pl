@@ -37,6 +37,8 @@ for(my($k)=0;$k<=$n;$k++)
 
     my($start)=(2*$k<$n)?0:(2*$k-$n);
     my($end)= int($k/2);
+    last if($end < $start);
+    
     my($is_multiple_2)=$c2>=$multiple;
     if($is_multiple_2)
     {
@@ -166,7 +168,7 @@ sub simple_case_implem_rec
       
       # print "$ss==> $count ($multiples_intervals, $no_multiples_intervals)\n";
     }    
-    else
+    elsif($idx_start == $idx_end)
     {
       if($pos_end <= $rem)
       {
@@ -184,7 +186,7 @@ sub simple_case_implem_rec
       
       # print "$ss==> $count(1)\n";
     }
-    return $count
+    return $count;
   }
 }
 
