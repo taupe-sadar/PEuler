@@ -46,7 +46,7 @@ for(my($k)=0;$k<=$n;$k++)
     }
     else
     {
-      $count += brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2,$is_multiple_2);
+      $count += brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
     }
 
     if( $count > 0 )
@@ -67,22 +67,17 @@ for(my($k)=0;$k<=$n;$k++)
 
 sub brute_force_implem
 {
-  my($start,$end,$rk5,$rk2,$c5,$c2,$is_multiple_2)=@_;
+  my($start,$end,$rk5,$rk2,$c5,$c2)=@_;
   my($count)=0;
   my(@m5)=remainder($start,\@pows5);
   my(@m2)=remainder($start,\@pows2);
   for(my($m)=$start;$m<=$end;$m++)
   {
     my($d5)=count_remainders(\@m5,$rk5);
-    
     list_increment(\@m5,\@pows5);
     
-    my($d2)=0;
-    if(!$is_multiple_2)
-    {
-      $d2 = count_remainders(\@m2,$rk2);
-      list_increment(\@m2,\@pows2);
-    }
+    my($d2) = count_remainders(\@m2,$rk2);
+    list_increment(\@m2,\@pows2);
     
     $count ++ if(($c2 + $d2 >= 12)  && ($c5 + $d5 >= 12));
   }
