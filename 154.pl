@@ -23,9 +23,9 @@ my(@k2)=(0)x($#pows2+1);
 my($count5)=0;
 my($count2)=0;
 
-print Dumper \@pows5;
-print Dumper \@pows2;
-<STDIN>;
+# print Dumper \@pows5;
+# print Dumper \@pows2;
+# <STDIN>;
 
 for(my($k)=0;$k<=$n;$k++)
 {
@@ -44,20 +44,30 @@ for(my($k)=0;$k<=$n;$k++)
     my($is_multiple_2)=$c2>=$multiple;
     if($is_multiple_2)
     {
-      $count += simple_case_implem($start,$end,\@k5,$c5);
+      $count += simple_case5_implem($start,$end,\@k5,$c5);
+    }
+    elsif(1)
+    {
+      my($count_5) = simple_case5_implem($start,$end,\@k5,$c5);
+      my($count_2) = simple_case2_implem($start,$end,\@k2,$c2);
+      my($count_brute) = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      
+      print "$k ($c2,$c5): 5 : $count_5, 2 : $count_2 (".($end-$start+1 - $count_2  )."), brute : $count_brute\n";
+      # <STDIN>;
     }
     else
     {
-      $count += double_case_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      $count += brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      # $count += double_case_implem($start,$end,\@k5,\@k2,$c5,$c2);
     }
     
     if(!$is_multiple_2)
     {
-      my($count2) = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
-      if( $count != $count2 )
-      {
-        print "$k ($c5)($c2) Error : => $count != $count2\n" 
-      }
+      # my($count2) = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      # if( $count != $count2 )
+      # {
+        # print "$k ($c5)($c2) Error : => $count != $count2\n" 
+      # }
     }
 
   }
@@ -69,6 +79,7 @@ for(my($k)=0;$k<=$n;$k++)
   if( $count > 0)
   {
     # print "$k ($c2): $count \n";
+    # <STDIN>;
   }
   
   #####
@@ -106,7 +117,7 @@ sub basic_count
   return $end - $start + 1;
 }
 
-sub simple_case_implem
+sub simple_case5_implem
 {
   my($start,$end,$rk5,$c5)=@_;
   my($pow5_idx)=$#pows5;
@@ -118,6 +129,20 @@ sub simple_case_implem
   # <STDIN>;
   my($cache)={};
   return simple_case_implem_rec($start,$end,$rk5,$multiple - $c5,$pow5_idx,\@pows5,\&basic_count,$cache);
+}
+
+sub simple_case2_implem
+{
+  my($start,$end,$rk2,$c2)=@_;
+  my($pow2_idx)=$#pows2;
+  # while($pow5_idx >=0 && $pows5[$pow5_idx] > $end )
+  # {
+    # $pow5_idx--;
+  # }
+  # print Dumper $rk5;
+  # <STDIN>;
+  my($cache)={};
+  return simple_case_implem_rec($start,$end,$rk2,$multiple - $c2,$pow2_idx,\@pows2,\&basic_count,$cache);
 }
 
 sub double_case_implem
@@ -141,7 +166,7 @@ sub simple_case_implem_rec
   my($key)="$start-$end-$need";
   return $$cache{$key} if(defined($cache) && exists($$cache{$key}));
   
-  # my($ss)=" "x($#$rpows-$pow_idx);
+  my($ss)=" "x($#$rpows-$pow_idx);
   if( $pow_idx >=-1 )
   {
     # print "$ss$start,$end,$need,$pow_idx\n"; 
@@ -153,7 +178,7 @@ sub simple_case_implem_rec
   {
     # print "$ss==> 0\n";
   }
-  elsif($need == 0)
+  elsif($need <= 0)
   {
     $count = &{$subroutune_count}($start,$end);
     # print "$ss==> $count\n";
