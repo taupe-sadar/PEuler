@@ -48,11 +48,13 @@ for(my($k)=0;$k<=$n;$k++)
     }
     elsif(1)
     {
-      my($count_5) = simple_case5_implem($start,$end,\@k5,$c5);
-      my($count_2) = simple_case2_implem($start,$end,\@k2,$c2);
-      my($count_brute) = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      my($count_5) = -1; #simple_case5_implem($start,$end,\@k5,$c5);
+      my($count_2) = -1; #simple_case2_implem($start,$end,\@k2,$c2);
+      my($count_brute) = -1; #brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
       my($count_smart)= melt_implem($start,$end,\@k5,$c5,\@k2,$c2);
-      
+      if( $k >= 132000 && $count_smart == 0) {
+        $count_brute = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      }
       print "$k ($c2,$c5): 5 : $count_5, 2 : $count_2 (".($end-$start+1 - $count_2  )."), brute : $count_brute, smart : $count_smart\n";
       # <STDIN>;
     }
