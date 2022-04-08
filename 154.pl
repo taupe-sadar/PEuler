@@ -51,8 +51,9 @@ for(my($k)=0;$k<=$n;$k++)
       my($count_5) = simple_case5_implem($start,$end,\@k5,$c5);
       my($count_2) = simple_case2_implem($start,$end,\@k2,$c2);
       my($count_brute) = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
+      my($count_smart)= melt_implem($start,$end,\@k5,$c5,\@k2,$c2);
       
-      print "$k ($c2,$c5): 5 : $count_5, 2 : $count_2 (".($end-$start+1 - $count_2  )."), brute : $count_brute\n";
+      print "$k ($c2,$c5): 5 : $count_5, 2 : $count_2 (".($end-$start+1 - $count_2  )."), brute : $count_brute, smart : $count_smart\n";
       # <STDIN>;
     }
     else
@@ -109,6 +110,76 @@ sub brute_force_implem
     $count ++ if(($c2 + $d2 >= 12)  && ($c5 + $d5 >= 12));
   }
   return $count;
+}
+
+sub melt_implem
+{
+  my($start,$end,$rk5,$c5,$rk2,$c2)=@_;
+  my($cache5)={};
+  my($pow2_idx)=$#pows2;
+  my($pow5_idx)=$#pows5;
+  my($cache)={};
+  return melt_implem_rec($start,$end,$rk5,$multiple - $c5, $pow5_idx, $rk2,$multiple - $c2, $pow2_idx, $cache);
+}
+
+sub melt_implem_rec
+{
+  my($start,$end,$rk5,$need5, $pow5_idx,$rk2,$need2, $pow2_idx, $cache5)=@_;
+  
+  return 0 if( $pow5_idx + 1 < $need5 );
+  return 0 if( $pow2_idx + 1 < $need2 );
+  
+  if( $need2 <= 0 )
+  {
+    return simple_case_implem_rec($start,$end,$rk5,$need5,$pow5_idx,\@pows5,\&basic_count,$cache5);
+  }
+  else
+  {
+    my($rk,$need,$pow_idx,$rpows);
+    
+    # print "$start,$end,$need5, $pow5_idx,$need2, $pow2_idx\n";
+    
+    my($step2)= ($need5 <= 0) || $pows5[$pow5_idx] < $pows2[$pow2_idx];
+    if( $step2 )
+    {
+      ($rk,$need,$pow_idx,$rpows) = ($rk2,$need2,$pow2_idx,\@pows2);
+    }
+    else
+    {
+      ($rk,$need,$pow_idx,$rpows) = ($rk5,$need5,$pow5_idx,\@pows5);
+    }
+    
+    my($mod)=$$rpows[$pow_idx];
+    my($rem)=$$rk[$pow_idx];
+    my($current_start)=$start;
+    my($count)=0;
+    while($current_start <= $end)
+    {
+      my($prev_mod)= int($current_start/$mod)*$mod;
+      my($next_mod)= $prev_mod + $mod - 1;
+      my($rem_border) = $prev_mod + $rem;
+      my($ismultiple, $current_end) = (0,0);
+      if( $rem_border < $current_start )
+      {
+        ($ismultiple, $current_end) = (1,$next_mod);
+      }
+      else
+      {
+        ($ismultiple, $current_end) = (0,$rem_border)
+      }
+      $current_end = $end if( $current_end > $end );
+      if($step2)
+      {
+        $count += melt_implem_rec($current_start,$current_end,$rk5,$need5, $pow5_idx,$rk2,$need2 - $ismultiple, $pow2_idx-1, $cache5);
+      }
+      else
+      {
+        $count += melt_implem_rec($current_start,$current_end,$rk5,$need5 - $ismultiple, $pow5_idx - 1,$rk2,$need2, $pow2_idx, $cache5);
+      }
+      $current_start = $current_end + 1;
+    }
+    return $count;
+  }
 }
 
 sub basic_count
