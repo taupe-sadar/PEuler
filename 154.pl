@@ -27,6 +27,9 @@ my($count2)=0;
 # print Dumper \@pows2;
 # <STDIN>;
 
+my($global_count)=0;
+my(@zones)=(0,0,0,0,0,0);
+my(@diags)=(0,0,0);
 for(my($k)=0;$k<=$n;$k++)
 {
   my($c2)=count_remainders(\@k2,\@n2);
@@ -41,28 +44,11 @@ for(my($k)=0;$k<=$n;$k++)
     my($end)= int($k/2);
     last if($end < $start);
     
-    my($is_multiple_2)=$c2>=$multiple;
-    if($is_multiple_2)
-    {
-      $count += simple_case5_implem($start,$end,\@k5,$c5);
-    }
-    elsif(1)
-    {
-      my($count_5) = -1; #simple_case5_implem($start,$end,\@k5,$c5);
-      my($count_2) = -1; #simple_case2_implem($start,$end,\@k2,$c2);
-      my($count_brute) = -1; #brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
-      my($count_smart)= melt_implem($start,$end,\@k5,$c5,\@k2,$c2);
-      if( $k >= 132000 && $count_smart == 0) {
-        $count_brute = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
-      }
-      print "$k ($c2,$c5): 5 : $count_5, 2 : $count_2 (".($end-$start+1 - $count_2  )."), brute : $count_brute, smart : $count_smart\n";
-      # <STDIN>;
-    }
-    else
-    {
-      $count += brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
-      # $count += double_case_implem($start,$end,\@k5,\@k2,$c5,$c2);
-    }
+    # my($start)=0;
+    # my($end)=$k;
+    
+    $count += all_implem($start,$end,\@k5,\@k2,$c5,$c2);
+    
     
     if(!$is_multiple_2)
     {
@@ -72,7 +58,23 @@ for(my($k)=0;$k<=$n;$k++)
         # print "$k ($c5)($c2) Error : => $count != $count2\n" 
       # }
     }
-
+    
+    $global_count += 6 *$count;
+    if( $end*2 == $k )
+    {
+      my($d2)=simple_count($end,\@k2,\@pows2);
+      my($d5)=simple_count($end,\@k5,\@pows5);
+      $global_count += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+      $annex_1 += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+    }
+    
+    {
+      my($d2)=simple_count($start,\@k2,\@pows2);
+      my($d5)=simple_count($start,\@k5,\@pows5);
+      $global_count -= 3 if($d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+      $annex_2 += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+    }
+    # $global_count += $count;
   }
   else 
   {
@@ -81,7 +83,7 @@ for(my($k)=0;$k<=$n;$k++)
 
   if( $count > 0)
   {
-    # print "$k ($c2): $count \n";
+    print "$k ($c2): $count \n";
     # <STDIN>;
   }
   
@@ -92,8 +94,30 @@ for(my($k)=0;$k<=$n;$k++)
   list_increment(\@k2,\@pows2);  
   list_increment(\@k5,\@pows5);
 }
+print "$global_count\n";
+print "$annex_1 $annex_2";
+# print "2 : $count2, 5 : $count5\n";
 
-print "2 : $count2, 5 : $count5\n";
+sub simple_count
+{
+  my($x,$rk,$rpows)=@_;
+  my(@r) = remainder($x,$rpows);
+  return count_remainders(\@r,$rk);
+}
+
+sub all_implem
+{
+  my($start,$end,$rk5,$rk2,$c5,$c2)=@_;
+  if($c2>=$multiple)
+  {
+    $count += simple_case5_implem($start,$end,\@k5,$c5);
+  }
+  else
+  {
+    $count += melt_implem($start,$end,\@k5,$c5,\@k2,$c2);
+  }
+}
+
 
 sub brute_force_implem
 {
