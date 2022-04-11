@@ -49,8 +49,7 @@ for(my($k)=0;$k<=$n;$k++)
     
     $count += all_implem($start,$end,\@k5,\@k2,$c5,$c2);
     
-    
-    if(!$is_multiple_2)
+    if($c2<$multiple)
     {
       # my($count2) = brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
       # if( $count != $count2 )
@@ -65,14 +64,12 @@ for(my($k)=0;$k<=$n;$k++)
       my($d2)=simple_count($end,\@k2,\@pows2);
       my($d5)=simple_count($end,\@k5,\@pows5);
       $global_count += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
-      $annex_1 += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
     }
     
     {
       my($d2)=simple_count($start,\@k2,\@pows2);
       my($d5)=simple_count($start,\@k5,\@pows5);
       $global_count -= 3 if($d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
-      $annex_2 += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
     }
     # $global_count += $count;
   }
@@ -95,7 +92,6 @@ for(my($k)=0;$k<=$n;$k++)
   list_increment(\@k5,\@pows5);
 }
 print "$global_count\n";
-print "$annex_1 $annex_2";
 # print "2 : $count2, 5 : $count5\n";
 
 sub simple_count
@@ -110,11 +106,11 @@ sub all_implem
   my($start,$end,$rk5,$rk2,$c5,$c2)=@_;
   if($c2>=$multiple)
   {
-    $count += simple_case5_implem($start,$end,\@k5,$c5);
+    return simple_case5_implem($start,$end,\@k5,$c5);
   }
   else
   {
-    $count += melt_implem($start,$end,\@k5,$c5,\@k2,$c2);
+    return melt_implem($start,$end,\@k5,$c5,\@k2,$c2);
   }
 }
 
