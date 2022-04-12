@@ -40,12 +40,13 @@ for(my($k)=0;$k<=$n;$k++)
   if( ($need - 1) <= $#pows5 && $k >= $pows5[$need- 1] )
   {
 
-    my($start)=(2*$k<$n)?0:(2*$k-$n);
-    my($end)= int($k/2);
-    last if($end < $start);
+    #Base implem
+    # my($start)=(2*$k<$n)?0:(2*$k-$n);
+    # my($end)= int($k/2);
+    # last if($end < $start);
     
-    # my($start)=0;
-    # my($end)=$k;
+    my($start)=0;
+    my($end)=$k;
     
     $count += all_implem($start,$end,\@k5,\@k2,$c5,$c2);
     
@@ -61,15 +62,11 @@ for(my($k)=0;$k<=$n;$k++)
     $global_count += 6 *$count;
     if( $end*2 == $k )
     {
-      my($d2)=simple_count($end,\@k2,\@pows2);
-      my($d5)=simple_count($end,\@k5,\@pows5);
-      $global_count += 3 if( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+      $global_count += 3 if(unique_count($end,\@k2,\@k5,$c2,$c5));
     }
     
     {
-      my($d2)=simple_count($start,\@k2,\@pows2);
-      my($d5)=simple_count($start,\@k5,\@pows5);
-      $global_count -= 3 if($d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+      $global_count -= 3 if(unique_count($start,\@k2,\@k5,$c2,$c5));
     }
     # $global_count += $count;
   }
@@ -93,6 +90,15 @@ for(my($k)=0;$k<=$n;$k++)
 }
 print "$global_count\n";
 # print "2 : $count2, 5 : $count5\n";
+
+sub unique_count
+{
+  my($val,$rk2,$rk5,$c2,$c5)=@_;
+  my($d2)=simple_count($val,$rk2,\@pows2);
+  my($d5)=simple_count($val,$rk5,\@pows5);
+  return ( $d2 + $c2 >= $multiple && $d5+ $c5 >= $multiple);
+}
+
 
 sub simple_count
 {
