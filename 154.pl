@@ -15,11 +15,6 @@ my(@pows2)=pows_list($p2,$n);
 my(@n5)=remainder($n,\@pows5);
 my(@n2)=remainder($n,\@pows2);
 
-
-my(@k5)=(0)x($#pows5+1);
-my(@k2)=(0)x($#pows2+1);
-
-
 my($count5)=0;
 my($count2)=0;
 
@@ -28,13 +23,10 @@ my($count2)=0;
 # <STDIN>;
 
 my($global_count)=0;
-my(@zones)=(0,0,0,0,0,0);
-my(@diags)=(0,0,0);
-
 
 my($begin)=0;
-@k5 = remainder($begin,\@pows5);
-@k2 = remainder($begin,\@pows2);
+my(@k5) = remainder($begin,\@pows5);
+my(@k2) = remainder($begin,\@pows2);
 
 for(my($k)=$begin;$k<=$n;$k++)
 {
@@ -46,104 +38,11 @@ for(my($k)=$begin;$k<=$n;$k++)
   my($need)=($multiple - $c5);
   if( ($need - 1) <= $#pows5 && $k >= $pows5[$need- 1] )
   {
-
-    #Base implem
-    # my($start)=(2*$k<$n)?0:(2*$k-$n);
-    # my($end)= int($k/2);
-    # last if($end < $start);
-    
-    my($start)=0;
-    my($end)=$k;
-    
-    #Diag 0
-    if( $k%2 == 0 )
-    {
-      my($diag) = unique_count($k/2,\@k2,\@k5,$c2,$c5)?1:0;
-      $count2+= 1 if($diag);
-      $diags[0]+= 1 if($diag);
-    }
-    #Diag 1
-    if( $k >=$n/2 )
-    {
-      my($diag) = unique_count(2*$k - $n,\@k2,\@k5,$c2,$c5)?1:0;
-      $count2 += 1 if($diag);
-      $diags[1]+= 1 if($diag);
-    }
-    #Diag 2
-    if( $k >=$n/2 )
-    {
-      my($diag) = unique_count($n-$k,\@k2,\@k5,$c2,$c5)?1:0;
-      $count2+= 1 if($diag);
-      $diags[2]+= 1 if($diag);
-    }
-
-    #Zone0
-    my($sz0)=($k < $n/2)?$start:(2*$k-$n+1);
-    my($ez0)=($k%2 == 0)?($k/2-1):(($k-1)/2);
-    if(($k < 2*$n/3) && ($sz0 <= $ez0) )
-    {
-      my($zone) = all_implem($sz0,$ez0,\@k5,\@k2,$c5,$c2);
-      $count2 += $zone; 
-      $zones[0] += $zone;
-    }
-    #Zone1
-    my($sz1)=($k%2 == 0)?($ez0+2):($ez0+1);
-    my($ez1)=($k < $n/2)?$end:($n-$k-1);
-    if(($k < 2*$n/3) && ($sz1 <= $ez1) )
-    {
-      my($zone) = all_implem($sz1,$ez1,\@k5,\@k2,$c5,$c2);
-      $count2 += $zone; 
-      $zones[1] += $zone;
-    }
-    #Zone2
-    my($sz2)=$start;
-    my($ez2)=($k < 2*$n/3)?($sz0-2):$ez1;
-    if(($k > $n/2) && ($sz2 <= $ez2) )
-    {
-      my($zone) = all_implem($sz2,$ez2,\@k5,\@k2,$c5,$c2);
-      $count2 += $zone; 
-      $zones[2] += $zone;
-    }
-    #Zone3
-    my($sz3)=($k < 2*$n/3)?($ez1+2):$sz0;
-    my($ez3)=$end;
-    if(($k > $n/2) && ($sz3 <= $ez3) )
-    {
-      my($zone) = all_implem($sz3,$ez3,\@k5,\@k2,$c5,$c2);
-      $count2 += $zone; 
-      $zones[3] += $zone;
-    }
-    #Zone4
-    my($sz4)=$ez2+2;
-    my($ez4)=$ez0;
-    if(($k > 2*$n/3) && ($sz4 <= $ez4) )
-    {
-      my($zone) = all_implem($sz4,$ez4,\@k5,\@k2,$c5,$c2);
-      $count2 += $zone; 
-      $zones[4] += $zone;
-    }
-    #Zone5
-    my($sz5)=$sz1;
-    my($ez5)=$sz3-2;
-    if(($k > 2*$n/3) && ($sz5 <= $ez5) )
-    {
-      my($zone) = all_implem($sz5,$ez5,\@k5,\@k2,$c5,$c2);
-      $count2 += $zone; 
-      $zones[5] += $zone;
-    }
+    my($start)=(2*$k<$n)?0:(2*$k-$n);
+    my($end)= int($k/2);
+    last if($end < $start);
     
     $count += all_implem($start,$end,\@k5,\@k2,$c5,$c2);
-    
-    if($count!=$count2)
-    {
-      my($true_count)= brute_force_implem($start,$end,\@k5,\@k2,$c5,$c2);
-      print "($k) : (all)$count != $count2(dec) -> correct : $true_count\n"; 
-      print Dumper \@zones;
-      print Dumper \@diags;
-      <STDIN>;
-    }
-    
-    
     
     if($c2<$multiple)
     {
@@ -155,9 +54,9 @@ for(my($k)=$begin;$k<=$n;$k++)
     }
     
     $global_count += 6 *$count;
-    if( $end*2 == $k )
+    if( $k%2 == 0 )
     {
-      $global_count += 3 if(unique_count($end,\@k2,\@k5,$c2,$c5));
+      $global_count -= 3 if(unique_count($end,\@k2,\@k5,$c2,$c5));
     }
     
     {
@@ -185,9 +84,6 @@ for(my($k)=$begin;$k<=$n;$k++)
 }
 print "$global_count\n";
 # print "2 : $count2, 5 : $count5\n";
-
-print Dumper \@zones;
-print Dumper \@diags;
 
 sub unique_count
 {
