@@ -360,7 +360,7 @@ sub simple_case_implem_rec
 {
   my($start,$end,$rk,$need,$pow_idx,$rpows,$subroutune_count,$cache)=@_;
   
-  my($key)="$start-$end-$need";
+  my($key)="$start-$end-$need-$pow_idx";
   return $$cache{$key} if(defined($cache) && exists($$cache{$key}));
   
   my($ss)=" "x($#$rpows-$pow_idx);
