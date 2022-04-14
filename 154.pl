@@ -71,7 +71,7 @@ for(my($k)=$begin;$k<=$n;$k++)
 
   if( $count > 0)
   {
-    print "$k ($c2): $count \n";
+    # print "$k ($c2): $count \n";
     # <STDIN>;
   }
   
@@ -82,7 +82,7 @@ for(my($k)=$begin;$k<=$n;$k++)
   list_increment(\@k2,\@pows2);  
   list_increment(\@k5,\@pows5);
 }
-print "$global_count\n";
+print $global_count;
 # print "2 : $count2, 5 : $count5\n";
 
 sub unique_count
@@ -149,6 +149,7 @@ sub melt_implem_rec
   my($start,$end,$rk5,$need5, $pow5_idx,$rk2,$need2, $pow2_idx, $cache5)=@_;
   
   return 0 if( $pow5_idx + 1 < $need5 );
+  return 0 if( $$rk5[0] +1 == $pows5[0] && $pow5_idx < $need5 );
   return 0 if( $pow2_idx + 1 < $need2 );
   
   if( $need2 <= 0 )
@@ -175,9 +176,9 @@ sub melt_implem_rec
     my($rem)=$$rk[$pow_idx];
     my($current_start)=$start;
     my($count)=0;
+    my($prev_mod)= $start - ($start%$mod);
     while($current_start <= $end)
     {
-      my($prev_mod)= int($current_start/$mod)*$mod;
       my($next_mod)= $prev_mod + $mod - 1;
       my($rem_border) = $prev_mod + $rem;
       my($ismultiple, $current_end) = (0,0);
@@ -198,6 +199,7 @@ sub melt_implem_rec
       {
         $count += melt_implem_rec($current_start,$current_end,$rk5,$need5 - $ismultiple, $pow5_idx - 1,$rk2,$need2, $pow2_idx, $cache5);
       }
+      $prev_mod += $mod if($current_end == $next_mod);
       $current_start = $current_end + 1;
     }
     return $count;
@@ -267,7 +269,7 @@ sub simple_case_implem_rec
   }
   
   my($count)=0;
-  if( $pow_idx + 1 < $need )
+  if( $pow_idx + 1 < $need  || ($$rk[0] +1 == $$rpows[0] && $pow_idx < $need ) )
   {
     # print "$ss==> 0\n";
   }
