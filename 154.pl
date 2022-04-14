@@ -47,12 +47,6 @@ for(my($k)=$begin;$k<=$n;$k++)
       $global_count -= 3 if(unique_count($start,\@k2,\@k5,$c2,$c5));
     }
   }
-
-  if( $count > 0)
-  {
-    # print "$k ($c2): $count \n";
-    # <STDIN>;
-  }
   
   list_increment(\@k2,\@pows2);  
   list_increment(\@k5,\@pows5);
@@ -189,26 +183,6 @@ sub simple_case5_implem
   my($start,$end,$rk5,$c5)=@_;
   my($cache)={};
   return simple_case_implem_rec($start,$end,$rk5,$multiple - $c5,$#pows5,\@pows5,\&basic_count,$cache);
-}
-
-sub simple_case2_implem
-{
-  my($start,$end,$rk2,$c2)=@_;
-  my($cache)={};
-  return simple_case_implem_rec($start,$end,$rk2,$multiple - $c2,$#pows2,\@pows2,\&basic_count,$cache);
-}
-
-sub double_case_implem
-{
-  my($start,$end,$rk5,$rk2,$c5,$c2)=@_;
-  
-  my($deep_cache)={};
-  my($simple_implem)= sub {
-    my($s,$e)=@_;
-    simple_case_implem_rec($s,$e,$rk5,$multiple - $c5,$#pows5,\@pows5,\&basic_count,$deep_cache);
-  };
-  my($cache) = undef;
-  return simple_case_implem_rec($start,$end,$rk2,$multiple - $c2,$#pows2,\@pows2,$simple_implem,$cache);
 }
 
 sub simple_case_implem_rec
