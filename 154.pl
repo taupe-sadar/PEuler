@@ -3,6 +3,24 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+# The p valuation of C(n,k) can be calculated this way :
+# First, p valuation of a!
+# V_p(a!) = sum( floor(a/p^i) )
+#         = sum( ( a - aj)/p^i ) (with aj = a % p^i ) 
+# Then, with n = k + l, ni= n % p^i, ki= k % p^i, li= l % p^i
+# V_p( C(n,k) ) = V_p(n!) - V_p(k!) - V_p(l!)
+#               = sum( ( kj + lj - nj )/p^i )
+# The quantity ( kj + lj - nj )/p^i, is either 0, or 1, iff kj > nj (think in the space Z/p^iZ)
+# Then, the only important criteria for determining the multiple p, (p= 2 or 5 ) is kj > nj.
+#
+# For the Triangular coefficient T(n,k,l) :
+# T(n,k,l) = n!/(k! * l! * (n-k-l)!)
+#          = C(n,k) * C(n-k,l)
+# With a variable change, as C(n,k) = C(n,n-k) we use 
+#   T(n,k,l) = C(n,k) * C(k,l)
+# 
+# So we process 2 loops, one processing C(n,k), counting the multiplicity of 2s and 5s, the other processing C(k,l)
+
 my($n)=200000;
 my($p5)=5;
 my($p2)=2;
