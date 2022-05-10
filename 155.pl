@@ -42,7 +42,7 @@ for(my($i)=2;$i<=$n;$i++)
         push(@candidates,$valj + $valk);
         push(@candidates,$valk->inverse() + $valj);
         
-        # if($j > 1)
+        if($j > 1)
         {
           push(@candidates,$valj->inverse() + $valk);
         }
