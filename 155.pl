@@ -47,8 +47,7 @@ for(my($i)=2;$i<=$n;$i++)
           push(@candidates,$valj->inverse() + $valk);
         }
         {
-          my($tmp)=$valj->inverse() + $valk->inverse();
-          my($harmonic)=$tmp->inverse();
+          my($harmonic)=$valj->inverse() + $valk->inverse();
           if( $harmonic->numerator() < $harmonic->denominator() )
           {
             $harmonic = $harmonic->inverse();
