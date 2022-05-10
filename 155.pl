@@ -40,17 +40,18 @@ for(my($i)=2;$i<=$n;$i++)
         my(@candidates)=();
         
         push(@candidates,$valj + $valk);
-        push(@candidates,Fraction->new(1)/$valk + $valj);
+        push(@candidates,$valk->inverse() + $valj);
         
         # if($j > 1)
         {
-          push(@candidates,Fraction->new(1)/$valj + $valk);
+          push(@candidates,$valj->inverse() + $valk);
         }
         {
-          my($harmonic)=Fraction->new(1)/((Fraction->new(1))/$valj + Fraction->new(1)/$valk);
+          my($tmp)=$valj->inverse() + $valk->inverse();
+          my($harmonic)=$tmp->inverse();
           if( $harmonic->numerator() < $harmonic->denominator() )
           {
-            $harmonic = Fraction->new(1)/$harmonic;
+            $harmonic = $harmonic->inverse();
           }
           push(@candidates,$harmonic);
         }

@@ -90,6 +90,12 @@ sub divide
   return $a* $f;
 }
 
+sub inverse
+{
+  my($a)=@_;
+  return Fraction->new($a->[1], $a->[0])
+}
+
 sub egal
 {
   my($a,$b)=@_;
