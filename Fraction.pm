@@ -38,12 +38,6 @@ sub denominator
   return $this->[1];
 }
 
-sub string_fraction
-{
-  my($this)=@_;
-  return "".$this->[0]."/".$this->[1];
-}
-
 sub eval_fraction
 {
   my($this)=@_;
