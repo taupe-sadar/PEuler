@@ -16,11 +16,20 @@ use overload
 
 sub new
 {
-  my ($class,$numerator,$denominator) = @_;
+  my ($class,$numerator,$denominator, $reduce ) = @_;
   $denominator = 1 unless(defined($denominator));
+  $reduce = 1 unless(defined($reduce));
 
-  my($gcd)=Gcd::pgcd($numerator,$denominator);
-  my $this = [$numerator/$gcd,$denominator/$gcd];
+  my($this);
+  if($reduce)
+  {
+    my($gcd)=Gcd::pgcd($numerator,$denominator);
+    $this = [$numerator/$gcd,$denominator/$gcd];
+  }
+  else
+  {
+    $this = [$numerator,$denominator];
+  }
   bless($this, $class);
 
   return $this;
@@ -90,7 +99,7 @@ sub divide
 sub inverse
 {
   my($a)=@_;
-  return Fraction->new($a->[1], $a->[0])
+  return Fraction->new($a->[1], $a->[0], 0 )
 }
 
 sub egal
