@@ -53,8 +53,7 @@ sub plus
     return Fraction->new(0/1);
   }
   my($d)= $a->[1]*$b->[1];
-  my($gcd)=Gcd::pgcd($n,$d);
-  return Fraction->new($n/$gcd,$d/$gcd); 
+  return Fraction->new($n,$d); 
 }
 
 sub multiply
@@ -64,11 +63,9 @@ sub multiply
   {
     return Fraction->new(0/1);
   }
-  my($gcd1)= Gcd::pgcd($a->[0],$b->[1]);
-  my($gcd2)= Gcd::pgcd($b->[0],$a->[1]);
-  my($n)= $a->[0]/$gcd1*$b->[0]/$gcd2;
+  my($n)= $a->[0]*$b->[0];
   
-  my($d)= $a->[1]/$gcd2*$b->[1]/$gcd1;
+  my($d)= $a->[1]*$b->[1];
   
   return Fraction->new($n,$d); 
 }
