@@ -53,8 +53,6 @@ sub eval_fraction
 sub plus
 {
   my($a,$b)=@_;
-  assertFracton(\$a);
-  assertFracton(\$b);
   my($n)= $a->[0]*$b->[1] + $b->[0]*$a->[1];
   if($n==0)
   {
@@ -68,8 +66,6 @@ sub plus
 sub multiply
 {
   my($a,$b)=@_;
-  assertFracton(\$a);
-  assertFracton(\$b);
   if($a->[0]==0 || $b->[0]==0  )
   {
     return Fraction->new(0/1);
@@ -90,14 +86,12 @@ sub minus
   {
     ($a,$b)=($b,$a);
   }
-  assertFracton(\$b);
   return $a+ Fraction->new( - $b->[0], $b->[1]);
 }
 
 sub divide
 {
   my($a,$b,$swap)=@_;
-  assertFracton(\$b);
   my($f)= Fraction->new($b->[1], $b->[0]);
   return $a* $f;
 }
@@ -105,16 +99,12 @@ sub divide
 sub egal
 {
   my($a,$b)=@_;
-  assertFracton(\$a);
-  assertFracton(\$b);
   return ( $a->[0] == $b->[0] && $a->[1] == $b->[1] );
 }
 
 sub inegal
 {
   my($a,$b)=@_;
-  assertFracton(\$a);
-  assertFracton(\$b);
   return ( $a->[0] != $b->[0] || $a->[1] != $b->[1] );
 }
 
@@ -123,14 +113,4 @@ sub print_frac
   my($a)=@_;
   return $a->[0]."/".$a->[1];
 }
-
-sub assertFracton
-{ 
-  my($ref)=@_;
-  if(ref($ref) eq "SCALAR")
-  {
-    $$ref = Fraction->new( $$ref);
-  }
-}
-
 1;
