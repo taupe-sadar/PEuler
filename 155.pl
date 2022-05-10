@@ -4,7 +4,7 @@ use warnings;
 use Data::Dumper;
 use Fraction;
 
-my(%values)=(1=>{"60/1" => Fraction->new(60)});
+my(%values)=(1=>{"1/1" => Fraction->new(1)});
 
 my($n)=18;
 
@@ -18,11 +18,24 @@ for(my($i)=2;$i<=$n;$i++)
     {
       foreach my $valk (values(%{$values{$k}}))
       {
-        my($sum)=$valj + $valk;
-        my($harmonic)=Fraction->new(1)/((Fraction->new(1))/$valj + Fraction->new(1)/$valk);
+        my(@candidates)=();
         
-        my(@candidates)=($sum,$harmonic);
+        push(@candidates,$valj + $valk);
+        push(@candidates,Fraction->new(1)/$valk + $valj);
         
+        # if($j > 1)
+        {
+          push(@candidates,Fraction->new(1)/$valj + $valk);
+        }
+        {
+          my($harmonic)=Fraction->new(1)/((Fraction->new(1))/$valj + Fraction->new(1)/$valk);
+          if( $$harmonic{"numerator"} < $$harmonic{"denominator"})
+          {
+            $harmonic = Fraction->new(1)/$harmonic;
+          }
+          push(@candidates,$harmonic);
+        }
+
         foreach my $c (@candidates)
         {
           my($key)=Fraction::print_frac($c);
