@@ -196,11 +196,11 @@ sub browse_hypothesis
   {
     my($frac)=$$rallhypos[$i]{"value"};
     
-    my($denom)=$frac->{"denominator"};
+    my($denom)=$frac->denominator();
     my($d)=Gcd::pgcd($denom,$pexp2);
     my($boost)=$pexp2/$d;
     
-    my($val) = $frac->{"numerator"}*$boost* Bezout::znz_inverse($denom/$d,$p2);
+    my($val) = $frac->numerator()*$boost* Bezout::znz_inverse($denom/$d,$p2);
     $val = $val%$p2;
     
     if( !exists($values_hypos{$val}) )

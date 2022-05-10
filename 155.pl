@@ -48,7 +48,7 @@ for(my($i)=2;$i<=$n;$i++)
         }
         {
           my($harmonic)=Fraction->new(1)/((Fraction->new(1))/$valj + Fraction->new(1)/$valk);
-          if( $$harmonic{"numerator"} < $$harmonic{"denominator"})
+          if( $harmonic->numerator() < $harmonic->denominator() )
           {
             $harmonic = Fraction->new(1)/$harmonic;
           }

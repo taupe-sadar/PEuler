@@ -17,31 +17,37 @@ use overload
 sub new
 {
   my ($class,$numerator,$denominator) = @_;
-  if(!defined($denominator))
-  {
-    $denominator = 1;
-  }
-  my $this = {};
-  bless($this, $class);
-  $this->{"numerator"} = $numerator;
-  $this->{"denominator"} = $denominator;
+  $denominator = 1 unless(defined($denominator));
+
   my($gcd)=Gcd::pgcd($numerator,$denominator);
-  $this->{"numerator"} = $numerator/$gcd;
-  $this->{"denominator"} = $denominator/$gcd;
+  my $this = [$numerator/$gcd,$denominator/$gcd];
+  bless($this, $class);
 
   return $this;
+}
+
+sub numerator
+{
+  my($this)=@_;
+  return $this->[0];
+}
+
+sub denominator
+{
+  my($this)=@_;
+  return $this->[1];
 }
 
 sub string_fraction
 {
   my($this)=@_;
-  return "".$this->{"numerator"}."/".$this->{"denominator"};
+  return "".$this->[0]."/".$this->[1];
 }
 
 sub eval_fraction
 {
   my($this)=@_;
-  return $this->{"numerator"}/$this->{"denominator"};
+  return $this->[0]/$this->[1];
 }
 
 sub plus
@@ -49,12 +55,12 @@ sub plus
   my($a,$b)=@_;
   assertFracton(\$a);
   assertFracton(\$b);
-  my($n)= $a->{"numerator"}*$b->{"denominator"} + $b->{"numerator"}*$a->{"denominator"};
+  my($n)= $a->[0]*$b->[1] + $b->[0]*$a->[1];
   if($n==0)
   {
     return Fraction->new(0/1);
   }
-  my($d)= $a->{"denominator"}*$b->{"denominator"};
+  my($d)= $a->[1]*$b->[1];
   my($gcd)=Gcd::pgcd($n,$d);
   return Fraction->new($n/$gcd,$d/$gcd); 
 }
@@ -64,15 +70,15 @@ sub multiply
   my($a,$b)=@_;
   assertFracton(\$a);
   assertFracton(\$b);
-  if($a->{"numerator"}==0 || $b->{"numerator"}==0  )
+  if($a->[0]==0 || $b->[0]==0  )
   {
     return Fraction->new(0/1);
   }
-  my($gcd1)= Gcd::pgcd($a->{"numerator"},$b->{"denominator"});
-  my($gcd2)= Gcd::pgcd($b->{"numerator"},$a->{"denominator"});
-  my($n)= $a->{"numerator"}/$gcd1*$b->{"numerator"}/$gcd2;
+  my($gcd1)= Gcd::pgcd($a->[0],$b->[1]);
+  my($gcd2)= Gcd::pgcd($b->[0],$a->[1]);
+  my($n)= $a->[0]/$gcd1*$b->[0]/$gcd2;
   
-  my($d)= $a->{"denominator"}/$gcd2*$b->{"denominator"}/$gcd1;
+  my($d)= $a->[1]/$gcd2*$b->[1]/$gcd1;
   
   return Fraction->new($n,$d); 
 }
@@ -85,14 +91,14 @@ sub minus
     ($a,$b)=($b,$a);
   }
   assertFracton(\$b);
-  return $a+ Fraction->new( - $b->{"numerator"}, $b->{"denominator"});
+  return $a+ Fraction->new( - $b->[0], $b->[1]);
 }
 
 sub divide
 {
   my($a,$b,$swap)=@_;
   assertFracton(\$b);
-  my($f)= Fraction->new($b->{"denominator"}, $b->{"numerator"});
+  my($f)= Fraction->new($b->[1], $b->[0]);
   return $a* $f;
 }
 
@@ -101,7 +107,7 @@ sub egal
   my($a,$b)=@_;
   assertFracton(\$a);
   assertFracton(\$b);
-  return ( $a->{"numerator"} == $b->{"numerator"} && $a->{"denominator"} == $b->{"denominator"} );
+  return ( $a->[0] == $b->[0] && $a->[1] == $b->[1] );
 }
 
 sub inegal
@@ -109,13 +115,13 @@ sub inegal
   my($a,$b)=@_;
   assertFracton(\$a);
   assertFracton(\$b);
-  return ( $a->{"numerator"} != $b->{"numerator"} || $a->{"denominator"} != $b->{"denominator"} );
+  return ( $a->[0] != $b->[0] || $a->[1] != $b->[1] );
 }
 
 sub print_frac
 {
   my($a)=@_;
-  return "$a->{numerator}/$a->{denominator}";
+  return $a->[0]."/".$a->[1];
 }
 
 sub assertFracton

@@ -50,7 +50,7 @@ sub crapyround
   {
     $exp*=10 ;
   }
-  my($val)=$f->{"numerator"}*10*$exp/$f->{"denominator"};
+  my($val)=$f->numerator()*10*$exp/$f->denominator();
   my($strval)=$val->bstr();
   my($last_digit)= $strval % 10;
   my($round)=( $last_digit >= 5 )?1:0;
