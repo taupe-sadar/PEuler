@@ -42,16 +42,16 @@ for(my($i)=2;$i<=$n;$i++)
       {
         my($sum)=$valj + $valk;
         my($h1)=$valk->inverse() + $valj;
-        my($harmonic)=$valj->inverse() + $valk->inverse();
-        if( $harmonic->numerator() < $harmonic->denominator() )
-        {
-          $harmonic = $harmonic->inverse();
-        }
-        my(@candidates)=($sum,$h1,$harmonic);
-        
+        my(@candidates)=($sum,$h1);
+
         if($j > 1)
         {
-          push(@candidates,$valj->inverse() + $valk);
+          my($harmonic)=$valj->inverse() + $valk->inverse();
+          if( $harmonic->numerator() < $harmonic->denominator() )
+          {
+            $harmonic = $harmonic->inverse();
+          }
+          push(@candidates,$valj->inverse() + $valk, $harmonic);
         }
         
         foreach my $c (@candidates)
