@@ -23,59 +23,59 @@ use Fraction;
  # 17 : 922194
  # 18 : 2327914
 
-my(%values)=(1=>{"1/1" => Fraction->new(1)});
-
+my(%values)=(1=>[Fraction->new(1)]);
+my(%known)=("1/1"=>1);
 my($n)=18;
 
 for(my($i)=2;$i<=$n;$i++)
 {
-  my(%vals)=();
+  my(@vals)=();
   for(my($j)=1;($i-$j) >= $j;$j++)
   {
+    print "  $j + ".($i-$j)." : ";
+    my($news)=0;
+    my($discards)=0;
     my($k)=$i-$j;
-    foreach my $valj (values(%{$values{$j}}))
+    foreach my $valj (@{$values{$j}})
     {
-      foreach my $valk (values(%{$values{$k}}))
+      foreach my $valk (@{$values{$k}})
       {
-        my(@candidates)=();
-        
-        push(@candidates,$valj + $valk);
-        push(@candidates,$valk->inverse() + $valj);
+        my($sum)=$valj + $valk;
+        my($h1)=$valk->inverse() + $valj;
+        my($harmonic)=$valj->inverse() + $valk->inverse();
+        if( $harmonic->numerator() < $harmonic->denominator() )
+        {
+          $harmonic = $harmonic->inverse();
+        }
+        my(@candidates)=($sum,$h1,$harmonic);
         
         if($j > 1)
         {
           push(@candidates,$valj->inverse() + $valk);
         }
-        {
-          my($harmonic)=$valj->inverse() + $valk->inverse();
-          if( $harmonic->numerator() < $harmonic->denominator() )
-          {
-            $harmonic = $harmonic->inverse();
-          }
-          push(@candidates,$harmonic);
-        }
-
+        
         foreach my $c (@candidates)
         {
           my($key)=Fraction::print_frac($c);
-          my($found)=0;
-          for(my($prev)=1;$prev<$i;$prev++)
+          
+          if(exists($known{$key}))
           {
-            if(exists($values{$prev}{$key}))
-            {
-              $found=1;
-              last;
-            }
+            $discards++;
           }
-          $vals{$key}=$c unless($found);
+          else
+          {
+            push(@vals,$c);
+            $news++;
+            $known{$key} = 1;
+          }
         }
       }
     }
+    print " news : $news, discards : $discards\n"; 
   }
   
-  $values{$i} = \%vals;
-  my(@num)=(keys(%vals));
-  print "$i : ".($#num+1)."\n";
+  $values{$i} = \@vals;
+  print "$i : ".($#vals+1)."\n";
   # print Dumper \%vals;<STDIN>;  
 }
 
