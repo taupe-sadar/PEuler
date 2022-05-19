@@ -23,59 +23,156 @@ use Fraction;
  # 17 : 922194
  # 18 : 2327914
 
-my(%values)=(1=>[Fraction->new(1)]);
+my(%values)=(1=>[[Fraction->new(1),0,0]]);
 my(%known)=("1/1"=>1);
+my(%all)=("1/1"=>1);
 my($n)=18;
+my($count)=1;
 
 for(my($i)=2;$i<=$n;$i++)
 {
   my(@vals)=();
   for(my($j)=1;($i-$j) >= $j;$j++)
   {
-    print "  $j + ".($i-$j)." : ";
     my($news)=0;
     my($discards)=0;
     my($k)=$i-$j;
-    foreach my $valj (@{$values{$j}})
+    foreach my $valk (@{$values{$k}})
     {
-      foreach my $valk (@{$values{$k}})
+      for(my($a)=0;$a<= ($#{$values{$j}}); $a++)
       {
-        my($sum)=$valj + $valk;
-        my($h1)=$valk->inverse() + $valj;
-        my(@candidates)=($sum,$h1);
-
-        if($j > 1)
+        my($valj)=$values{$j}[$a];
+        # print "Id : ".$$valj[1]."\n";<STDIN>;
+        if($$valj[1] <= $$valk[2] )
         {
-          my($harmonic)=$valj->inverse() + $valk->inverse();
-          if( $harmonic->numerator() < $harmonic->denominator() )
-          {
-            $harmonic = $harmonic->inverse();
-          }
-          push(@candidates,$valj->inverse() + $valk, $harmonic);
-        }
-        
-        foreach my $c (@candidates)
-        {
-          my($key)=Fraction::print_frac($c);
+          my($sum_frac)=$$valk[0] + $$valj[0]->inverse();
+          # if( $sum_frac->numerator() < $sum_frac->denominator() )
+          # {
+          #   $sum_frac = $sum_frac->inverse();
+          # }
+          my($key)=Fraction::print_frac($sum_frac);
           
           if(exists($known{$key}))
           {
+            if($i==7)
+            {
+              print "Cas 1 : k : ".Fraction::print_frac($$valk[0])." j : ". Fraction::print_frac($$valj[0])." -> $key\n";
+              
+            }
+            
             $discards++;
           }
           else
           {
-            push(@vals,$c);
+            # print "$key \n";
+            push(@vals,[$sum_frac,$count++,$$valj[1]]);
             $news++;
             $known{$key} = 1;
           }
         }
+        else
+        {
+          # my($sum_frac)=$$valk[0] + $$valj[0]->inverse();
+          # my($key)=Fraction::print_frac($sum_frac);
+          # if(!exists($known{$key}))
+          # {
+            # print "About to skip(1) : $key : ".Fraction::print_frac($$valk[0])." + ".Fraction::print_frac($$valj[0]->inverse())."\n";
+            # print "$key : \n";
+            # print "  $$valj[1] - $$valj[2] ".print_obj(dual($$valj[3]))."\n" ;
+            # print "  $$valk[1] - $$valk[2] ".print_obj($$valk[3])."\n" ;
+            # <STDIN>;
+          # }
+          
+          last;
+        }
+      }
+      foreach my $valj (@{$values{$j}})
+      {
+        my($sum_frac)=$$valk[0]->inverse() + $$valj[0]->inverse();
+        # if( $sum_frac->numerator() < $sum_frac->denominator() )
+        # {
+        #   $sum_frac = $sum_frac->inverse();
+        # }
+        my($key)=Fraction::print_frac($sum_frac);
+        if(exists($known{$key}))
+        {
+          if($i==7)
+          {
+            print "Cas 2 :  k :".Fraction::print_frac($$valk[0])." j: ". Fraction::print_frac($$valj[0])." -> $key\n";
+            
+          }
+          
+          $discards++;
+        }
+        else
+        {
+          # print "$key \n";
+          push(@vals,[$sum_frac,$count++,$$valj[1]]);
+          $news++;
+          $known{$key} = 1;
+        }
       }
     }
-    print " news : $news, discards : $discards\n"; 
+    print "  $j + ".($i-$j)." : news : $news, discards : $discards\n"; #<STDIN>;
   }
   
+  my($total)=0;
+  foreach my $v (@vals)
+  {
+    my($key)="";
+    if($$v[0]->numerator() < $$v[0]->denominator())
+    {
+      $key = Fraction::print_frac($$v[0]->inverse());
+    }
+    else
+    {
+      $key = Fraction::print_frac($$v[0]);
+    }
+    unless( exists($all{$key }) )
+    {
+      $all{$key} = 1;
+      $total++;
+    }
+  }
   $values{$i} = \@vals;
-  print "$i : ".($#vals+1)."\n";
+  # <STDIN>;
+  print "$i : $total / (".($#vals+1).")\n";
   # print Dumper \%vals;<STDIN>;  
 }
 
+sub dual
+{
+  my($obj)=@_;
+  if($$obj[0] eq '1')
+  {
+    return ['1'];
+  }
+  elsif($$obj[0] eq '+')
+  {
+    return ['o',dual($$obj[1]),dual($$obj[2])];
+  }
+  elsif($$obj[0] eq 'o')
+  {
+    return ['+',dual($$obj[1]),dual($$obj[2])];
+  }
+  
+  die "Unexpected";  
+}
+
+sub print_obj
+{
+  my($obj)=@_;
+  if($$obj[0] eq '1')
+  {
+    return '1';
+  }
+  elsif($$obj[0] eq '+')
+  {
+    return '('.print_obj($$obj[1]).' + '.print_obj($$obj[2]).')';
+  }
+  elsif($$obj[0] eq 'o')
+  {
+    return '('.print_obj($$obj[1]).' o '.print_obj($$obj[2]).')';
+  }
+  
+}
