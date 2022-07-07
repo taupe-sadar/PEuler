@@ -35,6 +35,7 @@ for(my($i)=2;$i<=$n;$i++)
   {
     my($news)=0;
     my($discards)=0;
+    my($skipped)=0;
     my($k)=$i-$j;
     foreach my $valk (@{$values{$k}})
     {
@@ -59,6 +60,7 @@ for(my($i)=2;$i<=$n;$i++)
         }
         else
         {
+          $skipped+= $#{$values{$j}} - $a +1 ;
           last;
         }
       }
@@ -82,11 +84,12 @@ for(my($i)=2;$i<=$n;$i++)
         }
         else
         {
+          $skipped+= $#{$values{$j}} - $a +1 ;
           last;
         }
       }
     }
-    print "  $j + ".($i-$j)." : news : $news, discards : $discards\n";
+    print "  $j + ".($i-$j)." : news : $news, discards : $discards, skip : $skipped\n";
   }
   
   $values{$i} = \@vals;
