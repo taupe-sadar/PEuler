@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Fraction;
 
  # For reminder
  # 2 : 2
@@ -23,7 +22,7 @@ use Fraction;
  # 17 : 922194
  # 18 : 2327914
 
-my(%values)=(1=>[[Fraction->new(1),0,0]]);
+my(%values)=(1=>[[[1,1],0,0]]);
 my(%known)=("1/1"=>1);
 my($n)=18;
 my($count)=1;
@@ -44,9 +43,8 @@ for(my($i)=2;$i<=$n;$i++)
         my($valj)=$values{$j}[$a];
         if($$valj[1] <= $$valk[2] )
         {
-          my($sum_frac)=$$valk[0] + $$valj[0]->inverse();
-          my($key)=($sum_frac->numerator() >  $sum_frac->denominator())?Fraction::print_frac($sum_frac):Fraction::print_frac($sum_frac->inverse());
-          
+          my($sum_frac)=add($$valk[0],inv($$valj[0]));
+          my($key)=($$sum_frac[0] > $$sum_frac[1])?print_frac($sum_frac):print_frac(inv($sum_frac));
           if(exists($known{$key}))
           {
             $discards++;
@@ -69,8 +67,8 @@ for(my($i)=2;$i<=$n;$i++)
         my($valj)=$values{$j}[$a];
         if($$valj[1] <= $$valk[1] )
         {
-          my($sum_frac)=$$valk[0]->inverse() + $$valj[0]->inverse();
-          my($key)=($sum_frac->numerator() >  $sum_frac->denominator())?Fraction::print_frac($sum_frac):Fraction::print_frac($sum_frac->inverse());
+          my($sum_frac)=add(inv($$valk[0]),inv($$valj[0]));
+          my($key)=($$sum_frac[0] > $$sum_frac[1])?print_frac($sum_frac):print_frac(inv($sum_frac));
           if(exists($known{$key}))
           {
             $discards++;
@@ -94,4 +92,40 @@ for(my($i)=2;$i<=$n;$i++)
   
   $values{$i} = \@vals;
   print "$i : ".($#vals+1)."\n";
+}
+
+sub add
+{
+  my($f,$g)=@_;
+  my($res)=[$$f[0]*$$g[1] + $$f[1]*$$g[0],$$f[1]*$$g[1]];
+  reduce($res);
+  return $res;
+}
+
+sub reduce
+{
+  my($f)=@_;
+  my($a)=($$f[0]>$$f[1])?$$f[0]:$$f[1];
+  my($b)=($$f[0]>$$f[1])?$$f[1]:$$f[0];
+  while($b >0 )
+  {
+    my($r)=$a%$b;
+    $a=$b;
+    $b=$r;
+  }
+  $$f[0] = $$f[0]/$a;
+  $$f[1] = $$f[1]/$a;
+}
+
+sub inv
+{
+  my($f)=@_;
+  my($res)=[$$f[1],$$f[0]];
+  return $res;  
+}
+
+sub print_frac
+{
+  my($f)=@_;
+  return "$$f[0]/$$f[1]";
 }
