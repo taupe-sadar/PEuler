@@ -25,7 +25,6 @@ use Fraction;
 
 my(%values)=(1=>[[Fraction->new(1),0,0]]);
 my(%known)=("1/1"=>1);
-my(%all)=("1/1"=>1);
 my($n)=18;
 my($count)=1;
 
@@ -50,7 +49,7 @@ for(my($i)=2;$i<=$n;$i++)
           # {
           #   $sum_frac = $sum_frac->inverse();
           # }
-          my($key)=Fraction::print_frac($sum_frac);
+          my($key)=($sum_frac->numerator() >  $sum_frac->denominator())?Fraction::print_frac($sum_frac):Fraction::print_frac($sum_frac->inverse());
           
           if(exists($known{$key}))
           {
@@ -90,7 +89,7 @@ for(my($i)=2;$i<=$n;$i++)
           # {
           #   $sum_frac = $sum_frac->inverse();
           # }
-          my($key)=Fraction::print_frac($sum_frac);
+          my($key)=($sum_frac->numerator() >  $sum_frac->denominator())?Fraction::print_frac($sum_frac):Fraction::print_frac($sum_frac->inverse());
           if(exists($known{$key}))
           {
             $discards++;
@@ -103,32 +102,18 @@ for(my($i)=2;$i<=$n;$i++)
             $known{$key} = 1;
           }
         }
+        else
+        {
+          last;
+        }
       }
     }
     print "  $j + ".($i-$j)." : news : $news, discards : $discards\n"; #<STDIN>;
   }
   
-  my($total)=0;
-  foreach my $v (@vals)
-  {
-    my($key)="";
-    if($$v[0]->numerator() < $$v[0]->denominator())
-    {
-      $key = Fraction::print_frac($$v[0]->inverse());
-    }
-    else
-    {
-      $key = Fraction::print_frac($$v[0]);
-    }
-    unless( exists($all{$key }) )
-    {
-      $all{$key} = 1;
-      $total++;
-    }
-  }
   $values{$i} = \@vals;
   # <STDIN>;
-  print "$i : $total / (".($#vals+1).")\n";
+  print "$i : ".($#vals+1)."\n";
   # print Dumper \%vals;<STDIN>;  
 }
 
