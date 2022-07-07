@@ -54,12 +54,6 @@ for(my($i)=2;$i<=$n;$i++)
           
           if(exists($known{$key}))
           {
-            if($i==7)
-            {
-              print "Cas 1 : k : ".Fraction::print_frac($$valk[0])." j : ". Fraction::print_frac($$valj[0])." -> $key\n";
-              
-            }
-            
             $discards++;
           }
           else
@@ -96,12 +90,6 @@ for(my($i)=2;$i<=$n;$i++)
         my($key)=Fraction::print_frac($sum_frac);
         if(exists($known{$key}))
         {
-          if($i==7)
-          {
-            print "Cas 2 :  k :".Fraction::print_frac($$valk[0])." j: ". Fraction::print_frac($$valj[0])." -> $key\n";
-            
-          }
-          
           $discards++;
         }
         else
