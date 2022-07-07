@@ -80,24 +80,28 @@ for(my($i)=2;$i<=$n;$i++)
           last;
         }
       }
-      foreach my $valj (@{$values{$j}})
+      for(my($a)=0;$a<= ($#{$values{$j}}); $a++)
       {
-        my($sum_frac)=$$valk[0]->inverse() + $$valj[0]->inverse();
-        # if( $sum_frac->numerator() < $sum_frac->denominator() )
-        # {
-        #   $sum_frac = $sum_frac->inverse();
-        # }
-        my($key)=Fraction::print_frac($sum_frac);
-        if(exists($known{$key}))
+        my($valj)=$values{$j}[$a];
+        if($$valj[1] <= $$valk[1] )
         {
-          $discards++;
-        }
-        else
-        {
-          # print "$key \n";
-          push(@vals,[$sum_frac,$count++,$$valj[1]]);
-          $news++;
-          $known{$key} = 1;
+          my($sum_frac)=$$valk[0]->inverse() + $$valj[0]->inverse();
+          # if( $sum_frac->numerator() < $sum_frac->denominator() )
+          # {
+          #   $sum_frac = $sum_frac->inverse();
+          # }
+          my($key)=Fraction::print_frac($sum_frac);
+          if(exists($known{$key}))
+          {
+            $discards++;
+          }
+          else
+          {
+            # print "$key \n";
+            push(@vals,[$sum_frac,$count++,$$valj[1]]);
+            $news++;
+            $known{$key} = 1;
+          }
         }
       }
     }
