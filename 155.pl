@@ -75,12 +75,14 @@ for(my($i)=2;$i<=$n;$i++)
         }
       }
     }
-    print "  $j + ".($i-$j)." : news : $news, discards : $discards, skip : $skipped\n";
+    # print "  $j + ".($i-$j)." : news : $news, discards : $discards, skip : $skipped\n";
   }
   
   $values{$i} = \@vals;
-  print "$i : ".($#vals+1)."\n";
+  # print "$i : ".($#vals+1)."\n";
 }
+
+print (($count-1)*2 +1);
 
 sub add
 {
