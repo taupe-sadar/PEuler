@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use Gcd;
 
 # For optimisation, only 'parallel' capacities are stored. ()
 # They represent capacities they are obtained with at least 2 capacities in parallel
@@ -95,14 +96,7 @@ sub add
 sub reduce
 {
   my($f)=@_;
-  my($a)=($$f[0]>$$f[1])?$$f[0]:$$f[1];
-  my($b)=($$f[0]>$$f[1])?$$f[1]:$$f[0];
-  while($b >0 )
-  {
-    my($r)=$a%$b;
-    $a=$b;
-    $b=$r;
-  }
+  my($a)=Gcd::pgcd($$f[0],$$f[1]);
   $$f[0] = $$f[0]/$a;
   $$f[1] = $$f[1]/$a;
 }
