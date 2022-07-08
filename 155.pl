@@ -3,24 +3,12 @@ use strict;
 use warnings;
 use Data::Dumper;
 
- # For reminder
- # 2 : 2
- # 3 : 4
- # 4 : 8
- # 5 : 20
- # 6 : 42
- # 7 : 102
- # 8 : 250
- # 9 : 610
- # 10 : 1486
- # 11 : 3710
- # 12 : 9228
- # 13 : 23050
- # 14 : 57718
- # 15 : 145288
- # 16 : 365820
- # 17 : 922194
- # 18 : 2327914
+# For optimisation, only 'parallel' capacities are stored. ()
+# They represent capacities they are obtained with at least 2 capacities in parallel
+# We do not need to calculates the others, the 'serial' capacities, because with symmetry of the problem
+# a value (x) can be otained IFF a value (1/x) can be obtain
+# Then a great optimisation consists be not performing additions that have already been made, by sorting the 
+# parallel capacitance.
 
 my(%values)=(1=>[[[1,1],0,0]]);
 my(%known)=("1/1"=>1);
