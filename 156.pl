@@ -25,7 +25,7 @@ sub seek_count_digits
     $range*=10;
     $k++;
   }
-  print "($digit) Stop at (".($k-1).") : $sum\n";
+  # print "($digit) Stop at (".($k-1).") : $sum\n";
   return $sum;
 }
 
