@@ -36,8 +36,6 @@ sub recursive_seek
   my($fl)=count_digits($low,$d);
   my($fh)=count_digits($high,$d);
   
-  # print "($range) $low,$high -> $fl,$fh\n"; #<STDIN>;
-  
   if($fh < $low )
   {
     return (0,1);
@@ -51,31 +49,24 @@ sub recursive_seek
   {
     my($sum)=0;
     my($may_cross_diag)=0;
-    my($start)=$low;
     if( $range == 1 )
     {
-      if($fl == $low)
+      my($try)=$low;
+      while($try <= $high)
       {
-        $sum += $fl;
-      }
-      for(my($i)=1;$i<=8;$i++)
-      {
-        my($try)=$low+$i;
         if(count_digits($try,$d) == $try)
         {
           $sum += $try;
         }
-      }
-      if($fh == $high)
-      {
-        $sum += $fh;
+        $try++;
       }
       $may_cross_diag = 1;
     }
     else
     {    
+      my($start)=$low;
       my($reduce_range)=$range/10;
-      for(my($i)=0;$i<=9;$i++)
+      while($start < $high )
       {
         my($s,$mcd)=recursive_seek($reduce_range,$start,$start+$range-1,$d);
         $sum += $s;
