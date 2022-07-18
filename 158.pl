@@ -3,73 +3,43 @@ use warnings;
 use Data::Dumper;
 use Permutations;
 
-# There are 2 adjacent chars involved in the parametrisation the char 'left' and 'right', the right follow the left lexicographically
-# and only those are in this case.
-#
-# With an alphabet of size S (max 26) 
-# We consider 3 parameters : 
-# - Position of the character left (p) (0-n)
-# - Value of left (0 .. S-1)
-# - Value of right (0 .. S-1)
-#
-# ( p chars)  | left | right | ( n - p - 2 chars )
-#
-# We must also take into account that chars must all be different
-# So we will have instead : 
-#    Cnk( available choices , p )
-#
-# And we need two other parameters : 
-# - j, which is the quantity of p chars, which value is between left and right char :
-# - k, which is the quantity of n - p - 2 chars, which value is between left and right char :
+# Consider the problem of seeking string of size n 
+# in an alphabet of size n, with all chars different
+# Except, the adjacent chars, all chars will be sorted
+# There are only 2 parameters, considering the interst neighbors :
+# - value of the left neighbor (left)
+# - value of the right neighbor (right)
 # 
-# ( p - j chars)    |       ( j chars)          | left | right |          ( k chars)           | ( n - p - 2 -k chars )
-# 
-#  S - right_val -1 |  right_val - left_val - 1 |              |  right_val - left_val - 1 - j |       left_val
-#    choices        |       choices             |              |           choices             |       choices
+# For a couple of neighbors (left,right), all possible arrangements will be determined 
+# by the chars whose values are between left and right
+# ie : 
+#      Sum(k,0,right - left - 1)( Cnk( right - left - 1, k ) ) = 2^(right - left - 1)
+#
+# Then, by counting all values for left and right :
+#
+#   Sum(i,0,n-1)(Sum(j,i+1,n)(2^(j - i - 1))) = 2^n - n - 1
 
 my($alpha_size)=26;
 
-# print Permutations::cnk(0,0)."\n";
+my($max)=0;
 
 for(my($size)=1;$size<=26;$size++)
 {
-  print "$size : ".count_lexileft($size,$alpha_size)."\n";
+  my($count) = count_lexileft($size,$alpha_size);
+  $max = $count if($max < $count);
 }
 
-
+print $max;
 
 sub count_lexileft
 {
   my($n,$S)=@_;
-  my($count)=0;
-  for(my($p)=0;$p<($n-1);$p++)
-  {
-    for(my($left)=0;$left<$S;$left++)
-    {
-      for(my($right)=$left+1;$right<$S;$right++)
-      {
-        for(my($j)=0;$j<=$p;$j++)
-        {
-          my($count_left) = count_subset($p - $j, $S - 1 - $right) ;
-          my($count_j) = count_subset($j, $right - $left - 1);
-          
-          for(my($k)=0;$k<=($n - $p - 2);$k++)
-          {
-            my($count_right)= count_subset($k, $right - $left - 1 - $j);
-            my($count_k)    = count_subset($n - $p - 2 - $k, $left );
-            $count += $count_left * $count_j * $count_right * $count_k;
-            # print "(".($p-$j).") ($j) [$left] [$right] ($k) (".($n-$p-2-$k).") : $count_left * $count_j * $count_right * $count_k = ".($count_left * $count_right * $count_j *$count_k)."\n";
-          }
-        }
-        # <STDIN>;
-      }
-    }
-  }
-  return $count;
+  return count_lexileft_all_chars($n)*Permutations::cnk($S, $n);
 }
 
-sub count_subset
+sub count_lexileft_all_chars
 {
-  my($quantity,$choices)=@_;
-  return Permutations::cnk($choices, $quantity);
+  my($n)=@_;
+  return (2**$n - $n - 1);
 }
+
