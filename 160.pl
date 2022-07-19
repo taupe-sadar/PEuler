@@ -4,6 +4,17 @@ use Data::Dumper;
 use POSIX qw/floor ceil/;
 use SmartMult;
 
+# First we consider the p-valuation (with p=2 and p=5) of n! (k=10^12)
+#
+# We will work in the Z/kZ (k=10^5)
+# First we work in Z/kZ* set, all the inversibles.
+# In this set we will find all numbers and their inversibles, except 1 and -1
+# Then multiplying all the numbers of Z/kZ* will result as -1
+# Next we count how many times there Z/kZ in [1,n] and apply a division of n
+#
+# Then we consider all multiples of (2^a * 5^b )
+# And will apply the same operation, but using n/(2^a * 5^b)
+
 my($n)=10**12;
 my($mod)=10**5;
 
