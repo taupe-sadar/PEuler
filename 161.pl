@@ -11,9 +11,13 @@ for(my($i)=0;$i<$num_states;$i++)
   push(@transitions,[(0)x$num_states]);
 }
 my(@workspace)=();
-for(my($i)=0;$i<3;$i++)
+for(my($i)=0;$i<$wide;$i++)
 {
-  push(@workspace,[(0)x$wide,1,1]);
+  push(@workspace,[0,0,0]);
+}
+for(my($i)=0;$i<2;$i++)
+{
+  push(@workspace,[1,1,1]);
 }
 
 my(@pieces) = (
@@ -45,6 +49,7 @@ sub init_workspace
       $workspace[$row][$i]= ($i < $level ? 1 : 0);
     }
     $state = ($state -$level)/3;
+    $row++;
   }
 }
 
@@ -52,7 +57,7 @@ sub fill_with_pieces_rec
 {
   my($state,$current_row)=@_;
   
-  while($workspace[$current_row][0] == 1 && $current_row < $wide)
+  while($current_row < $wide && $workspace[$current_row][0] == 1)
   {
     $current_row++;
   }
