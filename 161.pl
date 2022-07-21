@@ -3,7 +3,7 @@ use warnings;
 use Data::Dumper;
 
 my($wide)=9;
-my($num_states)=3**$wide;
+my($num_states)=3**($wide-1);
 
 my(@transitions)=();
 for(my($i)=0;$i<$num_states;$i++)
@@ -40,7 +40,9 @@ sub init_workspace
 {
   my($state)=@_;
   my($row)=0;
-  while($row < $wide)
+  my($complementarity)=0;
+  
+  while($row < ($wide-1))
   {
     my($level)=$state%3;
     
@@ -48,8 +50,14 @@ sub init_workspace
     {
       $workspace[$row][$i]= ($i < $level ? 1 : 0);
     }
+    $complementarity += $level;
     $state = ($state -$level)/3;
     $row++;
+  }
+  my($last_level)=(3-$complementarity)%3;
+  for(my($i)=0;$i<3;$i++)
+  {  
+    $workspace[$wide-1][$i] = ($i < $last_level ? 1 : 0);
   }
 }
 
@@ -84,7 +92,7 @@ sub write_transition
   my($state)=@_;
   my($next_state)=0;
   
-  for(my($i)=$wide-1;$i>=0;$i--)
+  for(my($i)=$wide-2;$i>=0;$i--)
   {
     if($workspace[$i][2] == 1)
     {
