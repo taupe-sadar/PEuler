@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use Hashtools;
 
 my($wide)=9;
 my($num_states)=3**($wide-1);
@@ -8,7 +9,7 @@ my($num_states)=3**($wide-1);
 my(@transitions)=();
 for(my($i)=0;$i<$num_states;$i++)
 {
-  push(@transitions,[(0)x$num_states]);
+  push(@transitions,{});
 }
 my(@workspace)=();
 for(my($i)=0;$i<$wide;$i++)
@@ -105,7 +106,7 @@ sub write_transition
     $next_state*=3 if($i>0);
   }
   
-  $transitions[$state][$next_state]++;
+  Hashtools::increment($transitions[$state],$next_state);
 }
 
 sub try_add_piece
