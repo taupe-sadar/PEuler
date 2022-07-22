@@ -4,6 +4,7 @@ use Data::Dumper;
 use Hashtools;
 
 my($wide)=9;
+my($long)=12;
 my($num_states)=3**($wide-1);
 
 my(@transitions)=();
@@ -35,6 +36,13 @@ for(my($s)=0;$s<$num_states;$s++)
 {
   init_workspace($s);
   fill_with_pieces_rec($s,0);
+}
+
+my($triominos)={0=>1};
+for(my($a)=1;$a<=$long;$a++)
+{
+  $triominos = apply_transitions($triominos);
+  print "$a : $$triominos{0}\n";
 }
 
 sub init_workspace
@@ -135,3 +143,17 @@ sub remove_piece
   $workspace[$row + $$piece[1][0] ][ $$piece[1][1] ] = 0;
 }
 
+sub apply_transitions
+{
+  my($rtrios)=@_;
+  my(%new_trios)=();
+  foreach my $s (keys(%$rtrios))
+  {
+    my($val)=$$rtrios{$s};
+    foreach my $news (keys(%{$transitions[$s]}))
+    {
+      Hashtools::increment(\%new_trios,$news,$transitions[$s]{$news} * $val);
+    }
+  }
+  return \%new_trios;
+}
