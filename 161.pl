@@ -28,9 +28,8 @@ my(@pieces) = (
   [[0,1],[-1,1]],
   [[0,1],[1,1]],
   [[1,0],[1,1]],
-  [[1,0],[1,1]]
+  [[1,0],[0,1]]
 );
-
 
 for(my($s)=0;$s<$num_states;$s++)
 {
@@ -42,8 +41,9 @@ my($triominos)={0=>1};
 for(my($a)=1;$a<=$long;$a++)
 {
   $triominos = apply_transitions($triominos);
-  print "$a : $$triominos{0}\n";
 }
+
+print "$$triominos{0}\n";
 
 sub init_workspace
 {
