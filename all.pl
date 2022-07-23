@@ -32,12 +32,6 @@ read_results(\@prev_results);
 
 @contents = sort{ordre($a) <=> ordre($b)} @contents;
 
-my($prefix)="";
-if(exists($ENV{"SHELL"}) && $ENV{"SHELL"} eq '/bin/bash')
-{
-  $prefix='/usr/bin/';
-}
-
 for(my($i)=0;$i<=$#contents;$i++)
 {
   chomp($contents[$i]);
@@ -53,7 +47,7 @@ for(my($i)=0;$i<=$#contents;$i++)
         next;
       }
       
-      my($value)=`${prefix}perl $contents[$i]`;
+      my($value)=`perl $contents[$i]`;
       if(!defined($value))
       {
         $value="";
