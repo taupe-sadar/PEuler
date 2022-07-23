@@ -3,6 +3,27 @@ use warnings;
 use Data::Dumper;
 use Hashtools;
 
+# We calculate all combinations possibles, by considering 'states'
+# On each column, a state is the pattern left by pieces placed on previous step
+# Exemple : 
+#
+#   x x .                                  x x .                                x . .
+#   . . .                                  o o .                                x . .
+#   x . .                                  x o .                                x . .
+#   x x .                                  x x .                                x . .
+#   x . .   -> may be filled by pieces ->  x . .  -> and next state will be ->  . . .
+#   x x .          o o     o o o           x x .                                x . .
+#   . . .            o                     o o o                                x x .
+#   x x .                                  x x .                                x . .
+#   x . .                                  x . .                                . . .
+#
+# We count all possible ways to go from one state to another in a matrix of transitions.
+# Then all we need is start from state 0 (flat), aggregate transition 12 times, and look at state 0 (flat)
+#
+# The state is described using a base 3 representation.
+# One important optimisation for memory allocation, is that the some of left pieces is always a multiple of 3.
+# Then we dont need to use the last number of the base 3 representation, as we can deduce it
+
 my($wide)=9;
 my($long)=12;
 my($num_states)=3**($wide-1);
