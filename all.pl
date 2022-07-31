@@ -83,7 +83,7 @@ sub read_results
   my($i);
   for($i=0;$i<=$#lines;$i++)
   {
-    if($lines[$i]=~m/^\s*(\d*)\s*:\s*((-|)\d*(\.\d*|))\s*$/)
+    if($lines[$i]=~m/^\s*(\d*)\s*:\s*((-|)(\d|[A-F])*(\.\d*|))\s*$/)
     {
       $$refresults[$1]=$2;
     }
@@ -97,12 +97,12 @@ sub check_results
   {
     return "";
   }
-  if($output=~m/^\s*((-|)\d*(\.\d*|))\s*$/)
+  if($output=~m/^\s*((-|)(\d|[A-F])*(\.\d*|))\s*$/)
   {
     my($number)=$1;
     if(defined($prev_results[$no]))
     {
-      if($prev_results[$no]==$number)
+      if($prev_results[$no] eq $number)
       {
         return "";#OK meme valeur qu'avant
       }
