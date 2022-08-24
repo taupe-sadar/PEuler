@@ -6,6 +6,15 @@ use POSIX qw/floor/;
 use Hashtools;
 use integer;
 
+# We calculate the index of an intersection of segment on the current segment.
+# This index must be between 0 and 1, for being a true intersection point
+#
+# Warnings :
+# - we use regions for 33% optimisation
+# - Some points are found more than once ( example 3 segments than share the same point)
+# - There is an evil corner case for confused/colinear segments. There is a special treat 
+#   for this one. Thats why the code is that complicated 
+
 my($s)=290797;
 my($num_segments)=5000;
 my($size)=500;
@@ -13,7 +22,6 @@ my($size)=500;
 my($div)=32;
 my(@zones)=init_zones();
 my(@borders)=init_borders();
-
 
 my(%confused_segments)=();
 my($true_intersects)=0;
