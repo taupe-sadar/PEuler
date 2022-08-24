@@ -3,71 +3,35 @@ use warnings;
 use Data::Dumper;
 use Gcd;
 use POSIX qw/floor/;
-
-use GD;
-
-my($scale)=5;
-sub scale
-{
-  return (map( {$_*$scale;} @_));
-}
-
+use Hashtools;
 use integer;
 
 my($s)=290797;
-my($num_segments)=3000;
+my($num_segments)=5000;
 my($size)=500;
 
 my($div)=32;
 my(@zones)=init_zones();
 my(@borders)=init_borders();
 
-#######################
-my($im) = new GD::Image(scale(500,500));
-my($white) = $im->colorAllocate(255,255,255);
-my($black) = $im->colorAllocate(0,0,0);
-my($blue) = $im->colorAllocate(0,0,255);       
-my($red) = $im->colorAllocate(255,0,0);
-my($green) = $im->colorAllocate(0,255,0);
-# $im->line(scale(12,303,246,140),$blue);
-# $im->line(scale(228,270,252,85),$red);
 
-for my $b (@borders)
-{
-  $im->line(scale($b,0,$b,500),$black);
-  $im->line(scale(0,$b,500,$b),$black);
-}
-
-open FILE, "> test.png";
-binmode FILE;
-print FILE $im->png;
-close FILE;
-#######################
-
-
-my(%inter_points)=();
+my(%confused_segments)=();
 my($true_intersects)=0;
 my(@segments)=();
+
 for(my($seg)=0;$seg<$num_segments;$seg++)
 {
   my($rsegment)=new_segment();
   $$rsegment[4]=$seg;
-  #Debug purpose
   $$rsegment[5]=$seg;
   my($rseg_zones)=calc_seg_zones($rsegment);
   
   my($coord)=join(" ",@$rsegment[0..3]);
   my($str)=join(" ",@$rseg_zones);
   
-  # print "segment : $seg \n" ;
-  # print "segment : $seg [$coord] ($str)\n" ;
-  
-  if( $seg == 2888 )
-  {
-     print "2888 : [$coord]";
-  }
-  
-  
+  my(%inter_points)=();
+  my(@confused_bounds)=();
+  my(%confused_hits)=();
   for(my($z)=0;$z<=$#$rseg_zones;$z++)
   {
     my($zone_segments)=$zones[$$rseg_zones[$z]];
@@ -77,69 +41,61 @@ for(my($seg)=0;$seg<$num_segments;$seg++)
       next if( $$rsegment[4]==$$zone_segments[$j][4]);
       $$zone_segments[$j][4] = $$rsegment[4];
       
-      my($inter)=intersect($rsegment,$$zone_segments[$j]);
-      if($inter ne 0)
+      my($inter,@bounds)=intersect($rsegment,$$zone_segments[$j]);
+      if($inter eq 1)
       {
-        if(!exists($inter_points{$inter}))
-        {
-          $inter_points{$inter}=["$seg $$zone_segments[$j][5]"];
-          # $inter_points{$inter}=1;
-          $true_intersects++;
-          if( $seg == 1263 )
-          {
-            $im->line(scale(@$rsegment[0..3]),$green);
-          }
+        my($other)=$$zone_segments[$j];
         
+        $confused_segments{$$other[5]} = $$other[5] if(!exists($confused_segments{$$other[5]}));
+        $confused_segments{$seg} = $confused_segments{$$other[5]};
         
-        }
-        else
-        {
-          print "$seg - $$zone_segments[$j][5] --- $inter \n";
-          push( @{$inter_points{$inter}},"$seg $$zone_segments[$j][5]"); 
-          if( $seg == 2888 )
-          {
-            print Dumper $inter_points{$inter}; 
-            $im->line(scale(@$rsegment[0..3]),$blue);
-            $im->line(scale(@{$$zone_segments[$j]}[0..3]),$red);
-            
-            open FILE, "> test.png";
-            binmode FILE;
-            print FILE $im->png;
-            close FILE;
-            
-            <STDIN>;
-          }
-          
-          # $inter_points{$inter}++;
-        }
-        # elsif($inter_points{$inter} == 1)
-        # {
-          # $true_intersects--;
-          # $inter_points{$inter}=0;
-        # }
+        push(@confused_bounds,\@bounds);
       }
-      
+      elsif($inter ne 0)
+      {
+        my($skip)=0;
+        my($other)=$$zone_segments[$j];
+        if( exists($confused_segments{$$other[5]}) )
+        {
+          my($equivalent)=$confused_segments{$$other[5]};
+          if(!exists($confused_hits{$equivalent}))
+          {
+            $confused_hits{$equivalent} = 1;
+          }
+          else
+          {
+            $skip = 1;
+          }
+        }
+        Hashtools::increment(\%inter_points,$inter) if(!$skip);
+      }
     }
-    
     
     push(@$zone_segments,$rsegment);
   }
   
-  if( $seg == 2888 )
+  foreach my $bound (@confused_bounds)
   {
-    
+    my($nmin,$dmin,$nmax,$dmax)=@$bound;
+    foreach my $p (keys(%inter_points))
+    {
+      my($num,$denom) =split('/',$p);
+      if( ($num * $dmin > $nmin * $denom) && ($num * $dmax < $nmax * $denom))
+      {
+        delete $inter_points{$p};
+      }
+    }
   }
   
+  foreach my $p (keys(%inter_points))
+  {
+    $true_intersects ++ if($inter_points{$p}==1);
+  }
+
   # print "$seg : $true_intersects\n";
 }
 
-my($total_size)=0;
-for(my($i)=0;$i<=$#zones;$i++)
-{
-  $total_size += $#{$zones[$i]} + 1;
-}
-print "Array size : $total_size\n";
-print "Intersections : ".$true_intersects;
+print $true_intersects;
 
 sub new_segment
 {
@@ -187,15 +143,7 @@ sub calc_seg_zones
   }
   my($rx1,$ry1,$rx2,$ry2)=map({zone_location($_)} ($x1,$y1,$x2,$y2));
   
-  # if($x1 == 228)
-  # {
-    # print "----- $rx1,$ry1,$rx2,$ry2\n";
-    # print Dumper \@borders;
-  # }
-  
   my($dx,$dy)=($x2-$x1,$y2-$y1);
-  
-  
   my(@locations)=($rx1 + $ry1 * $div);
   
   my($rx,$ry)=($rx1,$ry1);
@@ -216,15 +164,6 @@ sub calc_seg_zones
       my($val) = $dy * ($borders[$rx+1] - $x1) - $dx * ($borders[$ry + $sy] - $y1);
       my(@target_point)=($borders[$rx+1],$borders[$ry + $sy]);
       
-      # if($x1 == 228)
-      # {
-        # print "Sol : ".((-3 * (247.24 - 228) - 1 * (139.13 - 270)))."\n";
-        
-        
-        # print "target : ($target_point[0] $target_point[1])\n";
-        # print "val : $val\n";
-        # print "Full : ($dy * ($borders[$rx+1] - $x1) - $dx * ($borders[$ry + $sy] - $y1))\n";
-      # }
       if( $val * $ssy >= 0 )
       {
         $ry += $ssy ;
@@ -234,10 +173,6 @@ sub calc_seg_zones
         $rx++;
       }
     }
-    # if($x1 == 228)
-    # {
-      # print "-> loc  $rx , $ry \n";
-    # }
     push(@locations,$rx + $ry * $div);
   }
   return \@locations;
@@ -259,16 +194,37 @@ sub intersect
 {
   my($s1,$s2)=@_;
   
-  # return 0 if( $$s1[0] < $$s2[0] && $$s1[0] < $$s2[2] && $$s1[2] < $$s2[0] && $$s1[2] < $$s2[2] );
-  # return 0 if( $$s1[0] > $$s2[0] && $$s1[0] > $$s2[2] && $$s1[2] > $$s2[0] && $$s1[2] > $$s2[2] );
-  # return 0 if( $$s1[1] < $$s2[1] && $$s1[1] < $$s2[3] && $$s1[3] < $$s2[1] && $$s1[3] < $$s2[3] );
-  # return 0 if( $$s1[1] > $$s2[1] && $$s1[1] > $$s2[3] && $$s1[3] > $$s2[1] && $$s1[3] > $$s2[3] );
-  
   my($a,$b)=($$s1[2] - $$s1[0], $$s1[3] - $$s1[1]);
   my($c,$d)=($$s2[2] - $$s2[0], $$s2[3] - $$s2[1]);
   my($det)=$a*$d - $b*$c;
   
-  return 0 if($det==0);
+  if($det==0)
+  {
+    if( $a * ($$s2[1] - $$s1[1] ) == $b * ($$s2[0] - $$s1[0] ) )
+    {
+      my($ta)=($$s2[0] - $$s1[0]);
+      my($tb)=($$s2[2] - $$s1[0]);
+      
+      my($aa)=($a >= 0) ? $a : -$a;
+      if( $a < 0 )
+      {
+        $ta = -$ta;
+        $tb = -$tb;
+      }
+      my($tmin,$tmax) = ($ta > $tb) ? ($tb,$ta) : ($ta,$tb);
+      $tmin = 0 if $tmin < 0;
+      $tmax = $aa if $tmax > $aa;
+      
+      my($pmin)=Gcd::pgcd($tmin,$aa);
+      my($pmax)=Gcd::pgcd($tmax,$aa);
+      
+      return (1,$tmin/$pmin,$aa/$pmin,$tmax/$pmax,$aa/$pmax);
+    }
+    else
+    {
+      return 0 ;
+    }
+  }
   
   my($t1)=$d * ($$s2[0]-$$s1[0]) - $c * ($$s2[1]-$$s1[1]);
   my($t2)=$b * ($$s2[0]-$$s1[0]) - $a * ($$s2[1]-$$s1[1]);
@@ -281,35 +237,6 @@ sub intersect
   }
   return 0 if( $t1 <= 0 || $t2 <= 0 || $t1 >= $adet || $t2 >= $adet);
   
-  # my($x)=$$s1[0] + $a*($d * ($$s2[0]-$$s1[0]) - $c * ($$s2[1]-$$s1[1]))/$det;
-  # my($y)=$$s1[1] + $b*($d * ($$s2[0]-$$s1[0]) - $c * ($$s2[1]-$$s1[1]))/$det;
-  
-  
-  # my($t1)=($x - $$s1[0])/$a;
-  # my($t2)=($x - $$s2[0])/$c;
-  # print "-----------------------\n";
-  # print "det : $det\n";
-  # print "$x $y\n";
-  
-  # my($pgcd) = Gcd::pgcd($t1,$det);
-  
-  # return ($t1/$pgcd).'/'.($det/$pgcd);
-  
-  
-  my($xd)= $$s1[0]*$det + $a*($d * ($$s2[0]-$$s1[0]) - $c * ($$s2[1]-$$s1[1]));
-  my($yd)= $$s1[1]*$det + $b*($d * ($$s2[0]-$$s1[0]) - $c * ($$s2[1]-$$s1[1]));
-  my($pgcdx) = Gcd::pgcd($xd,$adet);
-  my($pgcdy) = Gcd::pgcd($yd,$adet);
-  my($pdetx)= $adet/$pgcdx;
-  my($pdety)= $adet/$pgcdy;
-  
-  if( $det > 0 )
-  {
-    return ($xd/$pgcdx."/$pdetx ".$yd/$pgcdy."/$pdety");
-  }
-  else
-  {
-    return (-$xd/$pgcdx."/$pdetx ".-$yd/$pgcdy."/$pdety");
-  }
-  
+  my($pgcd) = Gcd::pgcd($t1,$adet);
+  return ($t1/$pgcd).'/'.($adet/$pgcd);
 }
