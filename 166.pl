@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use List::Util qw(min);
+use List::Util qw(min max);
 
 # Variables names 
 #
@@ -20,10 +20,11 @@ use List::Util qw(min);
 #
 
 my($total)=0;
-for( my($sum) = 0; $sum <= 36; $sum ++ )
+for( my($sum) = 0; $sum <= 17; $sum ++ )
 {
-  $total += num_grids($sum);
+  $total += num_grids($sum)*2;
 }
+$total += num_grids(18);
 
 print $total;
 
@@ -37,18 +38,18 @@ sub num_grids
     for(my($d)=0;$d<=min(9,$S - $a);$d++)
     {
       my($ad)= $a + $d;
-      for(my($g)=0;$g<=min(9,$ad);$g++)
+      for(my($g)=max(0,$ad-9);$g<=min(9,$ad);$g++)
       {
         my($f)=$ad - $g;
-        for(my($e)=0;$e<=min(9,$S - $ad);$e++)
+        my($eh)=$S - $ad;
+        for(my($e)=max(0,$eh-9);$e<=min(9,$eh);$e++)
         {
-          my($h) = $S - $ad -$e;
-          next if($h > 9 ||$h < 0);
-          
-          my($eh) = $e + $h;
-          for(my($b)=0;$b<=min(9,$eh);$b++)
+          my($h) = $eh - $e;
+          for(my($b)=max(0,$eh-9);$b<=min(9,$eh);$b++)
           {
-            my($c) = $S - $ad - $b;
+            my($c) = $eh - $b;
+            
+            my($i_count)=0;
             
             my($ab) = $a + $b;
             for(my($i)=0;$i<=min(9,$S - $ab);$i++)
@@ -61,24 +62,29 @@ sub num_grids
               next if($o > 9 ||$o < 0);
               next if($p > 9 ||$p < 0);
               
-              my($ac) = $a + $c;
-              for(my($k)=0;$k<=min(9,$S - $ac);$k++)
-              {
-                my($m) = $S - $ac - $k;
-                my($l) = $S - $e - $f - $k;
-                my($n) = $S - $g - $h - $m;
-
-                next if($m > 9 ||$m < 0);
-                next if($l > 9 ||$l < 0);
-                next if($n > 9 ||$n < 0);
-                $count++;
-              }
+              $i_count++;
             }
+            
+            my($k_count)=0;
+            
+            my($ac) = $a + $c;
+            for(my($k)=0;$k<=min(9,$S - $ac);$k++)
+            {
+              my($m) = $S - $ac - $k;
+              my($l) = $S - $e - $f - $k;
+              my($n) = $S - $g - $h - $m;
+
+              next if($m > 9 ||$m < 0);
+              next if($l > 9 ||$l < 0);
+              next if($n > 9 ||$n < 0);
+              $k_count++;
+            }
+            $count += $i_count * $k_count;
+            
           }
         }
       }
     }
   }
-  print "$count\n"; 
   return $count;
 }
