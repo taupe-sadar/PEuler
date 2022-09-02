@@ -1,9 +1,28 @@
 use strict;
 use warnings;
 use Data::Dumper;
-
-use Hashtools;
 use integer;
+
+# In order to calculate ulam sequences, two properties must be proved
+#   1) If an ulam sequence has only finite even terms, the sequence is periodic
+#   2) For init values (2,v), with v = 2k + 1 (k >= 5) there are only 2 even terms
+# These are proven in research papers (Finch 1992) and (Schmerl,Fpiegel 1994)
+#
+# As part of the proof, and the methodology to determine the sequence elements,
+# We can notice that
+#  1) (2,2v + 2) are the 2 only even terms, therefore
+#  2) An odd term x is part of the sequence iff 
+#    (x - 2) is part of the sequence XOR (x - (2v + 2)) is part of the sequence
+#  3) Then an algorithm may use a circular state of the (v+1) elements 
+#     [ x(n), x(n+2), ... , x(n + 2v) ] in order to compute all elements
+#  
+# This implementation use a binary representation for the previous state, where x(n-2) 
+# is the highest bit, for example (v=5) 0b100011 means that only x(n-2) x(n-10) x(n-12) 
+# are part of the sequence.
+# Then the algorithm left shifts this state, gathering x(n) on the left, creating x(n + 2v + 2)
+# on the right.
+# once the initial state is reached for the first time, we have the period, and then we can compute 
+# any term
 
 my($n)=10**11;
 my($count)=0;
