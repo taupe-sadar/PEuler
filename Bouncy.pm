@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use Permutations;
 no warnings 'recursion';
+use Math::BigInt;
+use SmartMult;
 
 my(%cache_bouncy)=();
 my(%cache_descending_power10)=();
@@ -12,16 +14,15 @@ my(%cache_descending_power10)=();
 sub count_bouncy_power10
 {
   my($n)=@_;
-  my($num)=10**$n;
+  my($num)=SmartMult::smart_mult(10,$n);
   if( !exists($cache_bouncy{$num}))
   {
     my($constants )= 9*$n ;
     my($ascending ) = Permutations::cnk( $n + 9 , 9 ) - $constants - 1; #Remove the num of constant terms
     my($decending)= count_descending( $n );
-    $cache_bouncy{$num} = 10**$n -1 - ($ascending + $decending + $constants);
+    $cache_bouncy{$num} = $num - 1 - ($ascending + $decending + $constants);
   }
   return $cache_bouncy{$num}
-  
 }
 
 sub count_descending
@@ -74,17 +75,18 @@ sub count_bouncy
       if( $type =~ m/(.)!/ )
       {
         my($previous_part)=$1;
+        my($big)=SmartMult::smart_mult(10,$num_zeros);
         if( $previous_part eq '<' )
         {
-          $cache_bouncy{$n} = $parts[2]*(10**$num_zeros);
+          $cache_bouncy{$n} = $parts[2]*$big;
         }
         else #'>'
         {
           $parts[1]=~m/(.)$/;
           my( $last_of_monotone_part )=$1;
           my($working_zeros)= $num_zeros + length($parts[2]) - 1;
-          my($working_base) = 10**$working_zeros;
-          $cache_bouncy{$n} = $parts[2]* (10**$num_zeros) - ($last_of_monotone_part + 1)*$working_base  + 1;
+          my($working_base) = SmartMult::smart_mult(10,$working_zeros);
+          $cache_bouncy{$n} = $parts[2]* $big - ($last_of_monotone_part + 1)*$working_base  + 1;
           
           for(my($i)=0;$i<= $last_of_monotone_part; $i++ )
           {
@@ -92,8 +94,8 @@ sub count_bouncy
           }
         }
         
-        
-        $cache_bouncy{$n} += count_bouncy( "$parts[0]$parts[1]"*(10**($num_zeros + length($parts[2]))));
+        my($big_parts)=SmartMult::smart_mult(10,$num_zeros + length($parts[2]));
+        $cache_bouncy{$n} += count_bouncy( "$parts[0]$parts[1]"*$big_parts);
       }
       elsif($type eq '<' )
       {
@@ -102,7 +104,7 @@ sub count_bouncy
         my($constant_digit)=$1;
         $cache_bouncy{$n} = ($num_zeros == 0) ? 0 : 1; # Is this number bouncy ?
         my($working_zeros)=  $num_zeros;
-        my($working_base) = 10**$working_zeros;
+        my($working_base) = SmartMult::smart_mult(10,$working_zeros);
         
         for( my($d)= $#digits;$d>=1;$d--)
         {
@@ -140,7 +142,7 @@ sub count_bouncy
       {
         my(@digits)=split(//,$parts[1]);
         my($working_zeros)=  $num_zeros;
-        my($working_base) = 10**$working_zeros;
+        my($working_base) = SmartMult::smart_mult(10,$working_zeros);
         
         $cache_bouncy{$n} = 0; # This number is descending
         for( my($d)= $#digits;$d>=0;$d--)
@@ -162,7 +164,7 @@ sub count_bouncy
         $parts[0]=~m/(.)$/;
         my($digits)=$1;
         my($working_zeros)= $num_zeros;
-        my($working_base) = 10**$working_zeros;
+        my($working_base) = SmartMult::smart_mult(10,$working_zeros);
 
         $cache_bouncy{$n} = 0; # This number is descending
         for( my($d)= length($parts[0]) - 1 ;$d>=1;$d--)
@@ -214,7 +216,7 @@ sub count_bouncy_interval
   {
     return 0;
   }
-  return 10**$num_digits - count_ascending_interval($prefixlast, $num_digits) - count_descending_interval($prefixlast, $num_digits) + 1;
+  return SmartMult::smart_mult(10,$num_digits) - count_ascending_interval($prefixlast, $num_digits) - count_descending_interval($prefixlast, $num_digits) + 1;
 }
 
 sub ascending_or_descending

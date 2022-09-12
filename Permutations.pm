@@ -2,7 +2,6 @@ package Permutations;
 use strict;
 use warnings;
 use Data::Dumper;
-use Math::BigInt;
 use List::Util qw( sum );
 
 our(@facts)=(1,1);
@@ -47,7 +46,7 @@ sub subset
       }
       return ($a,@perm);
     }
-    $idx-=$size_subset->bstr();
+    $idx-=$size_subset;
     $size_subset*=($n-$k-$a);
     $size_subset/=($n-$a-1);
   }
@@ -62,7 +61,7 @@ sub cnk
   my($key)="$n-$k";
   if( !exists( $cache_cnk{$key}))
   {
-    my($val)=new Math::BigInt(1);
+    my($val)=1;
     my($i)=0;
     for($i=0;$i<$k;$i++)
     {
