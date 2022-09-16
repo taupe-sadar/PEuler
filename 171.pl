@@ -48,7 +48,7 @@ foreach my $s (@squares)
   # $t = $p % $modulo ;
   print " $s : ".($t/$num_digits)." ($test{$s}/$alt{$s}[0])\n";
   
-  $total = ($total + $t)%$base_modulo;
+  $total = ($total + $t/$num_digits)%$base_modulo;
 }
 print $total;
 
