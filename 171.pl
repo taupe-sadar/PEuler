@@ -31,9 +31,12 @@ find_sol_brute_force($num_digits,\%test);
 
 # print Dumper \%test;<STDIN>;
 
+my(%alt) = find_sol_alt($num_digits);
+
 my($total)=0;
 foreach my $s (@squares)
 {
+  $alt{$s} = [0,0] if(!exists($alt{$s}));
   my($t)=find_sol($num_digits, $s, 9, 0, 1, 0, [] );
   $t = ((new Math::BigInt($ones) * $t) % $modulo)->bint();
   
@@ -43,7 +46,7 @@ foreach my $s (@squares)
   }
   
   # $t = $p % $modulo ;
-  print " $s : ".($t/$num_digits)." ($test{$s})\n";
+  print " $s : ".($t/$num_digits)." ($test{$s}/$alt{$s}[0])\n";
   
   $total = ($total + $t)%$base_modulo;
 }
@@ -140,4 +143,60 @@ sub find_sol
     }
   }
   return $sum;
+}
+
+sub find_sol_alt
+{
+  my($n_digits)=@_;
+  
+  my($rvalues)={};
+  
+  for(my($i)=0;$i<=9;$i++)
+  {
+    $$rvalues{$tab_squares[$i]} = [$i,1];
+  }
+  
+  # foreach my $s (sort({$a<=>$b}keys(%$rvalues)))
+  # {
+    # print "$s : $$rvalues{$s}\n";
+  # }
+  # <STDIN>;
+  
+  my($exp)=10;
+  for(my($d)=2;$d<=$n_digits;$d++)
+  {
+    my(%new_values)=();
+    
+    for(my($j)=0;$j<=9;$j++)
+    {
+      my($val)=($d<=9)?($j*$exp):0;
+      foreach my $s (keys(%$rvalues))
+      {
+        my($new_key) = $s + $tab_squares[$j];
+        $new_values{$new_key} = [0,0] if(!exists($new_values{$new_key}));
+        
+        # if( $new_key == 4 )
+        # {
+          # print "($new_key) $d : $s + $tab_squares[$j] -> $new_values{$new_key} + $$rvalues{$s} + $val\n";
+          # <STDIN>;
+        # }
+        my($base)=$$rvalues{$s}[0];
+        my($count)=$$rvalues{$s}[1];
+        $new_values{$new_key}[0] = ($new_values{$new_key}[0] + $val*$count + $base) % $base_modulo;
+        $new_values{$new_key}[1] = ($new_values{$new_key}[1] + $count) % $base_modulo;
+      }
+    }
+    
+    $rvalues=\%new_values;
+    $exp*=10 if($d<=9);
+    
+    # print "------ $d ---------\n"; 
+    # foreach my $s (sort({$a<=>$b}keys(%$rvalues)))
+    # {
+      # print "$s : $$rvalues{$s}\n";
+    # }
+    # print Dumper $rvalues; 
+    # <STDIN>;
+  }
+  return %$rvalues;
 }
