@@ -2,40 +2,33 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Permutations;
-use List::Util qw( min max );
-use POSIX qw/ceil/;
+use List::Util qw( min );
 
-my($size)=18;
+my($max_size)=18;
 my($max_occurence)=3;
 
-my(@seq)=();
-my($count)=all_numbers(\@seq,0,$max_occurence);
-
-print $count;
-
-sub all_numbers
+my($rquantities_numbers)=[1];
+for(my($i)=1;$i<=10;$i++)
 {
-  my($rseq,$nb_occ_used,$max_occ)=@_;
-  my($sum)=0;
-  if( $nb_occ_used == $size )
+  my($rwith_less_digits)=$rquantities_numbers;
+  my($limited_size)=min($#$rwith_less_digits,$max_size);
+  
+  my(@quantities)=(0)x min($#$rwith_less_digits + $max_occurence+1,$max_size);
+  for(my($j)=0;$j<=min($#$rwith_less_digits,$max_size);$j++)
   {
-    print join(" ",@$rseq)."\n";
-    #computade
-  }
-  elsif( $nb_occ_used < $size )
-  {
-    my($i_min) =  max( 1, ceil($size / (10 - ($#$rseq + 1))));
-    for( my($i)=$max_occ; $i >= $i_min; $i-- )
+    for(my($occ)=0;$occ<=min($max_occurence,$max_size-$j);$occ++)
     {
-      push(@$rseq,$i);
-      $sum += all_numbers( $rseq,$nb_occ_used + $i,$i );
-      pop(@$rseq);
+      if($i<10)
+      {
+        $quantities[$j+$occ] += $$rwith_less_digits[$j] * Permutations::cnk($j+$occ,$occ);
+      }
+      else
+      {
+        $quantities[$j+$occ] += $$rwith_less_digits[$j] * Permutations::cnk($j+$occ -1,$occ);
+      }
     }
   }
-  else
-  {
-    print " $nb_occ_used, should not happen\n";
-    print join(" ",@$rseq)."\n";
-  }
-  return $sum;
+  $rquantities_numbers = \@quantities;
 }
+
+print $$rquantities_numbers[$max_size];
