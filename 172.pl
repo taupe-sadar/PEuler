@@ -4,6 +4,10 @@ use Data::Dumper;
 use Permutations;
 use List::Util qw( min );
 
+# Recursive approach : At step i, the array will contain the quantity
+# of numbers that can be written with i diffent digits, with no more 
+# than 3 each
+
 my($max_size)=18;
 my($max_occurence)=3;
 
