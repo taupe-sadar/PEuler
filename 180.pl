@@ -6,6 +6,13 @@ use Fraction;
 use POSIX qw/floor/;
 use integer;
 
+# The function f can be written as :
+#   f(x,y,z) = (x^n + y^n - z^n) * (x + y + z)
+# The fermat theorem says that for x,y,z positive integers, there is no solution for n >= 3
+# Consequently, for rational numbers x,y,z in ]0,1[, the only n possibles are -2, -1, 1 and 2
+
+
+
 my($max_order)=35;
 my($prime_numerators,$prime_numerators_inverse)=calc_prime_numerators($max_order);
 my(@sum_frac_by_denom)=(0)x($max_order+1);
