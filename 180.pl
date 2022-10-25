@@ -9,12 +9,8 @@ use integer;
 my($max_order)=35;
 my($prime_numerators,$prime_numerators_inverse)=calc_prime_numerators($max_order);
 my(@sum_frac_by_denom)=(0)x($max_order+1);
-# print Dumper $prime_numerators_inverse;<STDIN>;
 
 my(%sum_marks)=();
-
-# print "".(32*27*25*7*11*13*17*19*23*29*31)."\n";
-# <STDIN>;
 
 for(my($q1)=2;$q1<=$max_order;$q1++)
 {
@@ -51,9 +47,6 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
           if($zdenom <= $max_order)
           {
             store_s($$rp1[$i1],$q1,$$rp2[$i2],$q2,$num/$zgcd,$zdenom);
-            # print "$$rp1[$i1]/$q1 + $$rp2[$i2]/$q2 = $num/$base\n";
-            # <STDIN>;
-            
           }
         }
         if($num_squ < $base_squ)
@@ -66,12 +59,9 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
             if( $zdenom <= $max_order )
             {
               store_s($$rp1[$i1],$q1,$$rp2[$i2],$q2,$znum/$zgcd,$zdenom);
-              # print "$$rp1[$i1]/$q1² + $$rp2[$i2]/$q2² = $znum/$base²\n";
-              # <STDIN>;
             }
           }
         }
-        
       }
       last if($last);
     }
@@ -106,8 +96,6 @@ for(my($p1)=1;$p1<$max_order;$p1++)
         if($znum <= $max_order)
         {
           store_s($p1,$$rq1[$i1],$p2,$$rq2[$i2],$base/$zgcd,$znum);
-          # print "$$rq1[$i1]/$p1 + $$rq2[$i2]/$p2 = $num/$base\n";
-          # <STDIN>;
         }
         my($znum_root)=floor(sqrt($num_squ));
         if($znum_root*$znum_root == $num_squ)
@@ -117,19 +105,14 @@ for(my($p1)=1;$p1<$max_order;$p1++)
           if($znum_root_square <= $max_order)
           {
             store_s($p1,$$rq1[$i1],$p2,$$rq2[$i2],$base/$zgcd_square,$znum_root_square);
-            # print "$$rq1[$i1]/$p1² + $$rq2[$i2]/$p2² = $znum_root/$base²\n";
-            # <STDIN>;
           }
         }
-        
       }
     }
   }
 }
 
 total_frac();
-print "-----------------------------\n";
-test();
 
 sub add_frac
 {
@@ -150,7 +133,6 @@ sub store_s
   }
 }
 
-
 sub total_frac
 {
   my($int_part)=0;
@@ -169,149 +151,6 @@ sub total_frac
   }
   print "$int_part + $frac_part\n";
   print "".($int_part * $frac_part->denominator() + $frac_part->numerator() + $frac_part->denominator())."\n";
-}
-
-sub test_golden
-{
-  my($x,$y,$z,$n)=@_;
-  my($f1)=pow($x,$n+1)+pow($y,$n+1)-pow($z,$n+1);
-  my($f2)=(pow($x,$n-1)+pow($y,$n-1)-pow($z,$n-1))*($x*$y + $y*$z + $z*$x);
-  my($f3)=(pow($x,$n-2)+pow($y,$n-2)-pow($z,$n-2))*($x*$y*$z);
-  my($f)=$f1 + $f2 - $f3;
-  
-  if($f->numerator() != 0 )
-  {
-    # print "".pow($x,$n+1)." ".pow($y,$n+1)." ".pow($z,$n+1)."\n";
-    # print "$x $y $z ($n) $f1 $f2 $f3\n";<STDIN>;
-  }
-  
-  return $f->numerator() == 0;
-}
-
-sub pow
-{
-  my($f,$n)=@_;
-  return $f->inverse() if($n == -1);
-  my($p)=Fraction->new(1,1);
-  while($n > 0)
-  {
-    $p*=$f;
-    $n--;
-  }
-  return $p;
-}
-
-sub test
-{
-  my($sum)=Fraction->new(0,1);
-  my($integer_part)=0;
-  my(%all)=();
-  
-  my(@sumX)=(0)x($max_order+1);
-  for(my($a)=1;$a<=$max_order;$a++)
-  {
-    for(my($b)=$a+1;$b<=$max_order;$b++)
-    {
-      for(my($c)=1;$c<=$max_order;$c++)
-      {
-        for(my($d)=$c+1;$d<=$max_order;$d++)
-        {
-          my($f)=Fraction->new($a,$b);
-          my($g)=Fraction->new($c,$d);
-          my($h)=$f+$g;
-          if($h->numerator() < $h->denominator() && $h->denominator() <= $max_order )
-          {
-            unless(exists($all{"$f-$g-$h"}))
-            {
-              $all{"$f-$g-$h"} = 1;
-              $sum += $f+$g+$h;
-              # print "$f-$g-$h (1)\n";
-              $sumX[$f->denominator()] += $f->numerator();
-              $sumX[$g->denominator()] += $g->numerator();
-              $sumX[$h->denominator()] += $h->numerator();
-           }
-          }
-          my($f2)=Fraction->new($a*$a,$b*$b);
-          my($g2)=Fraction->new($c*$c,$d*$d);
-          my($issqu)=is_square($a*$a*$d*$d + $c*$c*$b*$b);
-          if($issqu)
-          {
-            my($h2)=$f2+$g2;
-            my($squ_h)=Fraction->new(sqrt($h2->numerator()),sqrt($h2->denominator()));
-            if($squ_h->numerator() < $squ_h->denominator() && $squ_h->denominator() <= $max_order)
-            {
-              
-              unless(exists($all{"$f-$g-$squ_h"}))
-              {
-                $all{"$f-$g-$squ_h"} = 1;
-                $sum += $f+$g+$squ_h;
-                # print "$f-$g-$squ_h (2)\n";
-                $sumX[$f->denominator()] += $f->numerator();
-                $sumX[$g->denominator()] += $g->numerator();
-                $sumX[$squ_h->denominator()] += $squ_h->numerator();
-              }
-            }
-          }
-          my($f3)=Fraction->new($b,$a);
-          my($g3)=Fraction->new($d,$c);
-          my($h3)=($f3+$g3)->inverse();
-          if($h3->numerator() < $h3->denominator() && $h3->denominator() <= $max_order )
-          {
-            unless(exists($all{"$f-$g-$h3"}))
-            {
-              $all{"$f-$g-$h3"} = 1;
-              $sum += $f+$g+$h3;
-              # print "$f-$g-$h3 (3)\n";
-              $sumX[$f->denominator()] += $f->numerator();
-              $sumX[$g->denominator()] += $g->numerator();
-              $sumX[$h3->denominator()] += $h3->numerator();
-            
-            }
-          }
-          my($f4)=Fraction->new($b*$b,$a*$a);
-          my($g4)=Fraction->new($d*$d,$c*$c);
-          if($issqu)
-          {
-            my($h4)=($f4+$g4)->inverse();
-            my($squ_h)=Fraction->new(sqrt($h4->numerator()),sqrt($h4->denominator()));
-            if($squ_h->numerator() < $squ_h->denominator() && $squ_h->denominator() <= $max_order)
-            {
-              
-              unless(exists($all{"$f-$g-$squ_h"}))
-              {
-                $all{"$f-$g-$squ_h"} = 1;
-                $sum += $f+$g+$squ_h;
-                # print "$f-$g-$squ_h (4)\n";
-                $sumX[$f->denominator()] += $f->numerator();
-                $sumX[$f->denominator()] += $g->numerator();
-                $sumX[$f->denominator()] += $squ_h->numerator();
-              }
-            }
-          }
-          while($sum->numerator() > $sum->denominator())
-          {
-            $sum -= Fraction->new(1,1);
-            $integer_part++;
-          }
-          
-        }
-      }
-    }
-  }
-  for(my($i)=2;$i<=$max_order;$i++)
-  {
-    print "$i : $sumX[$i]\n";
-  }
-  
-  
-  print "test : $integer_part + $sum\n"
-}
-
-sub is_square
-{
-  my($n)=@_;
-  my($x)=floor(sqrt($n));
-  return ($x*$x == $n);
 }
 
 sub calc_prime_numerators
