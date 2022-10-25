@@ -11,6 +11,7 @@ my($prime_numerators,$prime_numerators_inverse)=calc_prime_numerators($max_order
 my(@sum_frac_by_denom)=(0)x($max_order+1);
 # print Dumper $prime_numerators_inverse;<STDIN>;
 
+my(%sum_marks)=();
 
 # print "".(32*27*25*7*11*13*17*19*23*29*31)."\n";
 # <STDIN>;
@@ -34,9 +35,6 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
       my($i2start) = ($q1 == $q2)?$i1:0;
       for(my($i2)=$i2start;$i2<=$#$rp2;$i2++)
       {
-        
-        
-        my($double_count)=($q1==$q2 && $i1==$i2)?1:2;
         my($num_other) = $qq1*$$rp2[$i2];
         my($num)=$num_other + $num_part;
         my($num_squ)=$num_other*$num_other + $num_squ_part;
@@ -52,17 +50,7 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
           my($zdenom)=$base/$zgcd;
           if($zdenom <= $max_order)
           {
-            
-            #Official
-            add_frac($num*2*$double_count/$zgcd,$zdenom);
-            #tmp
-            
-            # add_frac($num*$double_count/$zgcd,$zdenom);
-            # add_frac($$rp1[$i1]*$double_count,$q1);
-            # add_frac($$rp2[$i2]*$double_count,$q2);
-            # total_frac();<STDIN>;
-            
-            
+            store_s($$rp1[$i1],$q1,$$rp2[$i2],$q2,$num/$zgcd,$zdenom);
             # print "$$rp1[$i1]/$q1 + $$rp2[$i2]/$q2 = $num/$base\n";
             # <STDIN>;
             
@@ -77,13 +65,8 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
             my($zdenom)=$base/$zgcd;
             if( $zdenom <= $max_order )
             {
-              add_frac($znum*$double_count/$zgcd,$zdenom);
-              add_frac($$rp1[$i1]*$double_count,$q1);
-              add_frac($$rp2[$i2]*$double_count,$q2);
-
-
+              store_s($$rp1[$i1],$q1,$$rp2[$i2],$q2,$znum/$zgcd,$zdenom);
               # print "$$rp1[$i1]/$q1² + $$rp2[$i2]/$q2² = $znum/$base²\n";
-              
               # <STDIN>;
             }
           }
@@ -95,7 +78,7 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
   }
 }
 
-for(my($p1)=1;$p1<0*$max_order;$p1++)
+for(my($p1)=1;$p1<$max_order;$p1++)
 {
   my($rq1)=$$prime_numerators_inverse[$p1];
   for(my($p2)=$p1;$p2<$max_order;$p2++)
@@ -114,20 +97,15 @@ for(my($p1)=1;$p1<0*$max_order;$p1++)
       my($i2start) = ($p1 == $p2)?$i1:0;
       for(my($i2)=$i2start;$i2<=$#$rq2;$i2++)
       {
-        my($double_count)=($p1==$p2 && $i1==$i2)?1:2;
         my($num_other) = $pp1*$$rq2[$i2];
         my($num)=$num_other + $num_part;
         my($num_squ)=$num_other*$num_other + $num_squ_part;
         
         my($zgcd)=Gcd::pgcd($num,$base);
         my($znum)=$num/$zgcd;
-        
-        
         if($znum <= $max_order)
         {
-          add_frac($p1*$double_count,$$rq1[$i1]);
-          add_frac($p2*$double_count,$$rq2[$i2]);
-          add_frac($base*$double_count/$zgcd,$znum);
+          store_s($p1,$$rq1[$i1],$p2,$$rq2[$i2],$base/$zgcd,$znum);
           # print "$$rq1[$i1]/$p1 + $$rq2[$i2]/$p2 = $num/$base\n";
           # <STDIN>;
         }
@@ -138,9 +116,7 @@ for(my($p1)=1;$p1<0*$max_order;$p1++)
           my($znum_root_square)=$znum_root/$zgcd_square;
           if($znum_root_square <= $max_order)
           {
-            add_frac($p1*$double_count,$$rq1[$i1]);
-            add_frac($p2*$double_count,$$rq2[$i2]);
-            add_frac($base*$double_count/$zgcd_square,$znum_root_square);
+            store_s($p1,$$rq1[$i1],$p2,$$rq2[$i2],$base/$zgcd_square,$znum_root_square);
             # print "$$rq1[$i1]/$p1² + $$rq2[$i2]/$p2² = $znum_root/$base²\n";
             # <STDIN>;
           }
@@ -160,6 +136,20 @@ sub add_frac
   my($num,$denom)=@_;
   $sum_frac_by_denom[$denom]+=$num;  
 }
+
+sub store_s
+{
+  my($p1,$q1,$p2,$q2,$psum,$qsum)=@_;
+  my($f)=Fraction->new($p1,$q1)+Fraction->new($p2,$q2)+Fraction->new($psum,$qsum);
+  unless(exists($sum_marks{"$f"}))
+  {
+    $sum_marks{"$f"} = 1;
+    add_frac($p1,$q1);
+    add_frac($p2,$q2);
+    add_frac($psum,$qsum);
+  }
+}
+
 
 sub total_frac
 {
@@ -262,12 +252,6 @@ sub test
               }
             }
           }
-          while($sum->numerator() > $sum->denominator())
-          {
-            $sum -= Fraction->new(1,1);
-            $integer_part++;
-          }
-          next;
           my($f3)=Fraction->new($b,$a);
           my($g3)=Fraction->new($d,$c);
           my($h3)=($f3+$g3)->inverse();
