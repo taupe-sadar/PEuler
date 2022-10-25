@@ -112,7 +112,10 @@ for(my($p1)=1;$p1<$max_order;$p1++)
   }
 }
 
-total_frac();
+my($integer_part,$residual_part)=total_frac();
+print "".($integer_part * $residual_part->denominator() + $residual_part->numerator() + $residual_part->denominator())."\n";
+
+
 
 sub add_frac
 {
@@ -139,7 +142,6 @@ sub total_frac
   my($frac_part)=Fraction->new(0,1);
   for(my($f)=2;$f<=$max_order;$f++)
   {
-    print "$f : $sum_frac_by_denom[$f]\n";
     my($rem)=$sum_frac_by_denom[$f]%$f;
     $int_part += ($sum_frac_by_denom[$f] - $rem)/$f;
     $frac_part += Fraction->new($rem,$f);
@@ -149,8 +151,8 @@ sub total_frac
       $int_part++;
     }
   }
-  print "$int_part + $frac_part\n";
-  print "".($int_part * $frac_part->denominator() + $frac_part->numerator() + $frac_part->denominator())."\n";
+  
+  return ($int_part,$frac_part);
 }
 
 sub calc_prime_numerators
