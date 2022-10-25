@@ -11,7 +11,8 @@ my($prime_numerators,$prime_numerators_inverse)=calc_prime_numerators($max_order
 my(@sum_frac_by_denom)=(0)x($max_order+1);
 # print Dumper $prime_numerators_inverse;<STDIN>;
 
-print "".(32*27*25*7*11*13*17*19*23*29*31)."\n";
+
+# print "".(32*27*25*7*11*13*17*19*23*29*31)."\n";
 # <STDIN>;
 
 for(my($q1)=2;$q1<=$max_order;$q1++)
@@ -33,6 +34,8 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
       my($i2start) = ($q1 == $q2)?$i1:0;
       for(my($i2)=$i2start;$i2<=$#$rp2;$i2++)
       {
+        
+        
         my($double_count)=($q1==$q2 && $i1==$i2)?1:2;
         my($num_other) = $qq1*$$rp2[$i2];
         my($num)=$num_other + $num_part;
@@ -45,12 +48,24 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
         
         if($num < $base)
         {
-          my($zgcd)=$base/Gcd::pgcd($num,$base);
+          my($zgcd)=Gcd::pgcd($num,$base);
           my($zdenom)=$base/$zgcd;
           if($zdenom <= $max_order)
           {
+            
+            #Official
             add_frac($num*2*$double_count/$zgcd,$zdenom);
-            # print "$$rp1[$i1]/$q1 + $$rp2[$i2]/$q2 = $num/$base\n";<STDIN>;
+            #tmp
+            
+            # add_frac($num*$double_count/$zgcd,$zdenom);
+            # add_frac($$rp1[$i1]*$double_count,$q1);
+            # add_frac($$rp2[$i2]*$double_count,$q2);
+            # total_frac();<STDIN>;
+            
+            
+            # print "$$rp1[$i1]/$q1 + $$rp2[$i2]/$q2 = $num/$base\n";
+            # <STDIN>;
+            
           }
         }
         if($num_squ < $base_squ)
@@ -58,12 +73,18 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
           my($znum)=floor(sqrt($num_squ));
           if($znum*$znum == $num_squ)
           {
-            my($zgcd)=$base/Gcd::pgcd($num,$base);
+            my($zgcd)=Gcd::pgcd($znum,$base);
             my($zdenom)=$base/$zgcd;
-            if( $zgcd <= $max_order )
+            if( $zdenom <= $max_order )
             {
-              add_frac(($num + $znum)*$double_count/$zgcd,$zdenom);
-              # print "$$rp1[$i1]/$q1² + $$rp2[$i2]/$q2² = $znum/$base²\n";<STDIN>;
+              add_frac($znum*$double_count/$zgcd,$zdenom);
+              add_frac($$rp1[$i1]*$double_count,$q1);
+              add_frac($$rp2[$i2]*$double_count,$q2);
+
+
+              # print "$$rp1[$i1]/$q1² + $$rp2[$i2]/$q2² = $znum/$base²\n";
+              
+              # <STDIN>;
             }
           }
         }
@@ -74,7 +95,7 @@ for(my($q1)=2;$q1<=$max_order;$q1++)
   }
 }
 
-for(my($p1)=1;$p1<$max_order;$p1++)
+for(my($p1)=1;$p1<0*$max_order;$p1++)
 {
   my($rq1)=$$prime_numerators_inverse[$p1];
   for(my($p2)=$p1;$p2<$max_order;$p2++)
@@ -100,24 +121,28 @@ for(my($p1)=1;$p1<$max_order;$p1++)
         
         my($zgcd)=Gcd::pgcd($num,$base);
         my($znum)=$num/$zgcd;
+        
+        
         if($znum <= $max_order)
         {
           add_frac($p1*$double_count,$$rq1[$i1]);
           add_frac($p2*$double_count,$$rq2[$i2]);
           add_frac($base*$double_count/$zgcd,$znum);
-          # print "$$rq1[$i1]/$p1 + $$rq2[$i2]/$p2 = $num/$base\n";<STDIN>;
+          # print "$$rq1[$i1]/$p1 + $$rq2[$i2]/$p2 = $num/$base\n";
+          # <STDIN>;
         }
         my($znum_root)=floor(sqrt($num_squ));
         if($znum_root*$znum_root == $num_squ)
         {
           my($zgcd_square)=Gcd::pgcd($znum_root,$base);
-          my($znum_root_square)=$num/$zgcd_square;
+          my($znum_root_square)=$znum_root/$zgcd_square;
           if($znum_root_square <= $max_order)
           {
             add_frac($p1*$double_count,$$rq1[$i1]);
             add_frac($p2*$double_count,$$rq2[$i2]);
-            add_frac($base*$double_count/$zgcd,$znum_root_square);
-            # print "$$rq1[$i1]/$p1² + $$rq2[$i2]/$p2² = $znum_root/$base²\n";<STDIN>;
+            add_frac($base*$double_count/$zgcd_square,$znum_root_square);
+            # print "$$rq1[$i1]/$p1² + $$rq2[$i2]/$p2² = $znum_root/$base²\n";
+            # <STDIN>;
           }
         }
         
@@ -126,28 +151,34 @@ for(my($p1)=1;$p1<$max_order;$p1++)
   }
 }
 
-my($int_part)=0;
-my($frac_part)=Fraction->new(0,1);
-for(my($f)=2;$f<=$max_order;$f++)
-{
-  # print "$f : $sum_frac_by_denom[$f]\n";
-  my($rem)=$sum_frac_by_denom[$f]%$f;
-  $int_part += ($sum_frac_by_denom[$f] - $rem)/$f;
-  $frac_part += Fraction->new($rem,$f);
-  if($frac_part->numerator() >= $frac_part->denominator() )
-  {
-    $frac_part -= Fraction->new(1,1);
-    $int_part++;
-  }
-}
-print "$int_part + $frac_part\n";
-print "".($int_part * $frac_part->denominator() + $frac_part->numerator() + $frac_part->denominator())."\n";
+total_frac();
+print "-----------------------------\n";
 test();
 
 sub add_frac
 {
   my($num,$denom)=@_;
   $sum_frac_by_denom[$denom]+=$num;  
+}
+
+sub total_frac
+{
+  my($int_part)=0;
+  my($frac_part)=Fraction->new(0,1);
+  for(my($f)=2;$f<=$max_order;$f++)
+  {
+    print "$f : $sum_frac_by_denom[$f]\n";
+    my($rem)=$sum_frac_by_denom[$f]%$f;
+    $int_part += ($sum_frac_by_denom[$f] - $rem)/$f;
+    $frac_part += Fraction->new($rem,$f);
+    if($frac_part->numerator() >= $frac_part->denominator() )
+    {
+      $frac_part -= Fraction->new(1,1);
+      $int_part++;
+    }
+  }
+  print "$int_part + $frac_part\n";
+  print "".($int_part * $frac_part->denominator() + $frac_part->numerator() + $frac_part->denominator())."\n";
 }
 
 sub test_golden
@@ -185,6 +216,8 @@ sub test
   my($sum)=Fraction->new(0,1);
   my($integer_part)=0;
   my(%all)=();
+  
+  my(@sumX)=(0)x($max_order+1);
   for(my($a)=1;$a<=$max_order;$a++)
   {
     for(my($b)=$a+1;$b<=$max_order;$b++)
@@ -202,8 +235,11 @@ sub test
             {
               $all{"$f-$g-$h"} = 1;
               $sum += $f+$g+$h;
-              # print "$f-$g-$h\n";
-            }
+              # print "$f-$g-$h (1)\n";
+              $sumX[$f->denominator()] += $f->numerator();
+              $sumX[$g->denominator()] += $g->numerator();
+              $sumX[$h->denominator()] += $h->numerator();
+           }
           }
           my($f2)=Fraction->new($a*$a,$b*$b);
           my($g2)=Fraction->new($c*$c,$d*$d);
@@ -219,10 +255,19 @@ sub test
               {
                 $all{"$f-$g-$squ_h"} = 1;
                 $sum += $f+$g+$squ_h;
-                # print "$f-$g-$squ_h\n";
+                # print "$f-$g-$squ_h (2)\n";
+                $sumX[$f->denominator()] += $f->numerator();
+                $sumX[$g->denominator()] += $g->numerator();
+                $sumX[$squ_h->denominator()] += $squ_h->numerator();
               }
             }
           }
+          while($sum->numerator() > $sum->denominator())
+          {
+            $sum -= Fraction->new(1,1);
+            $integer_part++;
+          }
+          next;
           my($f3)=Fraction->new($b,$a);
           my($g3)=Fraction->new($d,$c);
           my($h3)=($f3+$g3)->inverse();
@@ -232,7 +277,11 @@ sub test
             {
               $all{"$f-$g-$h3"} = 1;
               $sum += $f+$g+$h3;
-              # print "$f-$g-$h3\n";
+              # print "$f-$g-$h3 (3)\n";
+              $sumX[$f->denominator()] += $f->numerator();
+              $sumX[$g->denominator()] += $g->numerator();
+              $sumX[$h3->denominator()] += $h3->numerator();
+            
             }
           }
           my($f4)=Fraction->new($b*$b,$a*$a);
@@ -248,7 +297,10 @@ sub test
               {
                 $all{"$f-$g-$squ_h"} = 1;
                 $sum += $f+$g+$squ_h;
-                # print "$f-$g-$squ_h\n";<STDIN>;
+                # print "$f-$g-$squ_h (4)\n";
+                $sumX[$f->denominator()] += $f->numerator();
+                $sumX[$f->denominator()] += $g->numerator();
+                $sumX[$f->denominator()] += $squ_h->numerator();
               }
             }
           }
@@ -262,7 +314,13 @@ sub test
       }
     }
   }
-  print "test : $integer_part + $sum\n";
+  for(my($i)=2;$i<=$max_order;$i++)
+  {
+    print "$i : $sumX[$i]\n";
+  }
+  
+  
+  print "test : $integer_part + $sum\n"
 }
 
 sub is_square
