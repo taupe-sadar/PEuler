@@ -14,7 +14,7 @@ use Gcd;
 # 105 : 1725323624056
 
 
-my($radius)=105;
+my($radius)=3;
 
 my(%ratios)=("0/1" => {"num"=> $radius-1, "ratio" => [0,1]});
 
@@ -46,7 +46,7 @@ foreach my $rv (sort sort_radius_fn values(%ratios))
   # print $$rv{"num"}." ".$$rv{"ratio"}[0]."/".$$rv{"ratio"}[1]."\n"; <STDIN>;
   push(@ratios_occ,$$rv{"num"});
 }
-# print Dumper \@ratios_occ;
+print Dumper \@ratios_occ;
 
 my($num_angles)=$#ratios_occ;
 
@@ -61,32 +61,107 @@ for(my($i)=1;$i<2*$num_angles;$i++)
 my($sum_period)=$cumulated[2*$num_angles-1];
 
 my($all)=0;
-for(my($high_angle)=0;$high_angle < 2*$num_angles; $high_angle++)
+for(my($high_angle)=0;$high_angle <= $num_angles; $high_angle++)
 {
   my($prod_high)=get_occs($high_angle);
-  # print "($high_angle) : $prod_high\n";
-  for(my($low_angle)=0;$low_angle < 2*$num_angles; $low_angle++)
+  print "($high_angle) : $prod_high\n";
+  for(my($low_angle)=0;$low_angle <= $num_angles; $low_angle++)
   {
     my($prod)=$prod_high * get_occs($low_angle);
     
-    # my($prod_low) = get_occs($low_angle,\@ratios_occ);
-    # print "  ($low_angle) : $prod_low\n";
-    
+    my($prod_low) = get_occs($low_angle,\@ratios_occ);
+    print "  ($low_angle) : $prod_low\n";
     
     if( $high_angle > $low_angle )
     {
-      my($diff) = ($cumulated[$high_angle-1] - $cumulated[$low_angle]);
-      $prod *= $diff*3 + $sum_period;
+      #Work in progress
+      if($high_angle == $num_angles)
+      {
+        my($diff_simple)= $d2;
+        my($diff_long)= 2*$d1 + $d2 + $ratios_occ[0] + $ratios_occ[$low_angle];
+      }
+      if($low_angle == 0)
+      {
+        my($diff_simple)= $d2;
+        my($diff_long)= 2*$d1 + $d2 + $ratios_occ[0] + $ratios_occ[$low_angle];
+      }
       
+      
+      my($d1)=($low_angle > 0) ?($cumulated[$low_angle-1] - $cumulated[0]) : 0;
+      my($d2)=($cumulated[$high_angle-1] - $cumulated[$low_angle]);
+      my($d3)=($high_angle < $num_angles)?($cumulated[$num_angles-1] - $cumulated[$high_angle]):0;
+      my($diff_simple)= 2 * $d3 + 2 * $d2 + $ratios_occ[$high_angle] + $ratios_occ[$num_angles];
+      my($diff_long)= 4 * $d1 + 2 * $d2 + 2 * $d3 + 2 * $ratios_occ[0] + 2 * $ratios_occ[$low_angle] + $ratios_occ[$high_angle] + $ratios_occ[$num_angles];
+      
+      my($diff) = 3 * $diff_simple + $diff_long + 2 * $sum_period;
+      $diff/=2 if($high_angle == $num_angles);
+      $diff/=2 if($low_angle == 0);
+      
+      print "    $high_angle > $low_angle : $diff\n";
+      
+      $prod *= $diff;
+    }
+    elsif($high_angle < $low_angle)
+    {
+      my($d1)=($high_angle > 0) ?($cumulated[$high_angle-1] - $cumulated[0]) : 0;
+      my($d2)=($cumulated[$low_angle-1] - $cumulated[$high_angle]);
+      my($d3)=($low_angle < $num_angles)?($cumulated[$num_angles-1] - $cumulated[$low_angle]):0;
+      
+      my($diff_simple)= 2 * $d3 + 2 * $d2 + $ratios_occ[$high_angle] + $ratios_occ[$num_angles];
+      my($diff_long)= 4 * $d1 + 2 * $d2 + 2 * $d3  + 2 * $ratios_occ[0]  + 2 * $ratios_occ[$low_angle] + $ratios_occ[$high_angle] + $ratios_occ[$num_angles];
+      
+      my($diff) = 3 * $diff_simple + $diff_long + 2 * $sum_period;
+      $diff/=2 if($high_angle == $num_angles);
+      $diff/=2 if($low_angle == 0);
+
+      print "    $high_angle < $low_angle : $diff\n";
+      
+      $prod *= $diff;
     }
     else
     {
-      
-      my($diff) = ($high_angle > 0) ? $cumulated[$high_angle-1]:0;
-      $diff += $sum_period - $cumulated[$low_angle];
-      $prod *= $diff;
-      
+      if($high_angle == 0)
+      {
+        my($diff)= ($sum_period - $ratios_occ[0]);
+        $prod *= $diff;
+        print "    $high_angle == $low_angle : $diff\n";
+      }
+      elsif($high_angle == $num_angles)
+      {
+        my($diff)= ($sum_period - $ratios_occ[$num_angles]);
+        $prod *= $diff;
+        print "    $high_angle == $low_angle : $diff\n";
+      }
+      else
+      {
+        my($d1)=$cumulated[$high_angle-1] - $cumulated[0];
+        my($d3)=$cumulated[$num_angles-1] - $cumulated[$high_angle];
+        
+        my($diff_simple)= 2*$d3 + $ratios_occ[$num_angles];
+        my($diff_long)= 4*$d3 + 6*$d1 + 2* $ratios_occ[$num_angles] + 3 * $ratios_occ[0] + 2* $ratios_occ[$high_angle];
+        
+        my($diff)= $diff_long + $diff_simple * 3 + $sum_period;
+        
+        print "    $high_angle == $low_angle : $diff\n";
+        
+        $prod *= $diff;
+      }
     }
+    
+    # if( $high_angle > $low_angle )
+    # {
+      # my($diff) = ($cumulated[$high_angle-1] - $cumulated[$low_angle]);
+      # $prod *= $diff*3 + $sum_period;
+      
+    # }
+    # else
+    # {
+      
+      # my($diff) = ($high_angle > 0) ? $cumulated[$high_angle-1]:0;
+      # $diff += $sum_period - $cumulated[$low_angle];
+      # $prod *= $diff;
+      
+    # }
     
     $all += $prod;
   }
