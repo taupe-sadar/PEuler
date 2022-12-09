@@ -3,6 +3,17 @@ use warnings;
 use Data::Dumper;
 use Gcd;
 
+# 3   : 360
+# 5   : 10600
+# 7   : 111368
+# 10  : 1101232
+# 15  : 13638120
+# 21  : 104845792
+# 50  : 19879613488
+# 100 : 1288029912888
+# 105 : 1725323624056
+
+
 my($radius)=105;
 
 my(%ratios)=("0/1" => {"num"=> $radius-1, "ratio" => [0,1]});
@@ -42,22 +53,41 @@ my($num_angles)=$#ratios_occ;
 print "$num_angles\n";
 
 my(@cumulated)=($ratios_occ[0]);
-for(my($i)=1;$i<=4*$num_angles+1;$i++)
+for(my($i)=1;$i<2*$num_angles;$i++)
 {
   push(@cumulated,$cumulated[-1] + get_occs($i));
 }
 
+my($sum_period)=$cumulated[2*$num_angles-1];
+
 my($all)=0;
-for(my($high_angle)=2;$high_angle < 4*$num_angles; $high_angle++)
+for(my($high_angle)=0;$high_angle < 2*$num_angles; $high_angle++)
 {
   my($prod_high)=get_occs($high_angle);
   # print "($high_angle) : $prod_high\n";
-  for(my($low_angle)=0;$low_angle <= ($high_angle)-2; $low_angle++)
+  for(my($low_angle)=0;$low_angle < 2*$num_angles; $low_angle++)
   {
-    my($prod)=$prod_high * get_occs($low_angle,\@ratios_occ);
-    # print "  ($low_angle) : $prod * ".(($cumulated[$high_angle-1] - $cumulated[$low_angle]))."\n";
+    my($prod)=$prod_high * get_occs($low_angle);
     
-    $prod *= ($cumulated[$high_angle-1] - $cumulated[$low_angle]);
+    # my($prod_low) = get_occs($low_angle,\@ratios_occ);
+    # print "  ($low_angle) : $prod_low\n";
+    
+    
+    if( $high_angle > $low_angle )
+    {
+      my($diff) = ($cumulated[$high_angle-1] - $cumulated[$low_angle]);
+      $prod *= $diff*3 + $sum_period;
+      
+    }
+    else
+    {
+      
+      my($diff) = ($high_angle > 0) ? $cumulated[$high_angle-1]:0;
+      $diff += $sum_period - $cumulated[$low_angle];
+      $prod *= $diff;
+      
+    }
+    
     $all += $prod;
   }
 }
@@ -71,17 +101,9 @@ sub get_occs
   {
     return $ratios_occ[$angle];
   }
-  elsif($angle <= 2*$num_angles)
-  {
-    return $ratios_occ[2*$num_angles - $angle];
-  }
-  elsif($angle <= 3*$num_angles)
-  {
-    return $ratios_occ[$angle - 2*$num_angles];
-  }
   else
   {
-    return $ratios_occ[4*$num_angles - $angle];
+    return $ratios_occ[2*$num_angles - $angle];
   }
 }
 
