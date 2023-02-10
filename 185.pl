@@ -108,18 +108,28 @@ sub obvious_solve
             my($digit)=$$rboard[$i]{'digits'}[$n];
             if( $digit ne '.' )
             {
-              $$rstate{'candidates'}[$n]{$digit} = {};
-              $$rstate{'solution'}[$n] = $digit;
-        
-              $$rboard[$i]{'digits'}[$n] = '.';
-              $$rboard[$i]{'unknown'} --;
-              $$rboard[$i]{'match'} --;
+              if( exists($$rstate{'candidates'}[$n]{$digit}))
+              {
+                $$rstate{'candidates'}[$n] = {};
+                $$rstate{'solution'}[$n] = $digit;
+          
+                $$rboard[$i]{'digits'}[$n] = '.';
+                $$rboard[$i]{'unknown'} --;
+                $$rboard[$i]{'match'} --;
+              }
+              else
+              {
+                $contradiction == 1;
+                last;
+              }
             }
           }
         }
       }
+      last if($contradiction);
     }
-    
+    last if($contradiction);
+
     # print_state($rstate); <STDIN>;
     
     for(my($j)=0;$j<$$rstate{'size'};$j++)
