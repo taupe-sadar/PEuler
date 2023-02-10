@@ -18,6 +18,12 @@ my($init_state)=build_initial_state(\@raw_grid);
 my($state)=copy_state($init_state);
 
 my($error)=obvious_solve($state);
+# print_state($state);
+
+place_digit($state,0,9);
+
+$error=obvious_solve($state);
+
 print_state($state);
 
 
@@ -50,6 +56,7 @@ sub print_state
         print ' ';
       }
     }
+    
     print "\n";
   }
   print "--------\n";
@@ -66,6 +73,7 @@ sub print_board
     {
       print $$rboard[$i]{'digits'}[$j];
     }
+    print " $$rboard[$i]{match}/$$rboard[$i]{unknown}";
     print "\n";
   }
   
@@ -119,7 +127,7 @@ sub obvious_solve
               }
               else
               {
-                $contradiction == 1;
+                $contradiction = 1;
                 last;
               }
             }
@@ -188,6 +196,27 @@ sub obvious_solve
     # print_state($rstate); <STDIN>;
   }
   return $contradiction;
+}
+
+sub place_digit
+{
+  my($rstate,$idx,$val)=@_;
+  for(my($i)=0;$i<=$#{$$rstate{'board'}};$i++)
+  {
+    my($nb)=$$rstate{'board'}[$i]{'digits'}[$idx];
+    if( $nb ne '.' )
+    {
+      if( $nb eq $val )
+      {
+        $$rstate{'board'}[$i]{'match'}--;
+      }
+
+      $$rstate{'board'}[$i]{'unknown'}--;
+      $$rstate{'board'}[$i]{'digits'}[$idx] = '.';
+    }
+  }
+  $$rstate{'solution'}[$idx]=$val;
+  $$rstate{'candidates'}[$idx]={};
 }
 
 
