@@ -3,18 +3,31 @@ use warnings;
 use Data::Dumper;
 use Gcd;
 
-# 3   : 360
-# 5   : 10600
-# 7   : 111368
-# 10  : 1101232
-# 15  : 13638120
-# 21  : 104845792
-# 50  : 19879613488
-# 100 : 1288029912888
-# 105 : 1725323624056
+# First, if a triangle is valid, any triangle obtained by moving one point along its radius 
+# is a valid triangle. Let us find all radius, and how many points it contains.
+#
+# Next if we consider 3 distincts diameters, each diameter containing exactly one summit of triangles.
+# There are two possibilities for a summit on each diameter, so there are 2*2*2 = 8 ways to build 
+# a triangle that way.
+# It can be seen that only 2 / 8 triangles are valid. Exactly 1 of the 2, has 2 summits in radius which 
+# angles radius are in [0, pi[, (the other has summits in [pi, 2pi[, by symetry).
+#
+# If we order the possible radius with their angle, r_0 < r_1 < ... < r_n
+# If we take 2 summits on 2 of these differents radius, r_i < r_j, then a valid summit 
+# is on the opposite of radius r_k, with r_i < r_k < r_j, so k is in [ i+1 , j-1 ]
+# 
+# If a radius r_i contains p_i points, all possible triangles (with radius angle in [0 , pi[ )are :
+# T = sum( p_i * p_j * p_k ) with i < j < k, and our solution is 2 * T
+# 
+# With S = sum(p_i), Q = sum(p_i^2), C = sum(p_i^3)
+# By derivating S^3, we have : 
+# S^3 = 6T + 3QS - 2C
+#
+# Finally
+#
+# T = ((S^2 - 3Q) * S + 2C)/6
 
-
-my($radius)=3;
+my($radius)=105;
 
 my(%ratios)=("0/1" => {"num"=> $radius-1, "ratio" => [0,1]});
 
