@@ -13,9 +13,19 @@ my(@raw_grid)=(
 
 my($init_state)=build_initial_state(\@raw_grid);
 
+my(@checks)=();
+for(my($i)=0;$i<=$#{$init_state["board"]};$i++)
+{
+  if($$init_state["board"][$i]{"match"} == 0)
+  {
+    push(@checks,["line",$i]);
+  }    
+}
+process_checks($init_state,\@checks);
 
 
 my($state)=copy_state($init_state);
+
 
 my($error)=obvious_solve($state);
 # print_state($state);
@@ -62,7 +72,6 @@ sub print_state
   print "--------\n";
 }
 
-
 sub print_board
 {
   my($rstate)=@_;
@@ -76,7 +85,6 @@ sub print_board
     print " $$rboard[$i]{match}/$$rboard[$i]{unknown}";
     print "\n";
   }
-  
 }
 
 sub obvious_solve
@@ -197,6 +205,100 @@ sub obvious_solve
   }
   return $contradiction;
 }
+
+sub process_checks
+{
+  my($state,$rchecks)=@_;
+  
+  while($#$rchecks >= 0)
+  {
+    my($check)=shift(@$rchecks);
+    if($$check[0] eq 'line')
+    {
+      push(@$rchecks,check_line($$state,$$check[1]);
+    }
+    elsif($$check[0] eq 'col')
+    {
+      push(@$rchecks,check_col($$state,$$check[1]);
+    }
+  }
+}
+
+sub check_line
+{
+  my($state,$line_idx)=@_;
+  my($line)=$$state["board"][$line_idx];
+  my(@tasks)=();
+  if($$rboard[$i]{'unknown'} > 0)
+  {
+    if($$line{'match'} == 0)
+    {
+      $has_changed = 1;
+      for(my($n)=0;$n<=$#{$$rboard[$i]{'digits'}};$n++)
+      {
+        my($digit)=$$rboard[$i]{'digits'}[$n];
+        if( $digit ne '.' )
+        {
+          eliminate($state,$i,$n);
+          push(@tasks,['col',$n]);
+        }
+      }
+      
+    }
+    elsif($$line{'match'} == $$line{'unknown'})
+    {
+      for(my($n)=0;$n<=$#{$$rboard[$i]{'digits'}};$n++)
+      {
+        my($digit)=$$rboard[$i]{'digits'}[$n];
+        if( $digit ne '.' )
+        {
+          validate($state,$i,$n);
+          
+          
+          if( exists($$rstate{'candidates'}[$n]{$digit}))
+          {
+            $$rstate{'candidates'}[$n] = {};
+            $$rstate{'solution'}[$n] = $digit;
+      
+            $$rboard[$i]{'digits'}[$n] = '.';
+            $$rboard[$i]{'unknown'} --;
+            $$rboard[$i]{'match'} --;
+          }
+          else
+          {
+            $contradiction = 1;
+            last;
+          }
+        }
+      }
+    }
+    else
+    {
+      push(@tasks,["contradiction"]);
+    }
+  }
+}
+
+sub check_col
+{
+  my($state,$col_idx)=@_;
+  
+}
+
+sub eliminate
+{
+  my($state,$li,$co)=@_;
+  delete $$rstate{'candidates'}[$n]{$digit};
+  $$rboard[$li]{'digits'}[$n] = '.';
+  $$rboard[$li]{'unknown'} --;
+}
+
+sub validate
+{
+  my($state,$li,$co)=@_;
+}
+
+
 
 sub place_digit
 {
