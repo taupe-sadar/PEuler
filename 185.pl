@@ -14,9 +14,9 @@ my(@raw_grid)=(
 my($init_state)=build_initial_state(\@raw_grid);
 
 my(@checks)=();
-for(my($i)=0;$i<=$#{$init_state["board"]};$i++)
+for(my($i)=0;$i<=$#{$$init_state{"board"}};$i++)
 {
-  if($$init_state["board"][$i]{"match"} == 0)
+  if($$init_state{"board"}[$i]{"match"} == 0)
   {
     push(@checks,["line",$i]);
   }    
@@ -27,14 +27,10 @@ process_checks($init_state,\@checks);
 my($state)=copy_state($init_state);
 
 
-my($error)=obvious_solve($state);
-# print_state($state);
-
-place_digit($state,0,9);
-
-$error=obvious_solve($state);
-
 print_state($state);
+
+# place_digit($state,0,9);
+# print_state($state);
 
 
 sub print_state
@@ -87,125 +83,6 @@ sub print_board
   }
 }
 
-sub obvious_solve
-{
-  my($rstate)=@_;
-  
-  my($has_changed)=1;
-  my($contradiction)=0;
-  while( $has_changed && !$contradiction)
-  {
-    $has_changed = 0;
-    my($rboard)=$$rstate{'board'};
-    for(my($i)=0;$i<=$#$rboard;$i++)
-    {
-      if($$rboard[$i]{'unknown'} > 0)
-      {
-        if($$rboard[$i]{'match'} == 0)
-        {
-          $has_changed = 1;
-          for(my($n)=0;$n<=$#{$$rboard[$i]{'digits'}};$n++)
-          {
-            my($digit)=$$rboard[$i]{'digits'}[$n];
-            if( $digit ne '.' )
-            {
-              delete $$rstate{'candidates'}[$n]{$digit};
-              $$rboard[$i]{'digits'}[$n] = '.';
-              $$rboard[$i]{'unknown'} --;
-            }
-          }
-          
-        }
-        elsif($$rboard[$i]{'match'} == $$rboard[$i]{'unknown'})
-        {
-          $has_changed = 1;
-          for(my($n)=0;$n<=$#{$$rboard[$i]{'digits'}};$n++)
-          {
-            my($digit)=$$rboard[$i]{'digits'}[$n];
-            if( $digit ne '.' )
-            {
-              if( exists($$rstate{'candidates'}[$n]{$digit}))
-              {
-                $$rstate{'candidates'}[$n] = {};
-                $$rstate{'solution'}[$n] = $digit;
-          
-                $$rboard[$i]{'digits'}[$n] = '.';
-                $$rboard[$i]{'unknown'} --;
-                $$rboard[$i]{'match'} --;
-              }
-              else
-              {
-                $contradiction = 1;
-                last;
-              }
-            }
-          }
-        }
-      }
-      last if($contradiction);
-    }
-    last if($contradiction);
-
-    # print_state($rstate); <STDIN>;
-    
-    for(my($j)=0;$j<$$rstate{'size'};$j++)
-    {
-      my($sol)=$$rstate{'solution'}[$j];
-      if( $sol ne '.' )
-      {
-        for(my($i)=0;$i<=$#$rboard;$i++)
-        {
-          if($$rboard[$i]{'unknown'} > 0 && $$rboard[$i]{'digits'}[$j] eq $sol)
-          {
-            $$rboard[$i]{'digits'}[$j] = '.';
-            $$rboard[$i]{'unknown'} --;
-            $$rboard[$i]{'match'} --;
-          }
-        }
-      }
-      else
-      {
-        my($rcands)=$$rstate{'candidates'}[$j];
-        
-        my(@ks)=(keys(%$rcands));
-        if( $#ks < 0 )
-        {
-          $contradiction = 1;
-          last;
-        }
-        else
-        {
-          my($sol)='.';
-          $sol = $ks[0] if( $#ks == 0 );
-          
-          for(my($i)=0;$i<=$#$rboard;$i++)
-          {
-            my($digit)=$$rboard[$i]{'digits'}[$j];
-            if($digit ne '.' )
-            {
-              if( $digit eq $sol )
-              {
-                $has_changed = 1;
-                $$rboard[$i]{'digits'}[$j] = '.';
-                $$rboard[$i]{'unknown'} --;
-                $$rboard[$i]{'match'} --;
-              }
-              elsif( !exists($$rcands{$digit} ))
-              {
-                $has_changed = 1;
-                $$rboard[$i]{'digits'}[$j] = '.';
-                $$rboard[$i]{'unknown'} --;
-              }
-            }
-          }
-        }
-      }
-    }
-    # print_state($rstate); <STDIN>;
-  }
-  return $contradiction;
-}
-
 sub process_checks
 {
   my($state,$rchecks)=@_;
@@ -215,42 +92,42 @@ sub process_checks
     my($check)=shift(@$rchecks);
     if($$check[0] eq 'line')
     {
-      return 1 if(check_line($$state,$rchecks,$$check[1]));
+      return 1 if(check_line($state,$rchecks,$$check[1]));
     }
     elsif($$check[0] eq 'col')
     {
-      return 1 if(check_col($$state,$rchecks,$$check[1]));
+      return 1 if(check_col($state,$rchecks,$$check[1]));
     }
   }
 }
 
 sub check_line
 {
-  my($state,$rtasks,$line_idx)=@_;
-  my($rboard)=$$state["board"];
+  my($rstate,$rtasks,$line_idx)=@_;
+  my($rboard)=$$rstate{"board"};
   my($line)=$$rboard[$line_idx];
   my($contradiction)=0;
-  if($$rboard[$i]{'unknown'} > 0)
+  if($$rboard[$line_idx]{'unknown'} > 0)
   {
     my($eliminate)=($$line{'match'} == 0); 
     my($validate)=($$line{'match'} == $$line{'unknown'});
     if($eliminate || $validate)
     {
-      for(my($n)=0;$n<=$#{$$rboard[$i]{'digits'}};$n++)
+      for(my($n)=0;$n<=$#{$$rboard[$line_idx]{'digits'}};$n++)
       {
-        my($digit)=$$rboard[$i]{'digits'}[$n];
+        my($digit)=$$rboard[$line_idx]{'digits'}[$n];
         if( $digit ne '.' )
         {
           if($eliminate)
           {
-            eliminate($state,$i,$n,$digit);
+            eliminate($rstate,$line_idx,$n,$digit);
           }
           else
           {
-            validate($state,$i,$n,$digit);
+            validate($rstate,$line_idx,$n,$digit);
           }
 
-          if( candidate_contradiction($$rstate,$n) )
+          if( candidate_contradiction($rstate,$n) )
           {
             $contradiction = 1;
             last;
@@ -265,37 +142,43 @@ sub check_line
 
 sub check_col
 {
-  my($state,$rtasks,$col_idx)=@_;
-  my($rboard)=$$state["board"];
-  my($line)=$$rboard[$line_idx];
-  my($contradiction)=0;
-  if($$rboard[$i]{'unknown'} > 0)
+  my($rstate,$rtasks,$col_idx)=@_;
+  my($rboard)=$$rstate{"board"};
+  my($rcands)=$$rstate{'candidates'}[$col_idx];
+  
+  my(@ks)=(keys(%$rcands));
+  my($sol)='.';
+  if( $#ks == 0 )
   {
-    my($eliminate)=($$line{'match'} == 0); 
-    my($validate)=($$line{'match'} == $$line{'unknown'});
-    if($eliminate || $validate)
+    $sol = $ks[0];
+    $$rstate{'solution'}[$col_idx] = $sol;
+  }
+  
+  my($contradiction)=0;
+  for(my($i)=0;$i<=$#$rboard;$i++)
+  {
+    my($digit)=$$rboard[$i]{'digits'}[$col_idx];
+    if($digit ne '.' )
     {
-      for(my($n)=0;$n<=$#{$$rboard[$i]{'digits'}};$n++)
+      if( $digit eq $sol )
       {
-        my($digit)=$$rboard[$i]{'digits'}[$n];
-        if( $digit ne '.' )
+        validate($rstate,$i,$col_idx,$digit);
+        if( line_contradiction($rstate,$i) )
         {
-          if($eliminate)
-          {
-            eliminate($state,$i,$n,$digit);
-          }
-          else
-          {
-            validate($state,$i,$n,$digit);
-          }
-
-          if( candidate_contradiction($$rstate,$n) )
-          {
-            $contradiction = 1;
-            last;
-          }
-          push(@$rtasks,['col',$n]);
+          $contradiction = 1;
+          last;
         }
+        push(@$rtasks,['line',$i]);
+      }
+      elsif( !exists($$rcands{$digit} ))
+      {
+        eliminate($rstate,$i,$col_idx,$digit);
+        if( line_contradiction($rstate,$i) )
+        {
+          $contradiction = 1;
+          last;
+        }
+        push(@$rtasks,['line',$i]);
       }
     }
   }
@@ -304,8 +187,8 @@ sub check_col
 
 sub eliminate
 {
-  my($state,$li,$co,$digit)=@_;
-  my($rboard)=$$state["board"];
+  my($rstate,$li,$co,$digit)=@_;
+  my($rboard)=$$rstate{"board"};
   delete $$rstate{'candidates'}[$co]{$digit};
   $$rboard[$li]{'digits'}[$co] = '.';
   $$rboard[$li]{'unknown'} --;
@@ -313,22 +196,29 @@ sub eliminate
 
 sub validate
 {
-  my($state,$li,$co,$digit)=@_;
-  my($rboard)=$$state["board"];
+  my($rstate,$li,$co,$digit)=@_;
+  my($rboard)=$$rstate{"board"};
   foreach my $d (keys(%{$$rstate{'candidates'}[$co]}))
   {
     delete $$rstate{'candidates'}[$co]{$d} if($d != $digit);
   }
-  $$rboard[$i]{'digits'}[$n] = '.';
-  $$rboard[$i]{'unknown'} --;
-  $$rboard[$i]{'match'} --;
+  $$rboard[$li]{'digits'}[$co] = '.';
+  $$rboard[$li]{'unknown'} --;
+  $$rboard[$li]{'match'} --;
 }
 
 sub candidate_contradiction
 {
   my($rstate,$n)=@_;
-  my($rboard)=$$state["board"];
   return keys(%{$$rstate{'candidates'}[$n]}) < 0;
+}
+
+sub line_contradiction
+{
+  my($rstate,$n)=@_;
+  my($rboard)=$$rstate{"board"};
+  my($line)=$$rboard[$n];
+  return (($$line{'match'} < 0) || ($$line{'match'} > $$line{'unknown'})); 
 }
 
 sub place_digit
