@@ -29,8 +29,10 @@ my($state)=copy_state($init_state);
 
 print_state($state);
 
-# place_digit($state,0,9);
-# print_state($state);
+place_digit($state,\@checks,0,9);
+process_checks($state,\@checks);
+
+print_state($state);
 
 
 sub print_state
@@ -198,10 +200,7 @@ sub validate
 {
   my($rstate,$li,$co,$digit)=@_;
   my($rboard)=$$rstate{"board"};
-  foreach my $d (keys(%{$$rstate{'candidates'}[$co]}))
-  {
-    delete $$rstate{'candidates'}[$co]{$d} if($d != $digit);
-  }
+  remove_candidates($rstate,$co,$digit);
   $$rboard[$li]{'digits'}[$co] = '.';
   $$rboard[$li]{'unknown'} --;
   $$rboard[$li]{'match'} --;
@@ -223,23 +222,18 @@ sub line_contradiction
 
 sub place_digit
 {
-  my($rstate,$idx,$val)=@_;
-  for(my($i)=0;$i<=$#{$$rstate{'board'}};$i++)
-  {
-    my($nb)=$$rstate{'board'}[$i]{'digits'}[$idx];
-    if( $nb ne '.' )
-    {
-      if( $nb eq $val )
-      {
-        $$rstate{'board'}[$i]{'match'}--;
-      }
+  my($rstate,$rtasks,$idx,$val)=@_;
+  remove_candidates($rstate,$idx,$val);
+  push(@$rtasks,["col",$idx]);
+}
 
-      $$rstate{'board'}[$i]{'unknown'}--;
-      $$rstate{'board'}[$i]{'digits'}[$idx] = '.';
-    }
+sub remove_candidates
+{
+  my($rstate,$idx,$val)=@_;
+  foreach my $d (keys(%{$$rstate{'candidates'}[$idx]}))
+  {
+    delete $$rstate{'candidates'}[$idx]{$d} if($d != $val);
   }
-  $$rstate{'solution'}[$idx]=$val;
-  $$rstate{'candidates'}[$idx]={};
 }
 
 
