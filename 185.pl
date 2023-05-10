@@ -13,27 +13,49 @@ my(@raw_grid)=(
 
 my($init_state)=build_initial_state(\@raw_grid);
 
-my(@checks)=();
+my(@init_checks)=();
 for(my($i)=0;$i<=$#{$$init_state{"board"}};$i++)
 {
   if($$init_state{"board"}[$i]{"match"} == 0)
   {
-    push(@checks,["line",$i]);
+    push(@init_checks,["line",$i]);
   }    
 }
-process_checks($init_state,\@checks);
+process_checks($init_state,\@init_checks);
 
+backtrack($init_state);
 
-my($state)=copy_state($init_state);
+sub backtrack
+{
+  my($base_state)=@_;
+  print_state($base_state);
 
+  my($rtries)=list_tries($base_state);
+  for(my($i)=0;$i<=$#$rtries;$i++)
+  {
+    my(@checks)=();
+    my($state)=copy_state($base_state);
+    place_digit($state,\@checks,@{$$rtries[$i]});
+    my($ret)=process_checks($state,\@checks);
+    print_state($state);
+    print "Result : $ret\n";
+    <STDIN>;
+  }
+}
 
-print_state($state);
-
-place_digit($state,\@checks,0,9);
-process_checks($state,\@checks);
-
-print_state($state);
-
+sub list_tries
+{
+  my($state)=@_;
+  my(@t)=();
+  for(my($i)=0;$i<$$state{'size'};$i++)
+  {
+    for my $cand (keys(%{$$state{'candidates'}[$i]}))
+    {
+      push(@t,[$i,$cand]);
+    }
+  }
+  return \@t;
+}
 
 sub print_state
 {
@@ -101,6 +123,7 @@ sub process_checks
       return 1 if(check_col($state,$rchecks,$$check[1]));
     }
   }
+  return 0;
 }
 
 sub check_line
