@@ -11,6 +11,8 @@ my(@raw_grid)=(
   [12531,1]
 );
 
+my($dcount)=0;
+
 my($init_state)=build_initial_state(\@raw_grid);
 
 my(@init_checks)=();
@@ -23,24 +25,112 @@ for(my($i)=0;$i<=$#{$$init_state{"board"}};$i++)
 }
 process_checks($init_state,\@init_checks);
 
-backtrack($init_state);
+print_state($init_state);
+
+backtrack($init_state,0,[]);
 
 sub backtrack
 {
-  my($base_state)=@_;
-  print_state($base_state);
+  my($base_state,$depth,$hyp)=@_;
+
+  my($loop_state)=copy_state($base_state);
+  my($result)=0;
+  my(@result)=backtrack_tries($loop_state,$depth,$hyp);
+  while(1)
+  {
+    if($result[0] == -1) #means contradiction found
+    {
+      my(@checks)=();
+      
+      my($l1)=list_tries($loop_state);
+      remove_one_candidate($loop_state,$result[1],$result[2]);
+      my($l2)=list_tries($loop_state);
+      
+      if( $result[1] == 0 && $result[2] == 5 )
+      {
+        $dcount++;
+        if($dcount == 3)
+        {
+          print_state($loop_state);
+          print "La $dcount\n"; <STDIN>;
+        }
+      }
+      
+      
+      push(@checks,['col',$result[1]]);
+      my($ret)=process_checks($loop_state,\@checks);
+      
+      if($dcount == 3)
+        {
+          print_state($loop_state);
+          print "La $dcount\n"; <STDIN>;
+        }
+      
+      
+      if($ret < 0)
+      {
+        return -1;
+      }
+    }
+    elsif($result[0] == 1) #means no contradiction found 
+    {
+      print "($depth) No contradiction found\n";
+      print_state($loop_state);
+      <STDIN>;
+      return 1;
+    }
+    else #0 : means grid solved, no tries to do
+    {
+      print "($depth) Grid solved, no tries\n";
+      print_state($loop_state);
+      <STDIN>;
+      return 0;
+    }
+    @result=backtrack_tries($loop_state,$depth,$hyp);
+  }
+}
+
+
+sub backtrack_tries
+{
+  my($base_state,$depth,$hyp)=@_;
+  # print_state($base_state);
 
   my($rtries)=list_tries($base_state);
+  return 0 if($#$rtries < 0);
+  
+  my($space)='  'x$depth;
+  print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=2);
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
     my(@checks)=();
     my($state)=copy_state($base_state);
     place_digit($state,\@checks,@{$$rtries[$i]});
+    print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
     my($ret)=process_checks($state,\@checks);
-    print_state($state);
-    print "Result : $ret\n";
-    <STDIN>;
+    if($ret < 0)
+    {
+      print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
+      return (-1,$$rtries[$i][0],$$rtries[$i][1]);
+    }
+    
+    push(@{$$rtries[$i]},$ret);
+    push(@{$$rtries[$i]},$state);
   }
+  @$rtries = sort({$$b[2] <=> $$a[2] or $$a[0] <=> $$b[0] or $$a[1] <=> $$b[1]} @$rtries);
+  
+  for(my($i)=0;$i<=$#$rtries;$i++)
+  {
+    push(@$hyp,[$$rtries[$i][0],$$rtries[$i][1]]);
+    print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
+    my($ret)=backtrack($$rtries[$i][3],$depth+1,$hyp);
+    if($ret < 0)
+    {
+      print "$space($depth) FinallyRemove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
+      return (-1,$$rtries[$i][0],$$rtries[$i][1]);
+    }
+  }
+  return 1;
 }
 
 sub list_tries
@@ -49,7 +139,9 @@ sub list_tries
   my(@t)=();
   for(my($i)=0;$i<$$state{'size'};$i++)
   {
-    for my $cand (keys(%{$$state{'candidates'}[$i]}))
+    my(@cand_keys)=(sort(keys(%{$$state{'candidates'}[$i]})));
+    next if($#cand_keys <= 0);
+    for my $cand (@cand_keys)
     {
       push(@t,[$i,$cand]);
     }
@@ -111,19 +203,24 @@ sub process_checks
 {
   my($state,$rchecks)=@_;
   
+  my($all_modifs)=0;
   while($#$rchecks >= 0)
   {
     my($check)=shift(@$rchecks);
     if($$check[0] eq 'line')
     {
-      return 1 if(check_line($state,$rchecks,$$check[1]));
+      my($modifs)=check_line($state,$rchecks,$$check[1]);
+      return -1 if($modifs < 0);
+      $all_modifs += $modifs;
     }
     elsif($$check[0] eq 'col')
     {
-      return 1 if(check_col($state,$rchecks,$$check[1]));
+      my($modifs)=check_col($state,$rchecks,$$check[1]);
+      return -1 if($modifs < 0);
+      $all_modifs += $modifs;
     }
   }
-  return 0;
+  return $all_modifs;
 }
 
 sub check_line
@@ -131,7 +228,7 @@ sub check_line
   my($rstate,$rtasks,$line_idx)=@_;
   my($rboard)=$$rstate{"board"};
   my($line)=$$rboard[$line_idx];
-  my($contradiction)=0;
+  my($modifs)=0;
   if($$rboard[$line_idx]{'unknown'} > 0)
   {
     my($eliminate)=($$line{'match'} == 0); 
@@ -145,16 +242,16 @@ sub check_line
         {
           if($eliminate)
           {
-            eliminate($rstate,$line_idx,$n,$digit);
+            $modifs += eliminate($rstate,$line_idx,$n,$digit);
           }
           else
           {
-            validate($rstate,$line_idx,$n,$digit);
+            $modifs += validate($rstate,$line_idx,$n,$digit);
           }
 
           if( candidate_contradiction($rstate,$n) )
           {
-            $contradiction = 1;
+            $modifs = -1;
             last;
           }
           push(@$rtasks,['col',$n]);
@@ -162,7 +259,7 @@ sub check_line
       }
     }
   }
-  return $contradiction;
+  return $modifs;
 }
 
 sub check_col
@@ -179,7 +276,7 @@ sub check_col
     $$rstate{'solution'}[$col_idx] = $sol;
   }
   
-  my($contradiction)=0;
+  my($modifs)=0;
   for(my($i)=0;$i<=$#$rboard;$i++)
   {
     my($digit)=$$rboard[$i]{'digits'}[$col_idx];
@@ -187,27 +284,27 @@ sub check_col
     {
       if( $digit eq $sol )
       {
-        validate($rstate,$i,$col_idx,$digit);
+        $modifs += validate($rstate,$i,$col_idx,$digit);
         if( line_contradiction($rstate,$i) )
         {
-          $contradiction = 1;
+          $modifs = -1;
           last;
         }
         push(@$rtasks,['line',$i]);
       }
       elsif( !exists($$rcands{$digit} ))
       {
-        eliminate($rstate,$i,$col_idx,$digit);
+        $modifs += eliminate($rstate,$i,$col_idx,$digit);
         if( line_contradiction($rstate,$i) )
         {
-          $contradiction = 1;
+          $modifs = -1;
           last;
         }
         push(@$rtasks,['line',$i]);
       }
     }
   }
-  return $contradiction;
+  return $modifs;
 }
 
 sub eliminate
@@ -217,6 +314,7 @@ sub eliminate
   delete $$rstate{'candidates'}[$co]{$digit};
   $$rboard[$li]{'digits'}[$co] = '.';
   $$rboard[$li]{'unknown'} --;
+  return 1;
 }
 
 sub validate
@@ -227,6 +325,7 @@ sub validate
   $$rboard[$li]{'digits'}[$co] = '.';
   $$rboard[$li]{'unknown'} --;
   $$rboard[$li]{'match'} --;
+  return 1;
 }
 
 sub candidate_contradiction
@@ -259,6 +358,15 @@ sub remove_candidates
   }
 }
 
+sub remove_one_candidate
+{
+  my($rstate,$idx,$val)=@_;
+  if(exists($$rstate{'candidates'}[$idx]{$val}))
+  {
+    delete $$rstate{'candidates'}[$idx]{$val};
+  }
+}
+
 
 sub build_initial_state
 {
@@ -268,7 +376,7 @@ sub build_initial_state
   
   my($num_digits)=0;
   
-  for( my($line)=0;$line <= $#$rgrid; $line ++)
+  for(p my($line)=0;$line <= $#$rgrid; $line ++)
   {
     my(@digits)=split('',$$rgrid[$line][0]);
     $num_digits = $#digits + 1 if( $num_digits == 0 );
