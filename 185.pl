@@ -11,8 +11,6 @@ my(@raw_grid)=(
   [12531,1]
 );
 
-my($dcount)=0;
-
 my($init_state)=build_initial_state(\@raw_grid);
 
 my(@init_checks)=();
@@ -25,47 +23,38 @@ for(my($i)=0;$i<=$#{$$init_state{"board"}};$i++)
 }
 process_checks($init_state,\@init_checks);
 
-print_state($init_state);
+# print_state($init_state);
+# <STDIN>;
 
-backtrack($init_state,0,[]);
+my($result,$solution)=backtrack($init_state,0);
+if($result == 0)
+{
+  print $solution;
+}
+elsif($result == 1)
+{
+  print "Several solutions in the Number mind\n";
+}
+elsif($result == -1)
+{
+  print "Contradiction in the Number mind\n";
+}
 
 sub backtrack
 {
-  my($base_state,$depth,$hyp)=@_;
+  my($base_state,$depth)=@_;
 
   my($loop_state)=copy_state($base_state);
   my($result)=0;
-  my(@result)=backtrack_tries($loop_state,$depth,$hyp);
+  my(@result)=backtrack_tries($loop_state,$depth);
   while(1)
   {
     if($result[0] == -1) #means contradiction found
     {
       my(@checks)=();
-      
-      my($l1)=list_tries($loop_state);
       remove_one_candidate($loop_state,$result[1],$result[2]);
-      my($l2)=list_tries($loop_state);
-      
-      if( $result[1] == 0 && $result[2] == 5 )
-      {
-        $dcount++;
-        if($dcount == 3)
-        {
-          print_state($loop_state);
-          print "La $dcount\n"; <STDIN>;
-        }
-      }
-      
-      
       push(@checks,['col',$result[1]]);
       my($ret)=process_checks($loop_state,\@checks);
-      
-      if($dcount == 3)
-        {
-          print_state($loop_state);
-          print "La $dcount\n"; <STDIN>;
-        }
-      
       
       if($ret < 0)
       {
@@ -74,43 +63,51 @@ sub backtrack
     }
     elsif($result[0] == 1) #means no contradiction found 
     {
-      print "($depth) No contradiction found\n";
-      print_state($loop_state);
-      <STDIN>;
+      if($depth < 2)
+      {
+      # print "($depth) No contradiction found\n";
+      # print_state($loop_state);
+      # <STDIN>;
+      }
       return 1;
     }
     else #0 : means grid solved, no tries to do
     {
-      print "($depth) Grid solved, no tries\n";
-      print_state($loop_state);
-      <STDIN>;
-      return 0;
+      if($depth < 2)
+      {
+      # print "($depth) Grid solved, no tries\n";
+      # print_state($loop_state);
+      # <STDIN>;
+      }
+      my($solution)=join('',@{$$loop_state{'solution'}});
+      return (0,$solution);
     }
-    @result=backtrack_tries($loop_state,$depth,$hyp);
+    @result=backtrack_tries($loop_state,$depth);
   }
 }
 
-
 sub backtrack_tries
 {
-  my($base_state,$depth,$hyp)=@_;
+  my($base_state,$depth)=@_;
   # print_state($base_state);
 
   my($rtries)=list_tries($base_state);
-  return 0 if($#$rtries < 0);
   
   my($space)='  'x$depth;
-  print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=2);
+  # print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=1);
+  
+  return 0 if($#$rtries < 0);
+  
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
     my(@checks)=();
     my($state)=copy_state($base_state);
     place_digit($state,\@checks,@{$$rtries[$i]});
-    print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
+    # print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
     my($ret)=process_checks($state,\@checks);
     if($ret < 0)
     {
-      print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
+      # print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
     
@@ -121,12 +118,11 @@ sub backtrack_tries
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
-    push(@$hyp,[$$rtries[$i][0],$$rtries[$i][1]]);
-    print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
-    my($ret)=backtrack($$rtries[$i][3],$depth+1,$hyp);
+    # print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
+    my($ret)=backtrack($$rtries[$i][3],$depth+1);
     if($ret < 0)
     {
-      print "$space($depth) FinallyRemove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=2);
+      # print "$space($depth) FinallyRemove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
   }
@@ -248,7 +244,7 @@ sub check_line
           {
             $modifs += validate($rstate,$line_idx,$n,$digit);
           }
-
+          
           if( candidate_contradiction($rstate,$n) )
           {
             $modifs = -1;
@@ -285,11 +281,13 @@ sub check_col
       if( $digit eq $sol )
       {
         $modifs += validate($rstate,$i,$col_idx,$digit);
+        
         if( line_contradiction($rstate,$i) )
         {
           $modifs = -1;
           last;
         }
+
         push(@$rtasks,['line',$i]);
       }
       elsif( !exists($$rcands{$digit} ))
@@ -331,7 +329,8 @@ sub validate
 sub candidate_contradiction
 {
   my($rstate,$n)=@_;
-  return keys(%{$$rstate{'candidates'}[$n]}) < 0;
+  my(@ks)=keys(%{$$rstate{'candidates'}[$n]});
+  return ($#ks < 0);
 }
 
 sub line_contradiction
@@ -367,7 +366,6 @@ sub remove_one_candidate
   }
 }
 
-
 sub build_initial_state
 {
   my($rgrid)=@_;
@@ -376,7 +374,7 @@ sub build_initial_state
   
   my($num_digits)=0;
   
-  for(p my($line)=0;$line <= $#$rgrid; $line ++)
+  for(my($line)=0;$line <= $#$rgrid; $line ++)
   {
     my(@digits)=split('',$$rgrid[$line][0]);
     $num_digits = $#digits + 1 if( $num_digits == 0 );
