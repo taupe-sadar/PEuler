@@ -126,7 +126,7 @@ sub backtrack_tries
   {
     my(@checks)=();
     my($state)=copy_state($base_state);
-    place_digit($state,\@checks,@{$$rtries[$i]});
+    my($count)=place_digit($state,\@checks,@{$$rtries[$i]});
     # print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
     my($ret)=process_checks($state,\@checks);
     if($ret < 0)
@@ -135,7 +135,7 @@ sub backtrack_tries
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
     
-    push(@{$$rtries[$i]},$ret);
+    push(@{$$rtries[$i]},$ret + $count);
     push(@{$$rtries[$i]},$state);
   }
   @$rtries = sort({$$b[2] <=> $$a[2] or $$a[0] <=> $$b[0] or $$a[1] <=> $$b[1]} @$rtries);
@@ -333,21 +333,21 @@ sub eliminate
 {
   my($rstate,$li,$co,$digit)=@_;
   my($rboard)=$$rstate{"board"};
-  delete $$rstate{'candidates'}[$co]{$digit};
+  my($count)=remove_one_candidate($rstate,$co,$digit);
   $$rboard[$li]{'digits'}[$co] = '.';
   $$rboard[$li]{'unknown'} --;
-  return 1;
+  return $count;
 }
 
 sub validate
 {
   my($rstate,$li,$co,$digit)=@_;
   my($rboard)=$$rstate{"board"};
-  remove_candidates($rstate,$co,$digit);
+  my($count)=remove_candidates($rstate,$co,$digit);
   $$rboard[$li]{'digits'}[$co] = '.';
   $$rboard[$li]{'unknown'} --;
   $$rboard[$li]{'match'} --;
-  return 1;
+  return $count;
 }
 
 sub candidate_contradiction
@@ -368,17 +368,24 @@ sub line_contradiction
 sub place_digit
 {
   my($rstate,$rtasks,$idx,$val)=@_;
-  remove_candidates($rstate,$idx,$val);
+  my($count)=remove_candidates($rstate,$idx,$val);
   push(@$rtasks,["col",$idx]);
+  return $count;
 }
 
 sub remove_candidates
 {
   my($rstate,$idx,$val)=@_;
+  my($count)=0;
   foreach my $d (keys(%{$$rstate{'candidates'}[$idx]}))
   {
-    delete $$rstate{'candidates'}[$idx]{$d} if($d != $val);
+    if($d != $val)
+    {
+      $count++;
+      delete $$rstate{'candidates'}[$idx]{$d};
+    }
   }
+  return $count;
 }
 
 sub remove_one_candidate
@@ -387,7 +394,9 @@ sub remove_one_candidate
   if(exists($$rstate{'candidates'}[$idx]{$val}))
   {
     delete $$rstate{'candidates'}[$idx]{$val};
+    return 1;
   }
+  return 0;
 }
 
 sub build_initial_state
