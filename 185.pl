@@ -118,7 +118,7 @@ sub backtrack_tries
   my($rtries)=list_tries($base_state);
   
   my($space)='  'x$depth;
-  # print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=1);
+  print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=0);
   
   return 0 if($#$rtries < 0);
   
@@ -127,11 +127,11 @@ sub backtrack_tries
     my(@checks)=();
     my($state)=copy_state($base_state);
     place_digit($state,\@checks,@{$$rtries[$i]});
-    # print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
+    # print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
     my($ret)=process_checks($state,\@checks);
     if($ret < 0)
     {
-      # print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
+      # print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
     
@@ -142,11 +142,11 @@ sub backtrack_tries
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
-    # print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
+    print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
     my($ret)=backtrack($$rtries[$i][3],$depth+1);
     if($ret < 0)
     {
-      # print "$space($depth) FinallyRemove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=1);
+      # print "$space($depth) FinallyRemove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
   }
