@@ -107,6 +107,7 @@ sub backtrack
       }
       @presume_sol = @{$$loop_state{'solution'}} if($#presume_sol < 0);
       my($solution)=join('',@presume_sol);
+      print "Solution : $solution ($depth)\n";
       return (0,$solution);
     }
     @result=backtrack_tries($loop_state,$depth);
@@ -121,6 +122,7 @@ sub pref_fn
     return -1 if($presume_sol[$$b[0]] == $$b[1]);
   }
   
+  # return $$b[0] <=> $$a[0] || $$a[1] <=> $$b[1];
   return $$b[2] <=> $$a[2] || $$a[0] <=> $$b[0] || $$a[1] <=> $$b[1];
   
 }
@@ -392,15 +394,17 @@ sub remove_candidates
 {
   my($rstate,$idx,$val)=@_;
   my($count)=0;
-  foreach my $d (keys(%{$$rstate{'candidates'}[$idx]}))
+  my(@keys)=(keys(%{$$rstate{'candidates'}[$idx]}));
+  if(exists($$rstate{'candidates'}[$idx]{$val}))
   {
-    if($d != $val)
-    {
-      $count++;
-      delete $$rstate{'candidates'}[$idx]{$d};
-    }
+    $$rstate{'candidates'}[$idx]={$val=>1};
+    return $#keys;
   }
-  return $count;
+  else
+  {
+    $$rstate{'candidates'}[$idx]={};
+    return $#keys+1;
+  }
 }
 
 sub remove_one_candidate
