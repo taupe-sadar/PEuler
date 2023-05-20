@@ -35,6 +35,8 @@ my(@raw_grid)=(
   [2659862637316867,2]
 );
 
+my(@presume_sol)=();
+
 my($init_state)=build_initial_state(\@raw_grid);
 
 my(@init_checks)=();
@@ -103,11 +105,24 @@ sub backtrack
       # print_state($loop_state);
       # <STDIN>;
       }
-      my($solution)=join('',@{$$loop_state{'solution'}});
+      @presume_sol = @{$$loop_state{'solution'}} if($#presume_sol < 0);
+      my($solution)=join('',@presume_sol);
       return (0,$solution);
     }
     @result=backtrack_tries($loop_state,$depth);
   }
+}
+
+sub pref_fn
+{
+  if($#presume_sol >= 0)
+  {
+    return 1 if($presume_sol[$$a[0]] == $$a[1]);
+    return -1 if($presume_sol[$$b[0]] == $$b[1]);
+  }
+  
+  return $$b[2] <=> $$a[2] || $$a[0] <=> $$b[0] || $$a[1] <=> $$b[1];
+  
 }
 
 sub backtrack_tries
@@ -138,7 +153,7 @@ sub backtrack_tries
     push(@{$$rtries[$i]},$ret + $count);
     push(@{$$rtries[$i]},$state);
   }
-  @$rtries = sort({$$b[2] <=> $$a[2] or $$a[0] <=> $$b[0] or $$a[1] <=> $$b[1]} @$rtries);
+  @$rtries = sort(pref_fn @$rtries);
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
