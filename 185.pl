@@ -105,7 +105,16 @@ sub backtrack
       # print_state($loop_state);
       # <STDIN>;
       }
-      @presume_sol = @{$$loop_state{'solution'}} if($#presume_sol < 0);
+      
+      if($#presume_sol < 0)
+      {
+        for(my($i)=0;$i<$$loop_state{'size'};$i++)
+        {
+          my(@k)=(keys(%{$$loop_state{'candidates'}[$i]}));
+          push(@presume_sol,$k[0]);
+        }
+      }
+      
       my($solution)=join('',@presume_sol);
       print "Solution : $solution ($depth)\n";
       return (0,$solution);
@@ -191,8 +200,6 @@ sub print_state
   my($rstate)=@_;
   print "--------\n";
   print_board($rstate);
-  print "--------\n";
-  print join('',@{$$rstate{'solution'}})."\n";
   print "--------\n";
   my(@list)=();
   my($max)=0;
@@ -310,7 +317,6 @@ sub check_col
   if( $#ks == 0 )
   {
     $sol = $ks[0];
-    $$rstate{'solution'}[$col_idx] = $sol;
   }
   
   my($modifs)=0;
@@ -441,13 +447,6 @@ sub build_initial_state
   }
   $state{'board'} = \@board;
   
-  my(@solution)=();
-  for( my($i)=0; $i < $num_digits; $i++)
-  {
-    $solution[$i] = -1;
-  }
-  $state{'solution'} = \@solution;
-  
   my(@candidates)=();
   for( my($i)=0; $i < $num_digits; $i++)
   {
@@ -472,7 +471,6 @@ sub copy_state
   my(%state)=();
   
   my(@board)=();
-  my(@solution)=();
   my(@candidates)=();
   
   for( my($line)=0;$line <= $#{$$rstate{'board'}}; $line ++)
@@ -486,9 +484,6 @@ sub copy_state
     push(@board,\%hash);
   }
   $state{'board'} = \@board;
-  
-  @solution = (@{$$rstate{'solution'}});
-  $state{'solution'} = \@solution;
   
   for( my($i)=0; $i < $$rstate{'size'}; $i++)
   {
