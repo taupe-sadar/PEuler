@@ -275,7 +275,7 @@ sub check_line
       for(my($n)=0;$n<=$#{$$rboard[$line_idx]{'digits'}};$n++)
       {
         my($digit)=$$rboard[$line_idx]{'digits'}[$n];
-        if( $digit ne '.' )
+        if( $digit != -1 )
         {
           if($eliminate)
           {
@@ -306,7 +306,7 @@ sub check_col
   my($rcands)=$$rstate{'candidates'}[$col_idx];
   
   my(@ks)=(keys(%$rcands));
-  my($sol)='.';
+  my($sol)=-1;
   if( $#ks == 0 )
   {
     $sol = $ks[0];
@@ -317,7 +317,7 @@ sub check_col
   for(my($i)=0;$i<=$#$rboard;$i++)
   {
     my($digit)=$$rboard[$i]{'digits'}[$col_idx];
-    if($digit ne '.' )
+    if($digit != -1 )
     {
       if( $digit eq $sol )
       {
@@ -351,7 +351,7 @@ sub eliminate
   my($rstate,$li,$co,$digit)=@_;
   my($rboard)=$$rstate{"board"};
   my($count)=remove_one_candidate($rstate,$co,$digit);
-  $$rboard[$li]{'digits'}[$co] = '.';
+  $$rboard[$li]{'digits'}[$co] = -1;
   $$rboard[$li]{'unknown'} --;
   return $count;
 }
@@ -361,7 +361,7 @@ sub validate
   my($rstate,$li,$co,$digit)=@_;
   my($rboard)=$$rstate{"board"};
   my($count)=remove_candidates($rstate,$co,$digit);
-  $$rboard[$li]{'digits'}[$co] = '.';
+  $$rboard[$li]{'digits'}[$co] = -1;
   $$rboard[$li]{'unknown'} --;
   $$rboard[$li]{'match'} --;
   return $count;
@@ -444,7 +444,7 @@ sub build_initial_state
   my(@solution)=();
   for( my($i)=0; $i < $num_digits; $i++)
   {
-    $solution[$i] = '.';
+    $solution[$i] = -1;
   }
   $state{'solution'} = \@solution;
   
