@@ -393,7 +393,7 @@ sub place_digit
   my($rstate,$rtasks,$idx,$val)=@_;
   my($count)=remove_candidates($rstate,$idx,$val);
   push(@$rtasks,["col",$idx]);
-  return $count;
+  return 1000 + $count;
 }
 
 sub remove_candidates
