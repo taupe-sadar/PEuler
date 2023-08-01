@@ -35,6 +35,8 @@ my(@raw_grid)=(
   [2659862637316867,2]
 );
 
+my($num_digits)=0;
+
 my(@presume_sol)=();
 
 my($init_state)=build_initial_state(\@raw_grid);
@@ -108,7 +110,7 @@ sub backtrack
       
       if($#presume_sol < 0)
       {
-        for(my($i)=0;$i<$$loop_state{'size'};$i++)
+        for(my($i)=0;$i<$num_digits;$i++)
         {
           my(@k)=(keys(%{$$loop_state{'candidates'}[$i]}));
           push(@presume_sol,$k[0]);
@@ -183,7 +185,7 @@ sub list_tries
 {
   my($state)=@_;
   my(@t)=();
-  for(my($i)=0;$i<$$state{'size'};$i++)
+  for(my($i)=0;$i<$num_digits;$i++)
   {
     my(@cand_keys)=(sort(keys(%{$$state{'candidates'}[$i]})));
     next if($#cand_keys <= 0);
@@ -203,7 +205,7 @@ sub print_state
   print "--------\n";
   my(@list)=();
   my($max)=0;
-  for(my($j)=0;$j<$$rstate{'size'};$j++)
+  for(my($j)=0;$j<$num_digits;$j++)
   {
     my(@ks)=sort(keys(%{$$rstate{'candidates'}[$j]}));
     push(@list,\@ks);
@@ -211,7 +213,7 @@ sub print_state
   }
   for(my($i)=0;$i<$max;$i++)
   {
-    for(my($j)=0;$j<$$rstate{'size'};$j++)
+    for(my($j)=0;$j<$num_digits;$j++)
     {
       if($#{$list[$j]} >= $i)
       {
@@ -430,8 +432,6 @@ sub build_initial_state
   my(%state)=();
   my(@board)=();
   
-  my($num_digits)=0;
-  
   for(my($line)=0;$line <= $#$rgrid; $line ++)
   {
     my(@digits)=split('',$$rgrid[$line][0]);
@@ -459,8 +459,6 @@ sub build_initial_state
   }
   $state{'candidates'} = \@candidates;
   
-  $state{'size'} = $num_digits;
-  
   return \%state;
 }
 
@@ -485,14 +483,12 @@ sub copy_state
   }
   $state{'board'} = \@board;
   
-  for( my($i)=0; $i < $$rstate{'size'}; $i++)
+  for( my($i)=0; $i < $num_digits; $i++)
   {
     my(%cands)=(%{$$rstate{'candidates'}[$i]});
     push(@candidates,\%cands);
   }
   $state{'candidates'} = \@candidates;
-  
-  $state{'size'} = $$rstate{'size'};
   
   return \%state;
 }
