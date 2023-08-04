@@ -46,7 +46,7 @@ for(my($i)=0;$i<=$#{$$init_state{"matches"}};$i++)
 {
   if($$init_state{"matches"}[$i]{"match"} == 0)
   {
-    push(@init_checks,["line",$i]);
+    push(@init_checks,$i);
   }    
 }
 process_checks($init_state,\@init_checks);
@@ -92,7 +92,7 @@ sub backtrack
       {
         if( $$board[$li][$col] == $digit)
         {
-          push(@checks,['line',$li]);
+          push(@checks,$li);
         }
       }
       
@@ -281,12 +281,9 @@ sub process_checks
   while($#$rchecks >= 0)
   {
     my($check)=shift(@$rchecks);
-    if($$check[0] eq 'line')
-    {
-      my($modifs)=check_line($state,$rchecks,$$check[1]);
-      return -1 if($modifs < 0);
-      $all_modifs += $modifs;
-    }
+    my($modifs)=check_line($state,$rchecks,$check);
+    return -1 if($modifs < 0);
+    $all_modifs += $modifs;
   }
   return $all_modifs;
 }
@@ -331,7 +328,7 @@ sub check_line
       $modifs = -1;
       last;
     }
-    push(@$rtasks,['line',$c]);
+    push(@$rtasks,$c);
   }
   return $modifs;
 }
@@ -370,7 +367,7 @@ sub place_digit
     {
       return -1;
     }
-    push(@$rtasks,['line',$c]);
+    push(@$rtasks,$c);
   }
 
   return $count;
