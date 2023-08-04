@@ -333,18 +333,6 @@ sub check_line
   return $modifs;
 }
 
-sub eliminate
-{
-  my($rstate,$co,$digit,$rtocheck)=@_;
-  return remove_one_candidate($rstate,$co,$digit,$rtocheck);
-}
-
-sub validate
-{
-  my($rstate,$co,$digit,$rtocheck)=@_;
-  return remove_candidates($rstate,$co,$digit,$rtocheck);
-}
-
 sub line_contradiction
 {
   my($rstate,$n)=@_;
@@ -373,18 +361,18 @@ sub place_digit
   return $count;
 }
 
-sub remove_candidates
+sub validate
 {
   my($rstate,$idx,$val,$rtocheck)=@_;
   my($count)=0;
   foreach my $c (sort(keys(%{$$rstate{'candidates'}[$idx]})))
   {
-    $count += remove_one_candidate($rstate,$idx,$c,$rtocheck) unless($c == $val);
+    $count += eliminate($rstate,$idx,$c,$rtocheck) unless($c == $val);
   }
   return $count;
 }
 
-sub remove_one_candidate
+sub eliminate
 {
   my($rstate,$co,$val,$rtocheck)=@_;
   my($rcands)=$$rstate{'candidates'}[$co];
