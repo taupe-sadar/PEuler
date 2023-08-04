@@ -41,15 +41,15 @@ my(@presume_sol)=();
 
 my($board,$init_state)=build_initial_state(\@raw_grid);
 
-my(@init_checks)=();
+my(%init_checks)=();
 for(my($i)=0;$i<=$#{$$init_state{"matches"}};$i++)
 {
   if($$init_state{"matches"}[$i]{"match"} == 0)
   {
-    push(@init_checks,$i);
+    $init_checks{$i}=1;
   }    
 }
-process_checks($init_state,\@init_checks);
+process_checks($init_state,\%init_checks);
 
 # print_state($init_state);
 # <STDIN>;
@@ -79,24 +79,11 @@ sub backtrack
   {
     if($result[0] == -1) #means contradiction found
     {
-      my(%to_check)=();
+      my(%checks)=();
       my($col,$digit)=($result[1],$result[2]);
-      my($ret)= eliminate($loop_state,$col,$digit,\%to_check);
-      if($ret < 0)
-      {
-        return -1;
-      }
-      
-      my(@checks)=();
-      foreach my $li (sort(keys(%to_check)))
-      {
-        if( $$board[$li][$col] == $digit)
-        {
-          push(@checks,$li);
-        }
-      }
-      
-      my($ret_check)=process_checks($loop_state,\@checks);
+      eliminate($loop_state,$col,$digit,\%checks);
+            
+      my($ret_check)=process_checks($loop_state,\%checks);
       
       if($ret_check < 0)
       {
@@ -166,17 +153,12 @@ sub backtrack_tries
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
-    my(@checks)=();
+    my(%checks)=();
     my($state)=copy_state($base_state);
     
-    my($ret_place)=place_digit($state,\@checks,@{$$rtries[$i]});
-    if($ret_place < 0)
-    {
-      # print "$space($depth) Remove(fast) : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
-      return (-1,$$rtries[$i][0],$$rtries[$i][1]);
-    }
-    
-    my($ret_checks)=process_checks($state,\@checks);
+    my($ret_place)=validate($state,@{$$rtries[$i]},\%checks);
+   
+    my($ret_checks)=process_checks($state,\%checks);
     if($ret_checks < 0)
     {
       print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
@@ -278,12 +260,18 @@ sub process_checks
   my($state,$rchecks)=@_;
   
   my($all_modifs)=0;
-  while($#$rchecks >= 0)
+  while(1)
   {
-    my($check)=shift(@$rchecks);
-    my($modifs)=check_line($state,$rchecks,$check);
-    return -1 if($modifs < 0);
-    $all_modifs += $modifs;
+    my(@lines_to_check)=(sort(keys(%$rchecks)));
+    last if($#lines_to_check < 0);
+    while($#lines_to_check >= 0)
+    {
+      my($check)=shift(@lines_to_check);
+      delete $$rchecks{$check};
+      my($modifs)=check_line($state,$rchecks,$check);
+      return -1 if($modifs < 0);
+      $all_modifs += $modifs;
+    }
   }
   return $all_modifs;
 }
@@ -294,8 +282,11 @@ sub check_line
   my($rmatches)=$$rstate{"matches"};
   my($line)=$$rmatches[$line_idx];
   my($modifs)=0;
-  my(%to_check)=();
-  if($$rmatches[$line_idx]{'unknown'} > 0)
+  if(line_contradiction($rstate,$line_idx))
+  {
+    return -1;
+  }
+  elsif($$rmatches[$line_idx]{'unknown'} > 0)
   {
     my($eliminate)=($$line{'match'} == 0); 
     my($validate)=($$line{'match'} == $$line{'unknown'});
@@ -310,26 +301,17 @@ sub check_line
         {
           if($eliminate)
           {
-            $modifs += eliminate($rstate,$n,$digit,\%to_check);
+            $modifs += eliminate($rstate,$n,$digit,$rtasks);
           }
           else
           {
-            $modifs += validate($rstate,$n,$digit,\%to_check);
+            $modifs += validate($rstate,$n,$digit,$rtasks);
           }
         }
       }
     }
   }
   
-  foreach my $c (sort(keys(%to_check)))
-  {
-    if( line_contradiction($rstate,$c) )
-    {
-      $modifs = -1;
-      last;
-    }
-    push(@$rtasks,$c);
-  }
   return $modifs;
 }
 
@@ -339,26 +321,6 @@ sub line_contradiction
   
   my($line)=$$rstate{"matches"}[$n];
   return (($$line{'match'} < 0) || ($$line{'match'} > $$line{'unknown'})); 
-}
-
-sub place_digit
-{
-  my($rstate,$rtasks,$idx,$val)=@_;
-  
-  my(%to_checks)=();
-  
-  my($count)=validate($rstate,$idx,$val,\%to_checks);
-  
-  foreach my $c (sort(keys(%to_checks)))
-  {
-    if( line_contradiction($rstate,$c) )
-    {
-      return -1;
-    }
-    push(@$rtasks,$c);
-  }
-
-  return $count;
 }
 
 sub validate
