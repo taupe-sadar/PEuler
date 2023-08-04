@@ -39,12 +39,12 @@ my($num_digits)=0;
 
 my(@presume_sol)=();
 
-my($init_state)=build_initial_state(\@raw_grid);
+my($board,$init_state)=build_initial_state(\@raw_grid);
 
 my(@init_checks)=();
-for(my($i)=0;$i<=$#{$$init_state{"board"}};$i++)
+for(my($i)=0;$i<=$#{$$init_state{"matches"}};$i++)
 {
-  if($$init_state{"board"}[$i]{"match"} == 0)
+  if($$init_state{"matches"}[$i]{"match"} == 0)
   {
     push(@init_checks,["line",$i]);
   }    
@@ -79,12 +79,26 @@ sub backtrack
   {
     if($result[0] == -1) #means contradiction found
     {
-      my(@checks)=();
-      remove_one_candidate($loop_state,$result[1],$result[2]);
-      push(@checks,['col',$result[1]]);
-      my($ret)=process_checks($loop_state,\@checks);
-      
+      my(%to_check)=();
+      my($col,$digit)=($result[1],$result[2]);
+      my($ret)= eliminate($loop_state,$col,$digit,\%to_check);
       if($ret < 0)
+      {
+        return -1;
+      }
+      
+      my(@checks)=();
+      foreach my $li (sort(keys(%to_check)))
+      {
+        if( $$board[$li][$col] == $digit)
+        {
+          push(@checks,['line',$li]);
+        }
+      }
+      
+      my($ret_check)=process_checks($loop_state,\@checks);
+      
+      if($ret_check < 0)
       {
         return -1;
       }
@@ -154,16 +168,22 @@ sub backtrack_tries
   {
     my(@checks)=();
     my($state)=copy_state($base_state);
-    my($count)=place_digit($state,\@checks,@{$$rtries[$i]});
-    # print "$space($depth) Try : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
-    my($ret)=process_checks($state,\@checks);
-    if($ret < 0)
+    
+    my($ret_place)=place_digit($state,\@checks,@{$$rtries[$i]});
+    if($ret_place < 0)
     {
-      # print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
+      # print "$space($depth) Remove(fast) : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
     
-    push(@{$$rtries[$i]},$ret + $count);
+    my($ret_checks)=process_checks($state,\@checks);
+    if($ret_checks < 0)
+    {
+      print "$space($depth) Remove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
+      return (-1,$$rtries[$i][0],$$rtries[$i][1]);
+    }
+
+    push(@{$$rtries[$i]},$ret_place + $ret_checks);
     push(@{$$rtries[$i]},$state);
   }
   @$rtries = sort(pref_fn @$rtries);
@@ -233,14 +253,22 @@ sub print_state
 sub print_board
 {
   my($rstate)=@_;
-  my($rboard)=$$rstate{'board'};
-  for(my($i)=0;$i<=$#$rboard;$i++)
+  my($rmatches)=$$rstate{'matches'};
+  for(my($i)=0;$i<=$#$board;$i++)
   {
-    for(my($j)=0;$j<=$#{$$rboard[$i]{'digits'}};$j++)
+    for(my($j)=0;$j<=$#{$$board[$i]};$j++)
     {
-      print $$rboard[$i]{'digits'}[$j];
+      my($d)=$$board[$i][$j];
+      if(exists($$rstate{'candidates'}[$j]{$d}))
+      {
+        print $d;
+      }
+      else
+      {
+        print ".";
+      }
     }
-    print " $$rboard[$i]{match}/$$rboard[$i]{unknown}";
+    print " $$rmatches[$i]{match}/$$rmatches[$i]{unknown}";
     print "\n";
   }
 }
@@ -259,12 +287,6 @@ sub process_checks
       return -1 if($modifs < 0);
       $all_modifs += $modifs;
     }
-    elsif($$check[0] eq 'col')
-    {
-      my($modifs)=check_col($state,$rchecks,$$check[1]);
-      return -1 if($modifs < 0);
-      $all_modifs += $modifs;
-    }
   }
   return $all_modifs;
 }
@@ -272,164 +294,143 @@ sub process_checks
 sub check_line
 {
   my($rstate,$rtasks,$line_idx)=@_;
-  my($rboard)=$$rstate{"board"};
-  my($line)=$$rboard[$line_idx];
+  my($rmatches)=$$rstate{"matches"};
+  my($line)=$$rmatches[$line_idx];
   my($modifs)=0;
-  if($$rboard[$line_idx]{'unknown'} > 0)
+  my(%to_check)=();
+  if($$rmatches[$line_idx]{'unknown'} > 0)
   {
     my($eliminate)=($$line{'match'} == 0); 
     my($validate)=($$line{'match'} == $$line{'unknown'});
     if($eliminate || $validate)
     {
-      for(my($n)=0;$n<=$#{$$rboard[$line_idx]{'digits'}};$n++)
+      for(my($n)=0;$n<$num_digits;$n++)
       {
-        my($digit)=$$rboard[$line_idx]{'digits'}[$n];
-        if( $digit != -1 )
+        my($digit)=$$board[$line_idx][$n];
+        my($rcands)=$$rstate{"candidates"}[$n];
+        my($is_valid)=exists($$rcands{$digit});
+        if($is_valid)
         {
           if($eliminate)
           {
-            $modifs += eliminate($rstate,$line_idx,$n,$digit);
+            $modifs += eliminate($rstate,$n,$digit,\%to_check);
           }
           else
           {
-            $modifs += validate($rstate,$line_idx,$n,$digit);
+            $modifs += validate($rstate,$n,$digit,\%to_check);
           }
-          
-          if( candidate_contradiction($rstate,$n) )
-          {
-            $modifs = -1;
-            last;
-          }
-          push(@$rtasks,['col',$n]);
         }
       }
     }
   }
-  return $modifs;
-}
-
-sub check_col
-{
-  my($rstate,$rtasks,$col_idx)=@_;
-  my($rboard)=$$rstate{"board"};
-  my($rcands)=$$rstate{'candidates'}[$col_idx];
   
-  my(@ks)=(keys(%$rcands));
-  my($sol)=-1;
-  if( $#ks == 0 )
+  foreach my $c (sort(keys(%to_check)))
   {
-    $sol = $ks[0];
-  }
-  
-  my($modifs)=0;
-  for(my($i)=0;$i<=$#$rboard;$i++)
-  {
-    my($digit)=$$rboard[$i]{'digits'}[$col_idx];
-    if($digit != -1 )
+    if( line_contradiction($rstate,$c) )
     {
-      if( $digit eq $sol )
-      {
-        $modifs += validate($rstate,$i,$col_idx,$digit);
-        
-        if( line_contradiction($rstate,$i) )
-        {
-          $modifs = -1;
-          last;
-        }
-
-        push(@$rtasks,['line',$i]);
-      }
-      elsif( !exists($$rcands{$digit} ))
-      {
-        $modifs += eliminate($rstate,$i,$col_idx,$digit);
-        if( line_contradiction($rstate,$i) )
-        {
-          $modifs = -1;
-          last;
-        }
-        push(@$rtasks,['line',$i]);
-      }
+      $modifs = -1;
+      last;
     }
+    push(@$rtasks,['line',$c]);
   }
   return $modifs;
 }
 
 sub eliminate
 {
-  my($rstate,$li,$co,$digit)=@_;
-  my($rboard)=$$rstate{"board"};
-  my($count)=remove_one_candidate($rstate,$co,$digit);
-  $$rboard[$li]{'digits'}[$co] = -1;
-  $$rboard[$li]{'unknown'} --;
-  return $count;
+  my($rstate,$co,$digit,$rtocheck)=@_;
+  return remove_one_candidate($rstate,$co,$digit,$rtocheck);
 }
 
 sub validate
 {
-  my($rstate,$li,$co,$digit)=@_;
-  my($rboard)=$$rstate{"board"};
-  my($count)=remove_candidates($rstate,$co,$digit);
-  $$rboard[$li]{'digits'}[$co] = -1;
-  $$rboard[$li]{'unknown'} --;
-  $$rboard[$li]{'match'} --;
-  return $count;
-}
-
-sub candidate_contradiction
-{
-  my($rstate,$n)=@_;
-  my(@ks)=keys(%{$$rstate{'candidates'}[$n]});
-  return ($#ks < 0);
+  my($rstate,$co,$digit,$rtocheck)=@_;
+  return remove_candidates($rstate,$co,$digit,$rtocheck);
 }
 
 sub line_contradiction
 {
   my($rstate,$n)=@_;
-  my($rboard)=$$rstate{"board"};
-  my($line)=$$rboard[$n];
+  
+  my($line)=$$rstate{"matches"}[$n];
   return (($$line{'match'} < 0) || ($$line{'match'} > $$line{'unknown'})); 
 }
 
 sub place_digit
 {
   my($rstate,$rtasks,$idx,$val)=@_;
-  my($count)=remove_candidates($rstate,$idx,$val);
-  push(@$rtasks,["col",$idx]);
-  return 1000 + $count;
+  
+  my(%to_checks)=();
+  
+  my($count)=validate($rstate,$idx,$val,\%to_checks);
+  
+  foreach my $c (sort(keys(%to_checks)))
+  {
+    if( line_contradiction($rstate,$c) )
+    {
+      return -1;
+    }
+    push(@$rtasks,['line',$c]);
+  }
+
+  return $count;
 }
 
 sub remove_candidates
 {
-  my($rstate,$idx,$val)=@_;
+  my($rstate,$idx,$val,$rtocheck)=@_;
   my($count)=0;
-  my(@keys)=(keys(%{$$rstate{'candidates'}[$idx]}));
-  if(exists($$rstate{'candidates'}[$idx]{$val}))
+  foreach my $c (sort(keys(%{$$rstate{'candidates'}[$idx]})))
   {
-    $$rstate{'candidates'}[$idx]={$val=>1};
-    return $#keys;
+    $count += remove_one_candidate($rstate,$idx,$c,$rtocheck) unless($c == $val);
   }
-  else
-  {
-    $$rstate{'candidates'}[$idx]={};
-    return $#keys+1;
-  }
+  return $count;
 }
 
 sub remove_one_candidate
 {
-  my($rstate,$idx,$val)=@_;
-  if(exists($$rstate{'candidates'}[$idx]{$val}))
+  my($rstate,$co,$val,$rtocheck)=@_;
+  my($rcands)=$$rstate{'candidates'}[$co];
+  my(@cands)=(keys(%$rcands));
+  
+  if($#cands <= 0 || !exists($$rcands{$val}))
   {
-    delete $$rstate{'candidates'}[$idx]{$val};
-    return 1;
+    return 0;
   }
-  return 0;
+  
+  my($sol)=-1;
+  if($#cands == 1)
+  {
+    $sol = ($cands[0] == $val)?$cands[1]:$cands[0];
+  }
+  delete $$rcands{$val};
+  my($rmatches)=$$rstate{'matches'};
+  my($count)=0;
+  for(my($li)=0;$li<=$#$rmatches;$li++)
+  {
+    if($$board[$li][$co] == $sol)
+    {
+      $$rmatches[$li]{'unknown'} --;
+      $$rmatches[$li]{'match'} --;
+      $$rtocheck{$li}=1;
+      $count+=1000;
+    }
+    elsif($$board[$li][$co] == $val)
+    {
+      $$rmatches[$li]{'unknown'} --;
+      $$rtocheck{$li}=1;
+      $count++;
+    }
+  }
+  return $count;
 }
 
 sub build_initial_state
 {
   my($rgrid)=@_;
   my(%state)=();
+  my(@matches)=();
+  
   my(@board)=();
   
   for(my($line)=0;$line <= $#$rgrid; $line ++)
@@ -438,14 +439,15 @@ sub build_initial_state
     $num_digits = $#digits + 1 if( $num_digits == 0 );
     die "Uncoherent number of digits" if($num_digits != $#digits + 1);
     
+    push(@board,\@digits);
+    
     my(%hash)=(
-      'digits' => \@digits,
       'match' => $$rgrid[$line][1],
       'unknown' => $num_digits
     );
-    push(@board,\%hash);
+    push(@matches,\%hash);
   }
-  $state{'board'} = \@board;
+  $state{'matches'} = \@matches;
   
   my(@candidates)=();
   for( my($i)=0; $i < $num_digits; $i++)
@@ -459,7 +461,7 @@ sub build_initial_state
   }
   $state{'candidates'} = \@candidates;
   
-  return \%state;
+  return (\@board,\%state);
 }
 
 sub copy_state
@@ -468,20 +470,18 @@ sub copy_state
   
   my(%state)=();
   
-  my(@board)=();
+  my(@matches)=();
   my(@candidates)=();
   
-  for( my($line)=0;$line <= $#{$$rstate{'board'}}; $line ++)
+  for( my($line)=0;$line <= $#{$$rstate{'matches'}}; $line ++)
   {
-    my(@digits)=(@{$$rstate{'board'}[$line]{'digits'}});
     my(%hash)=(
-      'digits' => \@digits,
-      'match' => $$rstate{'board'}[$line]{'match'},
-      'unknown' => $$rstate{'board'}[$line]{'unknown'}
+      'match' => $$rstate{'matches'}[$line]{'match'},
+      'unknown' => $$rstate{'matches'}[$line]{'unknown'}
     );
-    push(@board,\%hash);
+    push(@matches,\%hash);
   }
-  $state{'board'} = \@board;
+  $state{'matches'} = \@matches;
   
   for( my($i)=0; $i < $num_digits; $i++)
   {
