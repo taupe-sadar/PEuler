@@ -81,7 +81,10 @@ sub backtrack
     {
       my(%checks)=();
       my($col,$digit)=($result[1],$result[2]);
-      eliminate($loop_state,$col,$digit,\%checks);
+      if(eliminate($loop_state,$col,$digit,\%checks) == -1)
+      {
+        return -1;
+      }
             
       my($ret_check)=process_checks($loop_state,\%checks);
       
@@ -157,7 +160,11 @@ sub backtrack_tries
     my($state)=copy_state($base_state);
     
     my($ret_place)=validate($state,@{$$rtries[$i]},\%checks);
-   
+    if($ret_place == -1)
+    {
+      return (-1,$$rtries[$i][0],$$rtries[$i][1]);
+    }
+
     my($ret_checks)=process_checks($state,\%checks);
     if($ret_checks < 0)
     {
@@ -282,11 +289,7 @@ sub check_line
   my($rmatches)=$$rstate{"matches"};
   my($line)=$$rmatches[$line_idx];
   my($modifs)=0;
-  if(line_contradiction($rstate,$line_idx))
-  {
-    return -1;
-  }
-  elsif($$rmatches[$line_idx]{'unknown'} > 0)
+  if($$rmatches[$line_idx]{'unknown'} > 0)
   {
     my($eliminate)=($$line{'match'} == 0); 
     my($validate)=($$line{'match'} == $$line{'unknown'});
@@ -299,14 +302,17 @@ sub check_line
         my($is_valid)=exists($$rcands{$digit});
         if($is_valid)
         {
+          my($num)=0;
           if($eliminate)
           {
-            $modifs += eliminate($rstate,$n,$digit,$rtasks);
+            $num = eliminate($rstate,$n,$digit,$rtasks);
           }
           else
           {
-            $modifs += validate($rstate,$n,$digit,$rtasks);
+            $num = validate($rstate,$n,$digit,$rtasks);
           }
+          return -1 if($num == -1);
+          $modifs += $num;
         }
       }
     }
@@ -329,7 +335,12 @@ sub validate
   my($count)=0;
   foreach my $c (sort(keys(%{$$rstate{'candidates'}[$idx]})))
   {
-    $count += eliminate($rstate,$idx,$c,$rtocheck) unless($c == $val);
+    unless($c == $val)
+    {
+      my($num)=eliminate($rstate,$idx,$c,$rtocheck);
+      return -1 if($num==-1);
+      $count += $num;
+    }
   }
   return $count;
 }
@@ -359,12 +370,18 @@ sub eliminate
     {
       $$rmatches[$li]{'unknown'} --;
       $$rmatches[$li]{'match'} --;
+      
+      return -1 if(line_contradiction($rstate,$li));
+
       $$rtocheck{$li}=1;
       $count+=1000;
     }
     elsif($$board[$li][$co] == $val)
     {
       $$rmatches[$li]{'unknown'} --;
+
+      return -1 if(line_contradiction($rstate,$li));
+
       $$rtocheck{$li}=1;
       $count++;
     }
