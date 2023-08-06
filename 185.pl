@@ -39,22 +39,24 @@ my($num_digits)=0;
 
 my(@presume_sol)=();
 
+use constant MATCH => 0;
+use constant UNKNOWN => 1;
+use constant CANDIDATES => 2;
+
 my($board,$init_state)=build_initial_state(\@raw_grid);
 
 my(%init_checks)=();
-for(my($i)=0;$i<=$#{$$init_state{"matches"}};$i++)
+for(my($i)=0;$i<=$#{$$init_state[MATCH]};$i++)
 {
-  if($$init_state{"matches"}[$i]{"match"} == 0)
+  if($$init_state[MATCH][$i] == 0)
   {
     $init_checks{$i}=1;
   }    
 }
 process_checks($init_state,\%init_checks);
 
-# print_state($init_state);
-# <STDIN>;
-
 my($result,$solution)=backtrack($init_state,0);
+
 if($result == 0)
 {
   print $solution;
@@ -116,7 +118,7 @@ sub backtrack
       {
         for(my($i)=0;$i<$num_digits;$i++)
         {
-          my(@k)=(keys(%{$$loop_state{'candidates'}[$i]}));
+          my(@k)=(keys(%{$$loop_state[CANDIDATES][$i]}));
           push(@presume_sol,$k[0]);
         }
       }
@@ -192,11 +194,11 @@ sub backtrack_tries
 
 sub list_tries
 {
-  my($state)=@_;
+  my($rstate)=@_;
   my(@t)=();
   for(my($i)=0;$i<$num_digits;$i++)
   {
-    my(@cand_keys)=(sort(keys(%{$$state{'candidates'}[$i]})));
+    my(@cand_keys)=(sort(keys(%{$$rstate[CANDIDATES][$i]})));
     next if($#cand_keys <= 0);
     for my $cand (@cand_keys)
     {
@@ -216,7 +218,7 @@ sub print_state
   my($max)=0;
   for(my($j)=0;$j<$num_digits;$j++)
   {
-    my(@ks)=sort(keys(%{$$rstate{'candidates'}[$j]}));
+    my(@ks)=sort(keys(%{$$rstate[CANDIDATES][$j]}));
     push(@list,\@ks);
     $max = $#ks+1 if( $#ks + 1 > $max );
   }
@@ -242,13 +244,12 @@ sub print_state
 sub print_board
 {
   my($rstate)=@_;
-  my($rmatches)=$$rstate{'matches'};
   for(my($i)=0;$i<=$#$board;$i++)
   {
     for(my($j)=0;$j<=$#{$$board[$i]};$j++)
     {
       my($d)=$$board[$i][$j];
-      if(exists($$rstate{'candidates'}[$j]{$d}))
+      if(exists($$rstate[CANDIDATES][$j]{$d}))
       {
         print $d;
       }
@@ -257,7 +258,7 @@ sub print_board
         print ".";
       }
     }
-    print " $$rmatches[$i]{match}/$$rmatches[$i]{unknown}";
+    print " $$rstate[MATCH][$i]/$$rstate[UNKNOWN][$i]";
     print "\n";
   }
 }
@@ -286,19 +287,19 @@ sub process_checks
 sub check_line
 {
   my($rstate,$rtasks,$line_idx)=@_;
-  my($rmatches)=$$rstate{"matches"};
-  my($line)=$$rmatches[$line_idx];
+  my($rmatch)=$$rstate[MATCH][$line_idx];
+  my($runknown)=$$rstate[UNKNOWN][$line_idx];
   my($modifs)=0;
-  if($$rmatches[$line_idx]{'unknown'} > 0)
+  if($runknown > 0)
   {
-    my($eliminate)=($$line{'match'} == 0); 
-    my($validate)=($$line{'match'} == $$line{'unknown'});
+    my($eliminate)=($rmatch == 0); 
+    my($validate)=($rmatch== $runknown);
     if($eliminate || $validate)
     {
       for(my($n)=0;$n<$num_digits;$n++)
       {
         my($digit)=$$board[$line_idx][$n];
-        my($rcands)=$$rstate{"candidates"}[$n];
+        my($rcands)=$$rstate[CANDIDATES][$n];
         my($is_valid)=exists($$rcands{$digit});
         if($is_valid)
         {
@@ -324,16 +325,14 @@ sub check_line
 sub line_contradiction
 {
   my($rstate,$n)=@_;
-  
-  my($line)=$$rstate{"matches"}[$n];
-  return (($$line{'match'} < 0) || ($$line{'match'} > $$line{'unknown'})); 
+  return (($$rstate[MATCH][$n] < 0) || ($$rstate[MATCH][$n] > $$rstate[UNKNOWN][$n])); 
 }
 
 sub validate
 {
   my($rstate,$idx,$val,$rtocheck)=@_;
   my($count)=0;
-  foreach my $c (sort(keys(%{$$rstate{'candidates'}[$idx]})))
+  foreach my $c (sort(keys(%{$$rstate[CANDIDATES][$idx]})))
   {
     unless($c == $val)
     {
@@ -348,7 +347,7 @@ sub validate
 sub eliminate
 {
   my($rstate,$co,$val,$rtocheck)=@_;
-  my($rcands)=$$rstate{'candidates'}[$co];
+  my($rcands)=$$rstate[CANDIDATES][$co];
   my(@cands)=(keys(%$rcands));
   
   if($#cands <= 0 || !exists($$rcands{$val}))
@@ -362,14 +361,15 @@ sub eliminate
     $sol = ($cands[0] == $val)?$cands[1]:$cands[0];
   }
   delete $$rcands{$val};
-  my($rmatches)=$$rstate{'matches'};
+  my($rmatch)=$$rstate[MATCH];
+  my($runknown)=$$rstate[UNKNOWN];
   my($count)=0;
-  for(my($li)=0;$li<=$#$rmatches;$li++)
+  for(my($li)=0;$li<=$#$rmatch;$li++)
   {
     if($$board[$li][$co] == $sol)
     {
-      $$rmatches[$li]{'unknown'} --;
-      $$rmatches[$li]{'match'} --;
+      $$runknown[$li]--;
+      $$rmatch[$li]--;
       
       return -1 if(line_contradiction($rstate,$li));
 
@@ -378,7 +378,7 @@ sub eliminate
     }
     elsif($$board[$li][$co] == $val)
     {
-      $$rmatches[$li]{'unknown'} --;
+      $$runknown[$li]--;
 
       return -1 if(line_contradiction($rstate,$li));
 
@@ -392,8 +392,11 @@ sub eliminate
 sub build_initial_state
 {
   my($rgrid)=@_;
-  my(%state)=();
-  my(@matches)=();
+  my(@state)=();
+
+  my(@match)=();
+  my(@unknown)=();
+  my(@candidates)=();
   
   my(@board)=();
   
@@ -405,15 +408,10 @@ sub build_initial_state
     
     push(@board,\@digits);
     
-    my(%hash)=(
-      'match' => $$rgrid[$line][1],
-      'unknown' => $num_digits
-    );
-    push(@matches,\%hash);
+    push(@match,$$rgrid[$line][1]);
+    push(@unknown,$num_digits);
   }
-  $state{'matches'} = \@matches;
   
-  my(@candidates)=();
   for( my($i)=0; $i < $num_digits; $i++)
   {
     my(%cands)=();
@@ -423,36 +421,33 @@ sub build_initial_state
     }
     push(@candidates,\%cands);
   }
-  $state{'candidates'} = \@candidates;
+  push(@state,\@match,\@unknown,\@candidates);
   
-  return (\@board,\%state);
+  return (\@board,\@state);
 }
 
 sub copy_state
 {
   my($rstate)=@_;
   
-  my(%state)=();
+  my(@state)=();
   
-  my(@matches)=();
+  my(@match)=();
+  my(@unknown)=();
   my(@candidates)=();
   
-  for( my($line)=0;$line <= $#{$$rstate{'matches'}}; $line ++)
+  for( my($line)=0;$line <= $#{$$rstate[MATCH]}; $line ++)
   {
-    my(%hash)=(
-      'match' => $$rstate{'matches'}[$line]{'match'},
-      'unknown' => $$rstate{'matches'}[$line]{'unknown'}
-    );
-    push(@matches,\%hash);
+    push(@match,$$rstate[MATCH][$line]);
+    push(@unknown,$$rstate[UNKNOWN][$line]);
   }
-  $state{'matches'} = \@matches;
   
   for( my($i)=0; $i < $num_digits; $i++)
   {
-    my(%cands)=(%{$$rstate{'candidates'}[$i]});
+    my(%cands)=(%{$$rstate[CANDIDATES][$i]});
     push(@candidates,\%cands);
   }
-  $state{'candidates'} = \@candidates;
+  push(@state,\@match,\@unknown,\@candidates);
   
-  return \%state;
+  return \@state;
 }
