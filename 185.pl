@@ -55,8 +55,13 @@ for(my($i)=0;$i<=$#{$$init_state[MATCH]};$i++)
 }
 process_checks($init_state,\%init_checks);
 
-my($global_ret,$rglobal_tries)=calculate_sorted_tries($init_state);
-
+my(@global_costs)=();
+for(my($i)=0;$i<$num_digits;$i++)
+{
+  my(@costs)=(0)x10;
+  push(@global_costs,\@costs);
+}
+update_costs($init_state,\@global_costs);
 my($result,$solution)=backtrack($init_state,0);
 
 if($result == 0)
@@ -123,7 +128,7 @@ sub backtrack
           my(@k)=(keys(%{$$loop_state[CANDIDATES][$i]}));
           push(@presume_sol,$k[0]);
         }
-        ($global_ret,$rglobal_tries) = calculate_sorted_tries($loop_state);
+        update_costs($init_state,\@global_costs);
       }
       
       my($solution)=join('',@presume_sol);
@@ -143,7 +148,9 @@ sub pref_fn
   }
   
   # return $$b[0] <=> $$a[0] || $$a[1] <=> $$b[1];
-  return $$b[2] <=> $$a[2] || $$a[0] <=> $$b[0] || $$a[1] <=> $$b[1];
+  my($acost)=$global_costs[$$a[0]][$$a[1]];
+  my($bcost)=$global_costs[$$b[0]][$$b[1]];
+  return $bcost <=> $acost || $$a[0] <=> $$b[0] || $$a[1] <=> $$b[1];
   
 }
 
@@ -152,13 +159,8 @@ sub backtrack_tries
   my($base_state,$depth)=@_;
   # print_state($base_state);
 
-  my($rtries)=$rglobal_tries;
-  if($depth <= 6)
-  {
-    my($unused)=0;
-    ($unused,$rtries)=calculate_sorted_tries($base_state);
-    $rglobal_tries = $rtries;
-  }
+  my($rtries)=list_tries($base_state);
+  
   return 0 if($#$rtries < 0);
 
   my($space)='  'x$depth;
@@ -201,26 +203,24 @@ sub list_tries
       push(@t,[$i,$cand]);
     }
   }
+  @t = sort(pref_fn @t);
   return \@t;
 }
 
-sub calculate_sorted_tries
+sub update_costs
 {
-  my($rstate)=@_;
+  my($rstate,$rcosts)=@_;
   my($rtries)=list_tries($rstate);
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
     my($tried_state)=copy_state($rstate);
     my($count) = simple_try($tried_state,@{$$rtries[$i]});
-    if($count == -1)
+    if($count != -1)
     {
-      return (-1,[[$$rtries[$i][0],$$rtries[$i][1]]]);
+      $$rcosts[$$rtries[$i][0]][$$rtries[$i][1]] = $count;
     }
-    push(@{$$rtries[$i]},$count,$tried_state);
   }
-  @$rtries = sort(pref_fn @$rtries);
-  return (0,$rtries);
 }
 
 sub simple_try
