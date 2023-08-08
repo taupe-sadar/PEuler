@@ -55,6 +55,8 @@ for(my($i)=0;$i<=$#{$$init_state[MATCH]};$i++)
 }
 process_checks($init_state,\%init_checks);
 
+my($global_ret,$rglobal_tries)=calculate_sorted_tries($init_state);
+
 my($result,$solution)=backtrack($init_state,0);
 
 if($result == 0)
@@ -121,6 +123,7 @@ sub backtrack
           my(@k)=(keys(%{$$loop_state[CANDIDATES][$i]}));
           push(@presume_sol,$k[0]);
         }
+        ($global_ret,$rglobal_tries) = calculate_sorted_tries($loop_state);
       }
       
       my($solution)=join('',@presume_sol);
@@ -149,24 +152,34 @@ sub backtrack_tries
   my($base_state,$depth)=@_;
   # print_state($base_state);
 
-  my($ret,$rtries)=calculate_sorted_tries($base_state);
-  
-  my($space)='  'x$depth;
-  if($ret == -1)
+  my($rtries)=$rglobal_tries;
+  if($depth <= 6)
   {
-    print "$space($depth) Remove : ($$rtries[0][0],$$rtries[0][1])\n" if($depth <=0);
-    return (-1,@{$$rtries[0]});
+    my($unused)=0;
+    ($unused,$rtries)=calculate_sorted_tries($base_state);
+    $rglobal_tries = $rtries;
   }
-  
   return 0 if($#$rtries < 0);
 
+  my($space)='  'x$depth;
   print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=0);
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
+    my($rcands)=$$base_state[CANDIDATES][$$rtries[$i][0]];
+    next if(!exists($$rcands{$$rtries[$i][1]}) || keys %$rcands <= 1);
+    
     print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
-    my($ret)=backtrack($$rtries[$i][3],$depth+1);
-    if($ret < 0)
+    my($backtrack_state)=copy_state($base_state);
+    my($ret_simple)=simple_try($backtrack_state,$$rtries[$i][0],$$rtries[$i][1]);
+    if($ret_simple < 0)
+    {
+      print "$space($depth) Remove : ($$rtries[0][0],$$rtries[0][1])\n" if($depth <=0);
+      return (-1,$$rtries[$i][0],$$rtries[$i][1]);
+    }
+    
+    my($ret_backtrack)=backtrack($backtrack_state,$depth+1);
+    if($ret_backtrack < 0)
     {
       # print "$space($depth) FinallyRemove : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
@@ -198,27 +211,37 @@ sub calculate_sorted_tries
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
-    my(%checks)=();
-    my($state)=copy_state($rstate);
-    
-    my($ret_place)=validate($state,@{$$rtries[$i]},\%checks);
-    if($ret_place == -1)
+    my($tried_state)=copy_state($rstate);
+    my($count) = simple_try($tried_state,@{$$rtries[$i]});
+    if($count == -1)
     {
       return (-1,[[$$rtries[$i][0],$$rtries[$i][1]]]);
     }
-
-    my($ret_checks)=process_checks($state,\%checks);
-    if($ret_checks < 0)
-    {
-      return (-1,[[$$rtries[$i][0],$$rtries[$i][1]]]);
-    }
-
-    push(@{$$rtries[$i]},$ret_place + $ret_checks);
-    push(@{$$rtries[$i]},$state);
+    push(@{$$rtries[$i]},$count,$tried_state);
   }
   @$rtries = sort(pref_fn @$rtries);
   return (0,$rtries);
 }
+
+sub simple_try
+{
+  my($state,$co,$digit)=@_;
+  my(%checks)=();
+  
+  my($ret_place)=validate($state,$co,$digit,\%checks);
+  if($ret_place == -1)
+  {
+    return -1;
+  }
+
+  my($ret_checks)=process_checks($state,\%checks);
+  if($ret_checks < 0)
+  {
+    return -1;
+  }
+  return $ret_place + $ret_checks;
+}
+
 
 sub print_state
 {
