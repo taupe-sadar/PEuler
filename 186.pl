@@ -2,26 +2,96 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+my($prime_minister)=524287;
+my($prime_minister_group)=-1;
+my($modulo)=1000000;
+my($stop_condition)=$modulo *99 /100;
+
+
 my(@circular_seq)=();
 my($circular_size)=55;
-my($modulo)=1000000;
 for(my($i)=1;$i<=$circular_size;$i++)
 {
   push(@circular_seq,(100003-200003*$i+300007*($i**3))%$modulo);
 }
 my($k)=0;
 
-while(1)
+my(%adresses)=();
+
+my($next_group_id)=0;
+my(%groups)=();
+
+my($called)=0;
+my($max_size)=0;
+
+my($call)=0;
+while($prime_minister_group < 0 || ($#{$groups{$prime_minister_group}} + 1) <$stop_condition)
 {
-  my($n)=next_sk();
-  # print $k." -> $n\n";
-  if($n==524287)
+  my($s1)=next_sk();
+  my($s2)=next_sk();
+  
+  next if $s1 == $s2;
+  
+  my($know1,$know2)=(exists($adresses{$s1}),exists($adresses{$s2}));
+  if( !$know1 && !$know2 )
   {
-    print $k." -> $n\n";
-    print"Found\n";
-    <STDIN>;
+    $adresses{$s1}=$next_group_id;
+    $adresses{$s2}=$next_group_id;
+    $groups{$next_group_id++} = [$s1,$s2];
+    $called+=2;
+    $max_size = 2 if($max_size < 2);
   }
+  elsif( $know1 && $know2 )
+  {
+    my($g1,$g2)=($adresses{$s1},$adresses{$s2});
+    
+    if( $g1 != $g2 )
+    {
+      if($#{$groups{$g1}} < $#{$groups{$g2}} )
+      {
+        ($g1,$g2) = ($g2,$g1);
+      }
+ 
+      my($size1,$size2)=($#{$groups{$g1}} + 1 ,  $#{$groups{$g2}} + 1 );
+      # print "Merge $g1($size1) and $g2($size2)\n";
+
+      foreach my $s (@{$groups{$g2}})
+      {
+        $adresses{$s} = $g1;
+        push(@{$groups{$g1}},$s);
+      }
+      delete $groups{$g2};
+      $max_size = $size1+$size2 if($max_size < $size1+$size2);
+    }
+  }
+  else
+  {
+    my($sknow,$snew)=$know1?($s1,$s2):($s2,$s1);
+    my($group)=$adresses{$sknow};
+    $adresses{$snew}=$group;
+    push(@{$groups{$group}},$snew);
+    $called++;
+    $max_size = $#{$groups{$group}} if($max_size < $#{$groups{$group}});
+  }
+  
+  if($call%100000 == 99999)
+  {
+    my $groups = keys %groups;
+    print "Called : $called, groups : $groups, max : $max_size\n";
+  }
+  
+  # print $k." -> $n\n";
+  
+  for my $s ($s1,$s2)
+  {
+    if( $s==$prime_minister )
+    {
+      $prime_minister_group = $adresses{$s};
+    }
+  }
+  $call++;
 }
+print $call;
 
 sub next_sk
 {
