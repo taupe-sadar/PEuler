@@ -2,6 +2,32 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+# Backtracking algorithm :
+# A state consists in :
+# - on each column, possible digits (candidates). If only one candidate, then its part of the solution
+# - on each row, the number of digits that remain unknown : part of solution or not ? (unknown)
+# - on each row, the number of digits among the unknow that should be part of the solution (match)
+#
+# Rules applies, on each row : 
+#  - if there is no more match number, all remaining digits are invalid candidates in their column
+#  - if if the unknown digits equals to the match number, all remaining digits are solutions, and in their column, 
+#    all other digits areinvalid candidates
+#  - if somehow there are more match digits than the remaining unknown, or the match digits is negative the current 
+#    state is in contradiction
+#
+# The backtracking algorithm consists in several candidate tries. A try consist in a digit on a column. 
+# We asssuming a candidate as valid. 
+# - If this lead to a contradiction, one can remove for sure this candidate in the current state.
+# - If no contradiction can be found. We make another assumption, making it recursive.
+# - If there are no more tries left, and still no contradiction, then we found a solution.
+# 
+# We choose the candidate with a cost function, the highest its assumption generates modifications, 
+# the earliest it will be chosen. For optimization reason, this cost is calculate only at the begining. 
+# 
+# Note : Once a solution found, we keep looking for eventual others, trying all candidates that are not
+# in the solution
+#
+
 # my(@raw_grid)=(
   # [90342,2],
   # [70794,0],
@@ -132,7 +158,7 @@ sub backtrack
       }
       
       my($solution)=join('',@presume_sol);
-      print "Solution : $solution ($depth)\n";
+      # print "Solution : $solution ($depth)\n";
       return (0,$solution);
     }
     @result=backtrack_tries($loop_state,$depth);
@@ -147,7 +173,6 @@ sub pref_fn
     return -1 if($presume_sol[$$b[0]] == $$b[1]);
   }
   
-  # return $$b[0] <=> $$a[0] || $$a[1] <=> $$b[1];
   my($acost)=$global_costs[$$a[0]][$$a[1]];
   my($bcost)=$global_costs[$$b[0]][$$b[1]];
   return $bcost <=> $acost || $$a[0] <=> $$b[0] || $$a[1] <=> $$b[1];
@@ -157,26 +182,25 @@ sub pref_fn
 sub backtrack_tries
 {
   my($base_state,$depth)=@_;
-  # print_state($base_state);
 
   my($rtries)=list_tries($base_state);
   
   return 0 if($#$rtries < 0);
 
   my($space)='  'x$depth;
-  print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=0);
+  # print "$space($depth) Numtries : ".($#$rtries+1)."\n" if($depth <=0);
   
   for(my($i)=0;$i<=$#$rtries;$i++)
   {
     my($rcands)=$$base_state[CANDIDATES][$$rtries[$i][0]];
     next if(!exists($$rcands{$$rtries[$i][1]}) || keys %$rcands <= 1);
     
-    print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
+    # print "$space($depth) Retry : ($$rtries[$i][0],$$rtries[$i][1])\n" if($depth <=0);
     my($backtrack_state)=copy_state($base_state);
     my($ret_simple)=simple_try($backtrack_state,$$rtries[$i][0],$$rtries[$i][1]);
     if($ret_simple < 0)
     {
-      print "$space($depth) Remove : ($$rtries[0][0],$$rtries[0][1])\n" if($depth <=0);
+      # print "$space($depth) Remove : ($$rtries[0][0],$$rtries[0][1])\n" if($depth <=0);
       return (-1,$$rtries[$i][0],$$rtries[$i][1]);
     }
     
