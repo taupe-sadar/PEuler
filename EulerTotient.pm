@@ -125,11 +125,11 @@ sub phi_decomposition
     {
       $decomposition{ $prime }--;
     }
-    my( %left_decomposition ) = Prime::decompose( $left );
-    foreach my $p (keys( %left_decomposition )) 
-    {
-      Hashtools::increment( \%decomposition, $p, $left_decomposition{ $p } );
-    }
+  }
+  my( %left_decomposition ) = Prime::decompose( $left );
+  foreach my $p (keys( %left_decomposition )) 
+  {
+    Hashtools::increment( \%decomposition, $p, $left_decomposition{ $p } );
   }
   return (%decomposition);
 } 
