@@ -2,11 +2,17 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+# The reolution use groups. 
+# for each call :
+# - if none of the callers have been called, a group of 2 people is created
+# - if only one has never been called, he is added to the other's group
+# - if both already are in different groups, the groups are merged into one.
+
+
 my($prime_minister)=524287;
 my($prime_minister_group)=-1;
 my($modulo)=1000000;
 my($stop_condition)=$modulo *99 /100;
-
 
 my(@circular_seq)=();
 my($circular_size)=55;
@@ -53,7 +59,6 @@ while($prime_minister_group < 0 || ($#{$groups{$prime_minister_group}} + 1) <$st
       }
  
       my($size1,$size2)=($#{$groups{$g1}} + 1 ,  $#{$groups{$g2}} + 1 );
-      # print "Merge $g1($size1) and $g2($size2)\n";
 
       foreach my $s (@{$groups{$g2}})
       {
@@ -77,7 +82,7 @@ while($prime_minister_group < 0 || ($#{$groups{$prime_minister_group}} + 1) <$st
   if($call%100000 == 99999)
   {
     my $groups = keys %groups;
-    print "Called : $called, groups : $groups, max : $max_size\n";
+    # print "Called : $called, groups : $groups, max : $max_size\n";
   }
   
   # print $k." -> $n\n";
