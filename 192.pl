@@ -17,20 +17,21 @@ for(my($n)=1;$n<=$max_n;$n++)
   my($isqu)=int($squ);
   next if($isqu*$isqu == $n);
 
-  my(@clist)=ContinueFraction::integers_list($n);
+  my($gen)=ContinueFraction::generator_from_integer($n);
+  
   my(@qns)=(0,1);
-  my($i)=0;
-  my($a)=coef_frac(\@clist,$i);
+  
+  my($a)=ContinueFraction::gen_next($gen);
   my($q)=$a * $qns[0] + $qns[1];
+  my($i)=0;
   while($q <= $denom_max )
   {
     @qns = ($q,$qns[0]);
-    $i++;
-    $a=coef_frac(\@clist,$i);
+    $a=ContinueFraction::gen_next($gen);
     $q = $a * $qns[0] + $qns[1];
+    $i++;
   }
   
-  $a=coef_frac(\@clist,$i);
   my($b)=floor(($denom_max-$qns[1])/$qns[0]);
   my($ret)=0;
   my($secondary)=$b * $qns[0] + $qns[1];
@@ -49,8 +50,8 @@ for(my($n)=1;$n<=$max_n;$n++)
     my($q_idx)=$i-1;
     while($q_idx > 0 )
     {
-      my($irr_coeff) = coef_frac(\@clist,$irr_idx);
-      my($q_coeff) = coef_frac(\@clist,$q_idx);
+      my($irr_coeff) = ContinueFraction::gen_get($gen,$irr_idx);
+      my($q_coeff) = ContinueFraction::gen_get($gen,$q_idx);
       if($irr_coeff != $q_coeff )
       {
         if( $sign * ($irr_coeff - $q_coeff ) > 0 )
@@ -85,12 +86,3 @@ for(my($n)=1;$n<=$max_n;$n++)
 }
 
 print $sum_q;
-
-sub coef_frac
-{
-  my($alist,$i)=@_;
-  my($aidx)=$i%($#$alist+1);
-  my($a)=$$alist[$aidx];
-  return $a if($i==0 || $aidx > 0);
-  return $a*2;
-}

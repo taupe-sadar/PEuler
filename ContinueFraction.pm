@@ -20,25 +20,73 @@ sub integers_list
 {
   my($n)=@_;
   my($integer)=int(sqrt($n));
-  my($b,$c)=next_quotient_complet($integer,1,$integer,$n);
+  my($b,$c)=($integer,$n - $integer*$integer);
+  
   my(@list)=($integer);
   while(($b!=$integer*2)&&($c!=1))
   {
-    my($a);
-    ($b,$c,$a)=next_quotient_complet($b,$c,$integer,$n);
+    my($a)=int(($integer+$b)/$c);
+    $b=$a*$c-$b;
+    $c=($n-$b*$b)/$c;
     push(@list,$a);
   }
   return @list;
 }
 
-sub next_quotient_complet
+######## generator ##########
+
+sub generator_from_integer
 {
-  my($b,$c,$ent_n,$n)=@_;
-  my($a)=int(($ent_n+$b)/$c);
-  my($b2)=$a*$c-$b;
-  my($c2)=($n-$b2**2)/$c;
-  return ($b2,$c2,$a);
+  my($n)=@_;
+  my($integer)=int(sqrt($n));
+  return [-1,$n,$integer,0,1,[],0];
 }
+
+sub gen_next
+{
+  my($generator)=@_;
+  my($i,$n,$ni,$b,$c,$alist,$complete)=(@$generator);
+  $$generator[0] = $i+1;
+  if($complete)
+  {
+    my($nexti)=($$generator[0])%($#$alist+1);
+    return 2*$ni if($nexti==0);
+    return $$alist[$nexti];
+  }
+  else
+  {
+    my($nexta)=int(($ni+$b)/$c);
+    my($nextb)=$nexta*$c-$b;
+    my($nextc)=($n-$nextb*$nextb)/$c;
+    $$generator[3] = $nextb;
+    $$generator[4] = $nextc;
+    
+    push(@{$$generator[5]},$nexta);
+    if( ($nextb==$ni)&&($nextc==1) )
+    {
+      $$generator[6] = 1;
+    }
+    return $nexta;
+  }
+}
+
+sub gen_get
+{
+  my($generator,$idx)=@_;
+  my($i,$n,$ni,$b,$c,$alist,$complete)=(@$generator);
+  return $ni if($idx==0);
+  
+  while( $idx > $#$alist && !$complete )
+  {
+    gen_next($generator);
+    ($alist,$complete)=(@$generator[5..6]);
+  }
+  
+  my($val)=$idx%($#$alist+1);
+  return 2*$ni if($val==0);
+  return $$alist[$val];
+}
+############
 
 sub fraction_cont
 {
