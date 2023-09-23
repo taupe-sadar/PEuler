@@ -19,18 +19,13 @@ sub period_frac_cont
 sub integers_list
 {
   my($n)=@_;
-  my($integer)=int(sqrt($n));
-  my($b,$c)=($integer,$n - $integer*$integer);
+  my($gen)=generator_from_integer($n);
   
-  my(@list)=($integer);
-  while(($b!=$integer*2)&&($c!=1))
+  while(!$$gen[6])
   {
-    my($a)=int(($integer+$b)/$c);
-    $b=$a*$c-$b;
-    $c=($n-$b*$b)/$c;
-    push(@list,$a);
+    gen_next($gen);
   }
-  return @list;
+  return @{$$gen[5]};
 }
 
 ######## generator ##########
