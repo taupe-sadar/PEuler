@@ -30,6 +30,18 @@ sub integers_list
 
 ######## generator ##########
 
+# The continued fraction of x is written :
+# a_0 = floor(x) , x = x_0 = a_0 + x_1 
+# a_1 = floor(1/x_1) , 1/x_1 = a_1 + x_2
+# ...
+# a_i = floor(1/xi) , 1/x_i = a_i + x_i+1
+#
+# when x is an integer, the x_i numbers can be written :
+# x_i = (sqrt(x) + b_i)/c_i
+# where b_i and c_i are integers
+#
+# The first index (i) where b_i = a_0 and c_i = 1 gives the period of the continued fraction
+
 sub generator_from_integer
 {
   my($n)=@_;
