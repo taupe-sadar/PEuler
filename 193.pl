@@ -25,66 +25,47 @@ for(my($i)=1;$i<$crible_size;$i++)
   if( $crible[$i] == 0)
   {
     #remove squares
-    my($kmax)=floor($max_sq2/$p2);
-    my($square)=$p2;
-    for(my($k)=1;$k<=$kmax;$k+=6)
+    my($square_idx)=($p2-1)/3;
+    while($square_idx<=$#crible)
     {
-      $crible[($square-1)/3]=-1;
-      $square+=4*$p2;
-      $crible[($square-2)/3]=-1;
-      $square+=2*$p2;
+      $crible[$square_idx]=-1;
+      $square_idx+=2*$p2;
+    }
+    $square_idx=(5*$p2-2)/3;
+    while($square_idx<=$#crible)
+    {
+      $crible[$square_idx]=-1;
+      $square_idx+=2*$p2;
     }
 
     #remember p multiples
-    my($amax)=floor($max_sq2/$p);
-    my($num)=$p;
+    my($doublep)=2*$p;
     my($modp)=($p%6 == 1)?1:2;
-    for(my($a)=1;$a<=$amax;$a+=6)
+    my($pidx)=($p - $modp)/3;
+    while($pidx<=$#crible)
     {
-      my($pidx)=($num - $modp)/3;
-      # if($p==7)
-      # {
-      # print "$num -> $pidx\n";<STDIN>;
-      # }
-      $crible[$pidx] ++ if( $crible[$pidx] != -1);
-      $num+=4*$p;
-      
-      last if($num>$max_sq2);
-      my($pidx2)=($num + $modp)/3 - 1;
-      
-      $crible[$pidx2] ++ if( $crible[$pidx2] != -1);
-      # if($p==7)
-      # {
-      # print "$num -> $pidx2\n";
-      # my($s)=join(" ",@crible[0..20]);
-      # print "$s\n";
-      # <STDIN>;
-      # }
-      $num+=2*$p;
+      $crible[$pidx]++ if( $crible[$pidx] != -1);
+      $pidx+=$doublep;
+    }
+    $pidx =(5*$p + $modp)/3 - 1;
+    while($pidx<=$#crible)
+    {
+      $crible[$pidx]++ if( $crible[$pidx] != -1);
+      $pidx+=$doublep;
     }
   }
 
   #count squared
   my($sign)=(($crible[$i]%2==0)?-1:1);
   $num_squared += $sign*floor($max/$p2);
-  $num_squared -= $sign*floor($max/$p2/2);
-  $num_squared -= $sign*floor($max/$p2/3);
-  $num_squared += $sign*floor($max/$p2/6);
-
-  # print "$i : ".(($i -$i%2)*3 + (($i%2==0)?1:5))." ($sign)\n";
-  # my($s)=join(" ",@crible[0..20]);
-  # print "$s\n";
-  # <STDIN>;
-
+  $num_squared -= $sign*floor($max/$p2/4);
+  $num_squared -= $sign*floor($max/$p2/9);
+  $num_squared += $sign*floor($max/$p2/36);
 
   $p+=($i%2==0)?4:2;
-
 }
+$num_squared += floor($max/4);
+$num_squared += floor($max/9);
+$num_squared -= floor($max/36);
 
 print ($max - $num_squared);
-
-sub ptoidx
-{
-  my($p)=@_;
-  return ($p - $p%6)/6
-}
