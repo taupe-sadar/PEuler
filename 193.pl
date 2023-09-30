@@ -25,33 +25,27 @@ for(my($i)=1;$i<$crible_size;$i++)
   if( $crible[$i] == 0)
   {
     #remove squares
-    my($square_idx)=($p2-1)/3;
-    while($square_idx<=$#crible)
+    
+    for(my($square_idx)=($p2-1)/3;$square_idx<=$#crible;$square_idx+=2*$p2)
     {
       $crible[$square_idx]=-1;
-      $square_idx+=2*$p2;
     }
-    $square_idx=(5*$p2-2)/3;
-    while($square_idx<=$#crible)
+    
+    for(my($square_idx)=(5*$p2-2)/3;$square_idx<=$#crible;$square_idx+=2*$p2)
     {
       $crible[$square_idx]=-1;
-      $square_idx+=2*$p2;
     }
 
     #remember p multiples
     my($doublep)=2*$p;
-    my($modp)=($p%6 == 1)?1:2;
-    my($pidx)=($p - $modp)/3;
-    while($pidx<=$#crible)
+    my($modp)=$p%3;
+    for(my($pidx)=($p - $modp)/3;$pidx<=$#crible;$pidx+=$doublep)
     {
       $crible[$pidx]++ if( $crible[$pidx] != -1);
-      $pidx+=$doublep;
     }
-    $pidx =(5*$p + $modp)/3 - 1;
-    while($pidx<=$#crible)
+    for(my($pidx)=(5*$p + $modp)/3 - 1;$pidx<=$#crible;$pidx+=$doublep)
     {
       $crible[$pidx]++ if( $crible[$pidx] != -1);
-      $pidx+=$doublep;
     }
   }
 
