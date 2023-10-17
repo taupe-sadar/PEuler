@@ -6,51 +6,86 @@ use List::Util qw(min max);
 
 use Permutations;
 
-my($max,$nmax)=(25,75);
-my($cmax)=1984;
+my($mmax,$nmax,$cmax)=(25,75,1984);
+my($modulo)=10**8;
 
 my(@table_a)=(0)x6;
 my(@table_b)=(0)x6;
 
 build_tables(\@table_a,\@table_b);
 
+my(@ank)=(1);
+my($prod)=1;
+my($climit)=0;
+while($prod > 0)
+{
+  $prod*=$cmax - $climit;
+  $prod%=$modulo;
+  push(@ank,$prod) if($prod > 0);
+  
+  $climit++;
+}
+$climit--;
+
 my(@S)=([[0,0,1]]);
 
-print "----- transform 1 ---------\n";
+for(my($n)=1;$n<=$nmax;$n++)
+{
+  my($next)=transform(0,$S[0][$n-1],$modulo,$climit);
+  push(@{$S[0]},$next);
+}
 
-my($x1)=transform(0,[0,0,1]);
-print Dumper $x1;
-print "------- transform 2 -------\n";
-my($x2)=transform(0,$x1);
-print Dumper $x2;
-my($val)=$$x2[3]*Permutations::factorielle(4) + $$x2[4]*Permutations::factorielle(4);
-print "val : $$x2[3]*24 + $$x2[4] *24 = $val\n";
+for(my($m)=1;$m<=$mmax;$m++)
+{
+  my($next)=transform(1,$S[$m-1][0],$modulo,$climit);
+  push(@S,[$next]);
+}
 
-print "------- base tables -------\n";
-print Dumper \@table_a;
-print Dumper \@table_b;
+for(my($m)=1;$m<=$mmax;$m++)
+{
+  for(my($n)=1;$n<=$nmax;$n++)
+  {
+    my($nextA)=transform(1,$S[$m-1][$n],$modulo,$climit);
+    my($nextB)=transform(0,$S[$m][$n-1],$modulo,$climit);
+    my(@numcolors)=();
+    for(my($c)=0;$c<=$#$nextA;$c++)
+    {
+      push(@numcolors,($$nextA[$c]+$$nextB[$c])%$modulo);
+    }
+    push(@{$S[$m]},\@numcolors);
+  }
+}
+my($result)=0;
+for(my($c)=0;$c<=$#{$S[$mmax][$nmax]};$c++)
+{
+  $result += ($S[$mmax][$nmax][$c] * $ank[$c])%$modulo;
+}
 
+print $result%$modulo;
 
 sub transform
 {
-  my($isA,$rnum_colors)=@_;
-  my(@new_num_colors)=(0)x($#$rnum_colors+5);
+  my($isA,$rnum_colors,$mod,$colormax)=@_;
+  
+  my($max_colors)=min($#$rnum_colors + 5,$colormax);
+  my(@new_num_colors)=(0)x($max_colors+1);
+  
   my($rtable)=($isA?\@table_a:\@table_b);
   for(my($old)=2;$old<=$#$rnum_colors;$old++)
   {
-    for(my($new)=0;$new<=5;$new++)
+    my($max_new)=$max_colors-$old;
+    for(my($new)=0;$new<=$max_new;$new++)
     {
       for(my($use_old)=max(0,1-$new);$use_old<=min(5-$new,$old-2);$use_old++)
       {
-        # print "$old $new $use_old\n";
-        $new_num_colors[$old+$new] += $$rnum_colors[$old]*$$rtable[$new+$use_old] * Permutations::cnk($old-2,$use_old) * Permutations::cnk($new+$use_old,$use_old) * Permutations::factorielle($use_old);
+        my($incr)=($$rnum_colors[$old]*$$rtable[$new+$use_old])%$mod;
+        my($combos)=(Permutations::cnk($old-2,$use_old)*Permutations::cnk($new+$use_old,$use_old)*Permutations::factorielle($use_old))%$mod;;
+        $new_num_colors[$old+$new] += ($incr * $combos)%$mod;
       }
     }
   }
   return \@new_num_colors;
 }
-
-
 
 sub build_tables
 {
@@ -79,7 +114,6 @@ sub try_nodes
     }
     else
     {
-      print Dumper \@new_state if($number_used == 0);
       $$rtable_a[$number_used]++ if($try != -1);
       $$rtable_b[$number_used]++ ;
     }
