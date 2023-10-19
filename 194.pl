@@ -6,6 +6,47 @@ use List::Util qw(min max);
 
 use Permutations;
 
+# First calculation of transition tables :
+# Starting with 2 colors with ID -2 and -1, and for each case A or B, 
+# we calculate all ways to choose a color value (in [0,4]), on the places (X,Y,Z,W,T)
+# with the constraint that the values are ordered : the first '0' is before the first '1' in the (X,Y,Z,W,T) set
+#   
+#  (-2)----- X
+#    | \   / |
+#    |   Y   |
+#    |   |   |
+#    |   Z   |
+#    |   |   |
+#    |   W   |
+#    | /   \ |
+#  (-1)******T
+# 
+# This calculation give a vector of "number of colors" ncol[c] of transition of colors, that we use for each additional unit A or B
+#
+# Then for the transitions : 
+# If we want to know how many ways to color a pattern S(a,b,c) of a units A and bunits B, with exactly c colors
+#
+#   S(a,b,c) = sum_c' S(a-1,b,c') * fA(c,c') + S(a,b - 1,c') * fB(c,c')
+#
+# where fX(c,c') is the transtion vector, where c is the color used in S(a,b,c), and c' are the (old) color used in S(a,b,c'),
+# ( the -2 and -1 colors cannot be used as an old color )
+#
+# The transition fonction is calculated : 
+#
+# if we use (cn) = c-c' new colors, (co) old colors, in the 5 availbale places (X,Y,Z,W,T), 1 <= cn + co <= 5
+# - there are cnk( c'-2, co) choices for the old colors
+# - there are cnk(cn + co, co) choices for placing them in the pattern
+# - there are (co!) choices for placing them in all different orders
+# - there is only 1 choice for placing the remaining new colors, because we keep them ordered !
+# 
+# fX(c,c') = sum_co ( cnk( c'-2, co) * cnk(cn + co, co) * (co!) * 1 * ncol[c'] )
+#
+# Finally, as the color are ordered, the total ways of coloring is : 
+# sum_c S(a,b,c) * ank( cmax, c)
+#
+# Important optimisation ank( cmax, c), is divisible 10**8, very soon, so its becoming nul as c gets big.
+# We calculate a limit for c, where calculation is no more needed
+
 my($mmax,$nmax,$cmax)=(25,75,1984);
 my($modulo)=10**8;
 
