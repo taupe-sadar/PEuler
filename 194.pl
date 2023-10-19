@@ -119,8 +119,8 @@ sub transform
     {
       for(my($use_old)=max(0,1-$new);$use_old<=min(5-$new,$old-2);$use_old++)
       {
-        my($incr)=($$rnum_colors[$old]*$$rtable[$new+$use_old])%$mod;
-        my($combos)=(Permutations::cnk($old-2,$use_old)*Permutations::cnk($new+$use_old,$use_old)*Permutations::factorielle($use_old))%$mod;;
+        my($incr)=($$rnum_colors[$old]*$$rtable[$new+$use_old]);
+        my($combos)=(Permutations::cnk($old-2,$use_old)*Permutations::ank($new+$use_old,$use_old));
         $new_num_colors[$old+$new] += ($incr * $combos)%$mod;
       }
     }

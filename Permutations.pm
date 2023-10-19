@@ -73,6 +73,19 @@ sub cnk
   return $cache_cnk{$key};
 }
 
+sub ank
+{
+  my($n,$k)=@_;
+  return 0 if( $k < 0 || $k > $n);
+  my($val)=1;
+  my($i)=0;
+  for($i=0;$i<$k;$i++)
+  {
+    $val*=($n-$i);
+  }
+  return $val;
+}
+
 #returns the numbers of permutations in a given set, where some elements are identical
 # the input entry is the array of "identical elements.
 # Ex : the set { 1,2,1,5,6,3,5} may be represented by : the perl array ( 2,1,2,1,1).
