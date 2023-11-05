@@ -5,7 +5,7 @@ use Data::Dumper;
 use Gcd;
 use POSIX qw/floor/;
 
-my($rmax)=100;
+my($rmax)=1053779;
 my(%base)=();
 
 
@@ -85,15 +85,15 @@ sub qloop1
   
   for(my($q)=$qstart;$q < $qmax;$q+=2)
   {
+    next if($q%3==0);
+    
     if(Gcd::pgcd($p,$q) == 1)
     {
       my($radius)=$p*($q-$p)*sqrt(3)/4;
       $num+=floor($rmax/$radius/$coeff);
-      $num-=floor($rmax/$radius/$coeff/3);
-      $num+=floor($rmax/$radius/$coeff/9);
       
       #Only debug
-      
+      next;
       my($a)=($q*$q -3*$p*$p + 2*$p*$q)*$coeff/4;
       if($a > 0)
       {
@@ -141,6 +141,8 @@ sub qloop2
 {
   my($p,$qstart,$coeff)=@_;
   
+  return 0 if($p%3==0);
+  
   my($qmax)= ($p + 4*$rmax/$p*sqrt(3)/$coeff)/3;
   my($num)=0;
   
@@ -150,11 +152,9 @@ sub qloop2
     {
       my($radius)=$p*(3*$q-$p)/sqrt(3)/4;
       $num+=floor($rmax/$radius/$coeff);
-      $num-=floor($rmax/$radius/$coeff/3);
-      $num+=floor($rmax/$radius/$coeff/9);
       
       #Only debug
-      
+      next;
       my($a)=(3*$q*$q -$p*$p + 2*$p*$q)*$coeff/4;
       if($a > 0)
       {
