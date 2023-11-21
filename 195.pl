@@ -82,63 +82,97 @@ sub qloop1
   
   my($qmax)= $p + 4*$rmax/$p/sqrt(3)/$coeff;
   my($num)=0;
-  
-  for(my($q)=$qstart;$q < $qmax;$q+=2)
+  if( $qmax > $qstart+2*$p )
   {
-    next if($q%3==0);
-    
-    if(Gcd::pgcd($p,$q) == 1)
+    my(@primes_with_q)=();
+    my($q)=$qstart;
+    for(my($d)=0;$d < 2*$p;$d+=2)
     {
-      my($radius)=$p*($q-$p)*sqrt(3)/4;
-      $num+=floor($rmax/$radius/$coeff);
-      
-      #Only debug
-      next;
-      my($a)=($q*$q -3*$p*$p + 2*$p*$q)*$coeff/4;
-      if($a > 0)
+      if(Gcd::pgcd($p,$q) == 1)
       {
-        my($b)=$p*$q*$coeff;
-        my($c)=(3*$p*$p + $q*$q) * $coeff/4;
-        
-        my($r2)= r2circle($a,$b,$c);
-        my($r)=sqrt($$r2[0]/$$r2[1]);
-        
-        
-        my($co)=floor($rmax/$radius/$coeff);
-        print "$p,$q -> $a, $b, $c . R = $r => $co. (qmax : $q/$qmax)\n";
-        if($r>=$rmax)
+        push(@primes_with_q,$q);
+        if($q%3>0)
         {
-          print "error !\n";
-          <STDIN>;
+          my($radius)=$p*($q-$p)*sqrt(3)/4;
+          $num+=floor($rmax/$radius/$coeff);
         }
-        my($key)="$a-$b";
-        if(exists($base{$key}))
-        {
-          print "Key error : $base{$key}!\n";
-          <STDIN>;
-        }
-        $base{$key} = "$p : $q (1)";
-        if($a*$a - $a *$b +$b*$b != $c*$c)
-        {
-          print "60 deg error !\n";
-          <STDIN>;
-        }
-        if($a<$b )
-        {
-          print "a>b error !\n";
-          <STDIN>;
-        }
+      }
+      $q+=2;
+    }
+    my($idx)=0;
+    while($q < $qmax)
+    {
+      $primes_with_q[$idx] += 2*$p;
+      $q = $primes_with_q[$idx++];
+      $idx = 0 if( $idx > $#primes_with_q );
+      if($q%3>0)
+      {
+        my($radius)=$p*($q-$p)*sqrt(3)/4;
+        $num+=floor($rmax/$radius/$coeff);
+      }
+    }
+  }
+  else
+  {
+    for(my($q)=$qstart;$q < $qmax;$q+=2)
+    {
+      next if($q%3==0);
+      if(Gcd::pgcd($p,$q) == 1)
+      {
+        my($radius)=$p*($q-$p)*sqrt(3)/4;
+        $num+=floor($rmax/$radius/$coeff);
         
-        
-        # <STDIN>;
+        # qloop1_debug($p,$q,$coeff,$radius,$qmax);
       }
     }
   }
   return $num;
 }
 
+sub qloop1_debug
+{
+  my($p,$q,$coeff,$radius,$qmax)=@_;
+  my($a)=($q*$q -3*$p*$p + 2*$p*$q)*$coeff/4;
+  if($a > 0)
+  {
+    my($b)=$p*$q*$coeff;
+    my($c)=(3*$p*$p + $q*$q) * $coeff/4;
+    
+    my($r2)= r2circle($a,$b,$c);
+    my($r)=sqrt($$r2[0]/$$r2[1]);
+    
+    
+    my($co)=floor($rmax/$radius/$coeff);
+    print "$p,$q -> $a, $b, $c . R = $r => $co. (qmax : $q/$qmax)\n";
+    if($r>=$rmax)
+    {
+      print "error !\n";
+      <STDIN>;
+    }
+    my($key)="$a-$b";
+    if(exists($base{$key}))
+    {
+      print "Key error : $base{$key}!\n";
+      <STDIN>;
+    }
+    $base{$key} = "$p : $q (1)";
+    if($a*$a - $a *$b +$b*$b != $c*$c)
+    {
+      print "60 deg error !\n";
+      <STDIN>;
+    }
+    if($a<$b )
+    {
+      print "a>b error !\n";
+      <STDIN>;
+    }
+  }
+}
+
+
 sub qloop2
 {
+  
   my($p,$qstart,$coeff)=@_;
   
   return 0 if($p%3==0);
@@ -146,55 +180,85 @@ sub qloop2
   my($qmax)= ($p + 4*$rmax/$p*sqrt(3)/$coeff)/3;
   my($num)=0;
   
-  for(my($q)=$qstart;$q < $qmax;$q+=2)
+  if( $qmax > $qstart+2*$p )
   {
-    if(Gcd::pgcd($p,$q) == 1)
+    my(@primes_with_q)=();
+    my($q)=$qstart;
+    for(my($d)=0;$d < 2*$p;$d+=2)
     {
+      if(Gcd::pgcd($p,$q) == 1)
+      {
+        push(@primes_with_q,$q);
+        my($radius)=$p*(3*$q-$p)/sqrt(3)/4;
+        $num+=floor($rmax/$radius/$coeff);
+      }
+      $q+=2;
+    }
+    my($idx)=0;
+    while($q < $qmax)
+    {
+      $primes_with_q[$idx] += 2*$p;
+      $q = $primes_with_q[$idx++];
+      $idx = 0 if( $idx > $#primes_with_q );
       my($radius)=$p*(3*$q-$p)/sqrt(3)/4;
       $num+=floor($rmax/$radius/$coeff);
-      
-      #Only debug
-      next;
-      my($a)=(3*$q*$q -$p*$p + 2*$p*$q)*$coeff/4;
-      if($a > 0)
+    }
+  }
+  else
+  {
+    for(my($q)=$qstart;$q < $qmax;$q+=2)
+    {
+      if(Gcd::pgcd($p,$q) == 1)
       {
-        my($b)=$p*$q*$coeff;
-        my($c)=($p*$p + 3*$q*$q) * $coeff/4;
+        my($radius)=$p*(3*$q-$p)/sqrt(3)/4;
+        $num+=floor($rmax/$radius/$coeff);
         
-        my($r2)= r2circle($a,$b,$c);
-        my($r)=sqrt($$r2[0]/$$r2[1]);
-        my($co)=floor($rmax/$radius/$coeff);
-        print "$p,$q -> $a, $b, $c . R = $r => $co. (qmax : $q/$qmax)\n";
-        # <STDIN>;
-        if($r>=$rmax)
-        {
-          print "error !\n";
-          <STDIN>;
-        }
-        my($key)="$a-$b";
-        if(exists($base{$key}))
-        {
-          print "Key error : $base{$key}!\n";
-          <STDIN>;
-        }
-        $base{$key} = "$p : $q (2)";
-        if($a*$a - $a *$b +$b*$b != $c*$c)
-        {
-          print "60 deg error !\n";
-          <STDIN>;
-        }
-        if($a<$b )
-        {
-          print "a>b error !\n";
-          <STDIN>;
-        }
+        #Only debug
+        # qloop2_debug($p,$q,$coeff,$radius,$qmax);
       }
     }
   }
   return $num;
 }
 
-
+sub qloop2_debug
+{
+  my($p,$q,$coeff,$radius,$qmax)=@_;
+  my($a)=(3*$q*$q -$p*$p + 2*$p*$q)*$coeff/4;
+  if($a > 0)
+  {
+    my($b)=$p*$q*$coeff;
+    my($c)=($p*$p + 3*$q*$q) * $coeff/4;
+    
+    my($r2)= r2circle($a,$b,$c);
+    my($r)=sqrt($$r2[0]/$$r2[1]);
+    my($co)=floor($rmax/$radius/$coeff);
+    print "$p,$q -> $a, $b, $c . R = $r => $co. (qmax : $q/$qmax)\n";
+    # <STDIN>;
+    if($r>=$rmax)
+    {
+      print "error !\n";
+      <STDIN>;
+    }
+    my($key)="$a-$b";
+    if(exists($base{$key}))
+    {
+      print "Key error : $base{$key}!\n";
+      <STDIN>;
+    }
+    $base{$key} = "$p : $q (2)";
+    if($a*$a - $a *$b +$b*$b != $c*$c)
+    {
+      print "60 deg error !\n";
+      <STDIN>;
+    }
+    if($a<$b )
+    {
+      print "a>b error !\n";
+      <STDIN>;
+    }
+  }
+}
 
 
 sub r2circle
