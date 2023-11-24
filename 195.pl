@@ -5,6 +5,44 @@ use Data::Dumper;
 use Gcd;
 use POSIX qw/floor/;
 
+# Let a triangle with integer sides (a,b,c).
+#
+# The inner circle radius verifies :
+#   R^2 = (a+b-c) * (a+c-b) * (b+c-a) / ( 4 * (a+b+c) ) 
+#
+# If the angle between sides a and b is pi/3, then 
+#      a^2 - a*b + b^2 = c^2
+# It can bve rewritten 
+#     ( 2*c - 2*a + b ) * ( 2*c + 2*a - b ) = 3 * b^2
+# 
+# The factor 3, may divide either ( 2*c - 2*a + b ) or (2*c - 2*a + b), so there are 2 cases.
+# # Case 1 :
+#   - b = p * q * r
+#   - 2*c - 2*a + b = 3 * p^2 * r    or    a = (q^2 - 3 * p^2 + 2 * p *q)/4 * r
+#   - 2*c + 2*a - b = q^2 * r              c = (3 * p^2 + q^2)/4 * r
+#   For unicity, and valid solutions, we want :
+#   - pgcd(p,q) = 1
+#   - q shall not be a multiple of 3 (otherwise, will fall in case #2)
+#   - if p,q are both odd, then r must be a multiple of 4, otherwise it may be anything
+#   - a > b which means q > 3*p
+#   - The radius : R = sqrt(3)*p*(q-p)
+# # Case 2 :
+#   - b = p * q * r
+#   - 2*c - 2*a + b = p^2 * r        or    a = (3 *q^2 - p^2 + 2 * p *r)/4 * r
+#   - 2*c + 2*a - b = 3 * q^2 * r          c = (p^2 + 3 * q^2)/4 * r
+#   For unicity, and valid solutions, we want :
+#   - pgcd(p,q) = 1
+#   - p shall not be a multiple of 3 (otherwise, will fall in case #2)
+#   - if p,q are both odd, then r must be a multiple of 4, otherwise it may be anything
+#   - a > b which means q > p
+#   - The radius : R = 1/sqrt(3)*p*(3*q-p)/4
+# 
+# The inner circle radius 
+# Algorithm : for both cases we iterate over p and q, checking that pgcd(p,q)=1, then
+# counting how many multiple of solution are relevant, knowing the radius. (How many values possibles for r)
+#
+# Final optimization, caching the pgcd, so that pgcd(p,q) is calculated at most p times.
+
 my($rmax)=1053779;
 
 my($count)=0;
