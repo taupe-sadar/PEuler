@@ -32,17 +32,70 @@ for(my($i)=-2;$i<=2;$i++)
   push(@pattern,\@neighbor_pattern);
 }
 
+# for( my($i)=0;$i<5;$i++)
+# {
+# print (join(" ",@{$pattern[$i]})."\n");
+# }
+# exit(0);
+
 my(@adjacents)=([-1,-1],[-1,0],[-1,1],[1,-1],[1,0],[1,1]);
-my(@prime_groups)=();
+my(@cand_triplets)=();
+my(%prime_links)=();
 for(my($k)=0;$k<$prod;$k++)
 {
-  my(@group)=();
-  my(%all)=();
-  if($pattern[2][$k] == 0 )
+  if($pattern[2][$k] == 0)
   {
     my(@adjs)=find_adj(\@pattern,2,$k,$prod);
+    if($#adjs == 1 )
+    {
+      my(@neighbors)=("2-$k","$adjs[0][0]-$adjs[0][1]","$adjs[1][0]-$adjs[1][1]");
+      push(@cand_triplets,[[2,$k],[$adjs[0][0],$adjs[0][1]],[$adjs[1][0],$adjs[1][1]]]);
+      foreach my $n (@neighbors)
+      {
+        $prime_links{$n} = [] if( !exists($prime_links{$n}) );
+        push(@{$prime_links{$n}},$#cand_triplets);
+      }
+    }
+    elsif( $#adjs > 1 )
+    {
+      die "Not supported";
+    }
+    
+    foreach my $a (@adjs)
+    {
+      my(@next_adj)=find_adj(\@pattern,$$a[0],$$a[1],$prod);
+      foreach my $b (@next_adj)
+      {
+        if(!( $$b[0] == 2 && $$b[1] == $k ))
+        {
+          my(@neighbors)=("2-$k","$$a[0]-$$a[1]","$$b[0]-$$b[1]");
+          push(@cand_triplets,[[2,$k],[$$a[0],$$a[1]],[$$b[0],$$b[1]]]);
+          # print Dumper \@neighbors;<STDIN>;
+          foreach my $n (@neighbors)
+          {
+            $prime_links{$n} = [] if( !exists($prime_links{$n}) );
+            push(@{$prime_links{$n}},$#cand_triplets);
+            
+          }
+          # print Dumper \%prime_links;
+          
+        }
+      }
+    }
   }
 }
+# print Dumper \@cand_triplets;
+# <STDIN>;
+print Dumper \%prime_links;
+print Dumper $prime_links{"2-16"};
+# <STDIN>;
+# print Dumper $prime_links
+
+
+print "$prod\n";
+# print Dumper \@pattern;
+
+
 
 sub find_adj
 {
@@ -51,19 +104,18 @@ sub find_adj
   foreach my $a (@adjacents)
   {
     my(@neighbor)=($x + $$a[0], $y + $$a[1]);
-    next if($neighbor[1]<0);
-    next if($neighbor[1]>=5);
+    next if($neighbor[0]<0);
+    next if($neighbor[0]>=5);
     my(@test)=@neighbor;
-    $test[0] += $max if($test[0]<0);
-    $test[0] -= $max if($test[0]>=0);
-    if($rpattern[$test[0]][$test[1]] == 0)
+    
+    $test[0] += $max if($test[1]<0);
+    $test[0] -= $max if($test[1]>=$max);
+    
+    if($$rpattern[$test[0]][$test[1]] == 0)
     {
       push(@result,\@neighbor);
     }
   }
+  return (@result);
 }
 
-# print (join(" ",@{$pattern[$i+2]})."\n");
-
-print "$prod\n";
-# print Dumper \@pattern;
