@@ -5,9 +5,10 @@ use Data::Dumper;
 use Prime;
 use POSIX qw/floor/;
 
+# my($n)=10000;
 my($n)=5678027;
 
-my(@first_primes)=(2,3,5,7,11,13);
+my(@first_primes)=(2,3,5,7,11*13);
 my($prod)=1;
 for(my($i)=0;$i<=$#first_primes;$i++)
 {
@@ -45,7 +46,7 @@ for(my($k)=0;$k<$prod;$k++)
       my(@next_adj)=find_adj($rpattern,$$a[0],$$a[1],$prod);
       foreach my $b (@next_adj)
       {
-        if(!( $$b[0] == 0 && $$b[1] == $k ))
+        if(!( $$b[0] == 0 && $$b[1] <= $k ))
         {
           add_triplet_cand(\@cand_triplets,\%prime_links,[[0,$k],[$$a[0],$$a[1]-$k],[$$b[0],$$b[1]-$k]]);
         }
@@ -69,29 +70,49 @@ while($primes[-1] <= $p_limit )
   push(@primes,Prime::next_prime());
 }
 my(@precision)=(-2*$n+3,-$n+1,0,$n,2*$n+1);
-my(%remember)=();
+
 my($result)=0;
-my($ii)=0;
-foreach my $triplet (@cand_triplets)
+for(my($offset)=0;$offset < ($end-$base);$offset += $prod)
 {
-  
-  my($cand_start)=$base + $$triplet[0][1];
-  for(my($cand)=$cand_start;$cand <= $end;$cand += $prod)
+  my($ii)=0;
+  my(%triplet_cache)=();
+  my($last_cand_prime)=0;
+  foreach my $triplet (@cand_triplets)
   {
-    next if( exists($remember{$cand}));
+    my($cand)=$base + $$triplet[0][1] + $offset;
+    last if $cand > $end;
+    next if( exists($triplet_cache{$cand}));
+    
+    %triplet_cache = () if( $last_cand_prime < $cand-2);
+    $last_cand_prime = $cand;
+    
+    my($test1)=1;
+    my($neighbor1)=$cand + $precision[$$triplet[1][0]+2]+$$triplet[1][1];
+    if(exists($triplet_cache{$neighbor1}))
+    {
+      next if($triplet_cache{$neighbor1}==0);
+      $test1 = 0;
+    }
+    
+    my($test2)=1;
+    my($neighbor2)=$cand + $precision[$$triplet[2][0]+2]+$$triplet[2][1];
+    if(exists($triplet_cache{$neighbor2}))
+    {
+      next if($triplet_cache{$neighbor2}==0);
+      $test2 = 0;
+    }
     
     my($is_prime)=1;
     for(my($pidx)=$#first_primes+1;$pidx<$#primes;$pidx++)
     {
       my($p)=$primes[$pidx];
-      if($cand%$p == 0){$is_prime=0;last;}
-      my($neighbor_offset_1)=$precision[$$triplet[1][0]+2]+$$triplet[1][1];
-      if( ($cand + $neighbor_offset_1)%$p == 0){$is_prime=0;last;}
-      my($neighbor_offset_2)=$precision[$$triplet[2][0]+2]+$$triplet[2][1];
-      if( ($cand + $neighbor_offset_2)%$p == 0){$is_prime=0;last;}
+      if($cand%$p == 0){$is_prime=0;$triplet_cache{$cand}=0;last;}
+      if( $test1 && $neighbor1%$p == 0){$is_prime=0;$triplet_cache{$neighbor1}=0;last;}
+      if( $test2 && $neighbor2%$p == 0){$is_prime=0;$triplet_cache{$neighbor2}=0;last;}
     }
     if($is_prime)
     {
+      my($cand_start)=$base + $$triplet[0][1];
       my($nb)=floor(($end-$cand_start)/$prod);
       my($current)=($cand-$cand_start)/$prod;
       print (display_triplet($cand,$triplet)." ($ii/$#cand_triplets - $current/$nb)\n");
@@ -100,12 +121,14 @@ foreach my $triplet (@cand_triplets)
       # print Dumper $triplet;
       # <STDIN>;
       
-      $remember{$cand}=1;
+      $triplet_cache{$cand}=1;
+      $triplet_cache{$neighbor1}=1;
+      $triplet_cache{$neighbor2}=1;
       $result+=$cand;
       
     }
+    $ii++;
   }
-  $ii++;
 }
 
 print $result;
