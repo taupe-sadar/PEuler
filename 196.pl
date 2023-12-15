@@ -7,8 +7,84 @@ use POSIX qw/floor/;
 
 # my($n)=10000;
 my($n)=5678027;
+# my($n)=7208785;
 
-my(@first_primes)=(2,3,5,7,11*13);
+if(1)
+{
+  my(@crible)=();
+  for(my($i)=-2;$i<=2;$i++)
+  {
+    my(@a)=(0)x($n+$i);
+    push(@crible,\@a);
+  }
+  my($base)=$n*($n-1)/2 + 1;
+  my($end)=$base + $n - 1;
+  my($end_last_row)=$base + 3*$n + 2;
+  my($p_limit)=floor(sqrt($end_last_row));
+  Prime::init_crible($p_limit+1000);
+  
+  for(my($p)=Prime::next_prime();$p<$p_limit;$p=Prime::next_prime())
+  {
+    for(my($i)=-2;$i<=2;$i++)
+    {
+      my($base_line)=($n+$i)*($n+$i-1)/2 + 1;
+      my($first_modulo)=$base_line%$p;
+      my($first_offset)=($first_modulo==0)?0:($p-$first_modulo);
+      
+      for(my($val)=$first_offset;$val<=$#{$crible[$i+2]};$val+=$p)
+      {
+        $crible[$i+2][$val]=1;  
+      }
+      
+    }  
+  }
+  
+  my(@adjacents)=([-1,-1],[-1,0],[-1,1],[1,-1],[1,0],[1,1]);
+  my(@column_shift)=(-2*$n+3,-$n+1,0,$n,2*$n+1);
+  my($sum_primes)=0;
+  for(my($i)=0;$i<$n;$i++)
+  {
+    if($crible[2][$i] == 0)
+    {
+      my(@neighbors) = find_adj2(\@crible,2,$i,\@adjacents);
+      if($#neighbors >= 1 )
+      {
+        $sum_primes += $base + $i;
+        # my(@triplet)=(
+              # $base + $i, 
+              # $base + $i + $neighbors[0][1] + $column_shift[$neighbors[0][0]],
+              # $base + $i + $neighbors[1][1] + $column_shift[$neighbors[1][0]]
+              # );
+        # print join(" ",@triplet)."\n";
+      }
+      elsif($#neighbors == 0 )
+      {
+        my(@other_neighbor) = find_adj2(\@crible,$neighbors[0][0],$neighbors[0][1],\@adjacents);
+        
+        for(my($k)=0;$k<=$#other_neighbor;$k++)
+        {
+          unless( $other_neighbor[$k][0] == 2 && $other_neighbor[$k][1] == $i )
+          {
+            $sum_primes += $base + $i;
+            # my(@triplet)=(
+              # $base + $i, 
+              # $base + $i + $neighbors[0][1] + $column_shift[$neighbors[0][0]],
+              # $base + $i + $other_neighbor[$k][1] + $column_shift[$other_neighbor[$k][0]]
+              # );
+            # print join(" ",@triplet)."\n";
+            last;
+          }
+        }
+      }
+    }
+  }
+  print $sum_primes;
+  exit(0);
+}
+
+
+
+my(@first_primes)=(2,3,5,7,11,13);
 my($prod)=1;
 for(my($i)=0;$i<=$#first_primes;$i++)
 {
@@ -205,6 +281,20 @@ sub find_adj
   return (@result);
 }
 
+sub find_adj2
+{
+  my($crible,$x,$y,$radjs)=@_;
+  my(@result)=();
+  foreach my $adj (@$radjs)
+  {
+    if($$crible[$x + $$adj[0]][$y + $$adj[1]] == 0)
+    {
+      push(@result,[$x + $$adj[0],$y + $$adj[1]]);
+    }
+  }
+  return (@result);
+}
+
 sub add_triplet_cand
 {
   my($list,$hash,$triplet)=@_;
@@ -215,6 +305,4 @@ sub add_triplet_cand
     $$hash{$key} = [] if( !exists($$hash{$key}) );
     push(@{$$hash{$key}},$#$list);
   }
-
 }
-
