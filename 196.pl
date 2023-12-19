@@ -5,71 +5,97 @@ use Data::Dumper;
 use Prime;
 use POSIX qw/floor/;
 
+# my($n)=11;
 # my($n)=10000;
-my($n)=5678027;
-# my($n)=7208785;
+# my($n)=5678027;
+my($n)=7208785;
 
 if(1)
 {
   my(@crible)=();
   for(my($i)=-2;$i<=2;$i++)
   {
-    my(@a)=(0)x($n+$i);
+    my($full_size)=($n+$i);
+    my($half_size)=0;
+    if($full_size%2 == 0)
+    {
+      $half_size = $full_size/2;
+    }
+    elsif($full_size%4 == 1)
+    {
+      $half_size = ($full_size+1)/2;
+    }
+    else
+    {
+      $half_size = ($full_size-1)/2;
+    }
+    
+    my(@a)=(0)x($half_size);
     push(@crible,\@a);
   }
+  
   my($base)=$n*($n-1)/2 + 1;
   my($end)=$base + $n - 1;
   my($end_last_row)=$base + 3*$n + 2;
   my($p_limit)=floor(sqrt($end_last_row));
   Prime::init_crible($p_limit+1000);
   
+  Prime::next_prime();#Skipping 2
   for(my($p)=Prime::next_prime();$p<$p_limit;$p=Prime::next_prime())
   {
     for(my($i)=-2;$i<=2;$i++)
     {
       my($base_line)=($n+$i)*($n+$i-1)/2 + 1;
-      my($first_modulo)=$base_line%$p;
-      my($first_offset)=($first_modulo==0)?0:($p-$first_modulo);
+      
+      my($first_multiple)=$base_line + 2*$p - 1 - ( $base_line + $p - 1 )%(2*$p);
+      my($first_offset)=crible_idx($n+$i,$first_multiple);
       
       for(my($val)=$first_offset;$val<=$#{$crible[$i+2]};$val+=$p)
       {
-        $crible[$i+2][$val]=1;  
+        $crible[$i+2][$val]=1;
       }
       
-    }  
+    }
   }
   
-  my(@adjacents)=([-1,-1],[-1,0],[-1,1],[1,-1],[1,0],[1,1]);
+  # print Dumper \@crible;
+
+
   my(@column_shift)=(-2*$n+3,-$n+1,0,$n,2*$n+1);
   my($sum_primes)=0;
-  for(my($i)=0;$i<$n;$i++)
+  for(my($i)=0;$i<=$#{$crible[2]};$i++)
   {
     if($crible[2][$i] == 0)
     {
+      # print "$i : \n";<STDIN>;
+      
+      my(@adjacents)=get_adjacents_mod2($n);
       my(@neighbors) = find_adj2(\@crible,2,$i,\@adjacents);
       if($#neighbors >= 1 )
       {
-        $sum_primes += $base + $i;
+        $sum_primes += crible_value($n,$i);
         # my(@triplet)=(
-              # $base + $i, 
-              # $base + $i + $neighbors[0][1] + $column_shift[$neighbors[0][0]],
-              # $base + $i + $neighbors[1][1] + $column_shift[$neighbors[1][0]]
+              # crible_value($n,$i),
+              # crible_value($n + $neighbors[0][0] - 2,$neighbors[0][1]),
+              # crible_value($n + $neighbors[1][0] - 2,$neighbors[1][1]),
               # );
         # print join(" ",@triplet)."\n";
       }
       elsif($#neighbors == 0 )
       {
-        my(@other_neighbor) = find_adj2(\@crible,$neighbors[0][0],$neighbors[0][1],\@adjacents);
+        my(@other_adjacents)=get_adjacents_mod2($n + $neighbors[0][0] - 2);
+        my(@other_neighbor) = find_adj2(\@crible,$neighbors[0][0],$neighbors[0][1],\@other_adjacents);
         
         for(my($k)=0;$k<=$#other_neighbor;$k++)
         {
           unless( $other_neighbor[$k][0] == 2 && $other_neighbor[$k][1] == $i )
           {
-            $sum_primes += $base + $i;
+            $sum_primes += crible_value($n,$i);
+            
             # my(@triplet)=(
-              # $base + $i, 
-              # $base + $i + $neighbors[0][1] + $column_shift[$neighbors[0][0]],
-              # $base + $i + $other_neighbor[$k][1] + $column_shift[$other_neighbor[$k][0]]
+              # crible_value($n,$i), 
+              # crible_value($n + $neighbors[0][0] -2,$neighbors[0][1]),
+              # crible_value($n + $other_neighbor[$k][0] -2,$other_neighbor[$k][1])
               # );
             # print join(" ",@triplet)."\n";
             last;
@@ -82,6 +108,45 @@ if(1)
   exit(0);
 }
 
+sub crible_value
+{
+  my($line,$i)=@_;
+  my($base)=$line * ($line-1)/2 + 1;
+  
+  # print "$line $i ->".($base +(1-$base%2) +  $i*2)."\n";
+  
+  return $base +(1-$base%2) +  $i*2;
+}
+
+sub crible_idx
+{
+  my($line,$val)=@_;
+  die "invalid val $val in crible_idx" if($val%2 == 0);
+  my($base)=$line * ($line-1)/2 + 1;
+  return ($val - ($base +(1-$base%2)))/2;
+}
+
+sub get_adjacents_mod2
+{
+  my($line)=@_;
+  my($mod)=$line%4;
+  if( $mod == 0 )
+  {
+    return ([-1,-1],[-1,0],[1,0]);
+  }
+  elsif($mod == 1)
+  {
+    return ([-1,0],[1,-1],[1,0]);
+  }
+  elsif($mod == 2)
+  {
+    return ([-1,0],[-1,1],[1,0]);
+  }
+  else
+  {
+    return ([-1,0],[1,0],[1,1]);
+  }
+}
 
 
 my(@first_primes)=(2,3,5,7,11,13);
@@ -285,10 +350,19 @@ sub find_adj2
 {
   my($crible,$x,$y,$radjs)=@_;
   my(@result)=();
+  
+  # print Dumper $radjs;
+  
   foreach my $adj (@$radjs)
   {
-    if($$crible[$x + $$adj[0]][$y + $$adj[1]] == 0)
+    my($raw)=$$crible[$x + $$adj[0]];
+    my($offset)=$y + $$adj[1];
+  
+    # print "--- $x $y $$adj[0] $$adj[1]\n";
+
+    if(($offset >= 0) && ($offset <= $#$raw) && ($$raw[$offset] == 0))
     {
+      # print "  -> Yes\n";
       push(@result,[$x + $$adj[0],$y + $$adj[1]]);
     }
   }
