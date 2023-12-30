@@ -24,7 +24,7 @@ use ContinueFraction;
 # p_n-2/q_n-2 < p/q <= p_n/q_n < x < p_n-1/q_n-1 (for even n case)
 # 
 # Looking if p/q is a best approximation of x, (i.e. |p/q -x| > |p'/q' - x| => q' > q)
-# 1) If p/q is not in all intervals [p_n-2/q_n-2, p_n/q_n], then there is a  p_n/q_n which is are better approx
+# 1) If p/q is not in all intervals [p_n-2/q_n-2, p_n/q_n], then there is a  p_n/q_n which is a better approx
 # 2) If p/q is in an interval [p_n-2/q_n-2, p_n/q_n], then it is at least a secondary reduced.
 #    In order to be a best approximation, we must verify :
 #    (**) x - p/q < p_n-1/q_n-1 - x . if not p_n-1/q_n-1 is a better approximation since q_n-1 < q = q_n-2 + b * q_n-1
