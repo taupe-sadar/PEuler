@@ -53,6 +53,7 @@ if( 1 )
 
 
 my(@all_sets_values)=({0=>1});
+my(@all_sets_details)=({0=>[[]]});
 
 my(@example)=(0,1,3,6,8,10,11);
 
@@ -61,6 +62,7 @@ for(my($n)=1;$n<=$num_elts;$n++)
   my($square)=$n*$n;
   # my($square)=$example[$n];
   push(@all_sets_values,{}) if($n <= $sub_num_elts);
+  push(@all_sets_details,{}) if($n <= $sub_num_elts);
   print "--- $n ---\n";
   for(my($set_size)=min($n,$sub_num_elts)-1;$set_size>=max(0,$n-$sub_num_elts-1);$set_size--)
   {
@@ -72,6 +74,25 @@ for(my($n)=1;$n<=$num_elts;$n++)
       # $all_sets_values[$set_size+1]{$sum}+=$$rprev_values{$v};
       Hashtools::increment($all_sets_values[$set_size+1],$sum, $$rprev_values{$v});
     }
+    
+    my($rprev_detailed)=$all_sets_details[$set_size];
+    foreach my $v (keys(%$rprev_detailed))
+    {
+      my($sum)=$v + $square;
+      if( $sum <= 700 )
+      {
+        if(!exists($all_sets_details[$set_size+1]{$sum}))
+        {
+          $all_sets_details[$set_size+1]{$sum} = [];
+        }
+        my($rall)=$$rprev_detailed{$v};
+        for(my($d)=0;$d<=$#$rall;$d++)
+        {
+          push(@{$all_sets_details[$set_size+1]{$sum}},[@{$$rall[$d]},$n]);
+        }
+      }
+    }
+    
   }
   # print Dumper \@all_sets_values;
   # <STDIN>;
@@ -98,6 +119,15 @@ foreach my $v (sort({$a<=>$b} (keys(%{$all_sets_values[$sub_num_elts]}))))
   my($rec)="";
   $rec = $receipe_sums{$v} if(exists($receipe_sums{$v}));
   print "$v : => $all_sets_values[$sub_num_elts]{$v}       $rec\n";
+  if(exists($all_sets_details[$sub_num_elts]{$v}))
+  {
+    my($rall)=$all_sets_details[$sub_num_elts]{$v};
+    for(my($d)=0;$d<=$#$rall;$d++)
+    {
+      print ("    ".join(" ",@{$$rall[$d]})."\n");
+    }
+  }
+  <STDIN>;
 }
 
 # Half : 
