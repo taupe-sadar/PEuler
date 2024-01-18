@@ -9,6 +9,27 @@ use Sums;
 my($num_elts)=100;
 my($sub_num_elts)=$num_elts/2;
 
+if( 1 )
+{
+  my($first)=1;
+  my($last)=6;
+  
+  my($mid)=($last + $first -1)/2;
+  my($middle)=int((offset_square_sum($mid+1,$last)+offset_square_sum($first,$mid))/2);
+  my($final)=all_sums($first,$last);
+  
+  foreach my $k (sort({$a<=>$b}keys(%$final)))
+  {
+    my($delta)=$k - $middle;
+    print "$delta -> $$final{$k}\n";
+  }
+  
+  # print Dumper $final;
+  exit( 0 );
+}
+
+
+
 my(@all_sets_values)=({0=>1});
 my(@all_sets_details)=({0=>[[]]});
 
@@ -21,9 +42,9 @@ for(my($n)=$num_elts;$n>=1;$n--)
   my($max_set)=$num_elts-$n+1;
   
   # my($square)=$max_set*$max_set;
-  # my($square)=$n*$n;
+  my($square)=$n*$n;
   
-  my($square)=$maping*$maping;
+  # my($square)=$maping*$maping;
   
   
   # my($square)=$example[$n];
@@ -120,14 +141,41 @@ print "# $#all\n";
 
 print $sum;
 
+sub all_sums
+{
+  my($start,$end)=@_;
+  
+  my($max_sub_elements)=int(($end-$start+1)/2);
+
+  my(@all_sets_values)=({0=>1});
+  for(my($n)=$end;$n>=$start;$n--)
+  {
+    my($max_set)=$end-$n+1;
+    my($square)=$n*$n;
+    push(@all_sets_values,{}) if($max_set <= $max_sub_elements);
+    for(my($set_size)=min($max_set,$sub_num_elts)-1;$set_size>=max(0,$max_set-$sub_num_elts-1);$set_size--)
+    {
+      my($rprev_values)=$all_sets_values[$set_size];
+      foreach my $v (keys(%$rprev_values))
+      {
+        my($sum)=$v + $square;
+        Hashtools::increment($all_sets_values[$set_size+1],$sum, $$rprev_values{$v});
+      }
+    }
+  }
+  
+  return $all_sets_values[$max_sub_elements];
+}
+
+
 sub offset_square_sum
 {
   my($start,$end)=@_;
-  for(my($i)=$start;$i<=$end;$i++)
-  {
-    print "$i² ";
-  }
-  print "\n";
+  # for(my($i)=$start;$i<=$end;$i++)
+  # {
+    # print "$i² ";
+  # }
+  # print "\n";
   
   return ($end - $start + 1) * ((2*$end + 1)*($start+$end) + 2*$start*($start-1))/6;
 }
