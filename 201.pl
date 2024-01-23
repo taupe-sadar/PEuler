@@ -6,7 +6,28 @@ use Hashtools;
 use List::Util qw(max min);
 use Sums;
 
-# 
+# Let us split the interval [ 1 , n ] = [ 1 , 2k ] U [ 2k+1 , n ]
+# such as d < L where : 
+#  - the max difference between two adjacent squares : d = n² - (n-1)²
+#  - if we list all the subsets of k elements [1,2k], and list all the sum of the squares of those subsets.
+#       within this list, search the largest interval [a,b] of contiguous values which occurrence are at least 2.
+#       then L = b - a
+#  The minimum sum of squares of n/2 -k elements in [ 2k+1 , n ] is m = sum(i²) from (2k+1) to (k + n/2)
+#  The maximum sum of squares of n/2 -k elements in [ 2k+1 , n ] is M = sum(i²) from (k + n/2 +1) to (n)
+#  By increasing/decreasing 1 by 1 from one subset to another in [ 2k+1 , n ], we increase/decrease the sum value
+#  of a value < d
+#  Then we can construct all values from[a + m, b + M] by picking a subset in [ 2k+1 , n ] and adjusting with another 
+#  subset in [ 1 , 2k ]
+#  We can then use the bound (a+m) in the main algorithm.
+#  
+#  The main algorithm list all values and their occurrences using intermediate subsets, avoiding final possible 
+#  values higher than the bound.
+#  Finally we count the values lower than the bound which occur only once.
+#  
+#  Because of symetry of the problem, if a sum of suares of a subset occurs only once, the for the complementary subset
+#  it occurs also once.
+#  this is a duo whose sum is : sum(i²) from (1) to (n)
+#  Finally we multiply this sum to the previous counting
 
 my($num_elts)=100;
 my($sub_num_elts)=$num_elts/2;
@@ -24,7 +45,7 @@ while(1)
   my($max_twice)=$middle;
   $max_twice++ while($$final{$max_twice});
   
-  if($max_twice - $min_twice > ($num_elts *2 + 1))
+  if($max_twice - $min_twice > ($num_elts *2 - 1))
   {
     $maximum_bound = offset_square_sum($subset_set*2 + 1,$num_elts/2+$subset_set) + $min_twice;
     last;
@@ -33,7 +54,6 @@ while(1)
 }
 
 my(@all_sets_values)=({0=>1});
-my(@all_sets_details)=({0=>[[]]});
 
 my($count)=0;
 for(my($n)=$num_elts;$n>=1;$n--)
