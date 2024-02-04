@@ -3,6 +3,7 @@ use warnings;
 use Data::Dumper;
 use POSIX qw/floor ceil/;
 use SmartMult;
+use Prime;
 
 # First we consider the p-valuation (with p=2 and p=5) of n! (k=10^12)
 #
@@ -18,8 +19,8 @@ use SmartMult;
 my($n)=10**12;
 my($mod)=10**5;
 
-my($val2)=fact_p_valuation($n,2);
-my($val5)=fact_p_valuation($n,5);
+my($val2)=Prime::fact_p_valuation($n,2);
+my($val5)=Prime::fact_p_valuation($n,5);
 
 my(@coprimes)=();
 for(my($i)=0;$i<$mod;$i++)
@@ -58,15 +59,3 @@ for(my($fact2)=1;$fact2<=$n;$fact2*=2)
 $fact_product = ($fact_product * SmartMult::smart_mult_modulo(2,$val2-$val5,$mod))%$mod;
 print $fact_product;
 
-sub fact_p_valuation
-{
-  my($nb,$p)=@_;
-  my($pval)=0;
-  my($div)=$p;
-  while($nb > $div)
-  {
-    $pval += floor($nb/$div);
-    $div *= $p;
-  }
-  return $pval;
-}
