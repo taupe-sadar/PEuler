@@ -5,6 +5,21 @@ use Prime;
 use Hashtools;
 use Sums;
 
+sub phi
+{
+  my($n)=@_;
+  Prime::init_crible(sqrt($n)+1000);
+  my( %decomposition ) = Prime::decompose( $n );
+  my($extra)=1;
+  foreach my $prime (keys(%decomposition))
+  {
+    $decomposition{$prime}--;
+    delete $decomposition{$prime} if( $decomposition{$prime}==0);
+    $extra *= $prime-1;
+  }
+  return $extra*Prime::dec_to_nb(\%decomposition);
+}
+
 #Those functions use the equations with Moebius function
 # d = prod( pi**ki )
 # mu(d)=  0 if some ki > 1,  (-1)**(nb of pi) else

@@ -5,12 +5,13 @@ use Data::Dumper;
 use Prime;
 use POSIX qw/floor/;
 use Gcd;
+use EulerTotient;
 
-
+my($S)=11;
 # my($S)=1000001;
-my($S)=12017639147;
+# my($S)=12017639147;
 
-my($sr)=($S+3)/2*0 + 5*11;
+my($sr)=($S+3)/2;
 
 my($b)=2-(($sr+2)%3);
 my($a)=($sr - 2*$b)/3;
@@ -60,8 +61,8 @@ if( $b != 0 )
         
         
         
-        print "$count2\n";
-        print "(b=$b) d=$nb($dr) k=$k($kr) e=$e($er) truc = $truc ($tr)\n";
+        # print "$count2\n";
+        # print "(b=$b) d=$nb($dr) k=$k($kr) e=$e($er) truc = $truc ($tr)\n";
         # <STDIN>;
         
         
@@ -87,6 +88,26 @@ if( $b != 0 )
     # my($x)=$r + 3*($a-$i);
     # $num++ if(Gcd::pgcd($x,$y)==1);
   # }
+  
+  my($num_1mod3)=0;
+  my($num_2mod3)=0;
+  my($parity)=($sr%3==1)?(-1):1;
+  foreach my $p (keys(%dec))
+  {
+    if($p%3==1)
+    {
+      $num_1mod3 ++;
+    }
+    else
+    {
+      $num_2mod3 ++;
+    }
+  }
+  my($extra)=($num_1mod3==0)?(1<<$num_2mod3):0;
+  my($smart_calc)= 1/3*(EulerTotient::phi($sr) + $parity*($extra));
+  print "----------------\n";
+  print "$smart_calc / $parity * $extra\n";
+  print "----------------\n";
 }
 
 print "extra : $count_extra/3 = ".($count_extra/3)."\n";
