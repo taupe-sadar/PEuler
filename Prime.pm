@@ -366,7 +366,7 @@ sub fact_p_valuation
   my($nb,$p)=@_;
   my($pval)=0;
   my($div)=$p;
-  while($nb > $div)
+  while($nb >= $div)
   {
     $pval += floor($nb/$div);
     $div *= $p;
