@@ -4,75 +4,79 @@ use warnings;
 use Data::Dumper;
 use POSIX qw/floor ceil/;
 
-# Brute force : 1598174770174689458
-# bug :         1598174769467582681
+# The region defined by |x| + |y| <= r, is a square centered in O, rotated by pi/4
+# which summits are (0,r), (r,0), (0,-r), (-r,0).
+#
+# There are 3 ways to a OBC to be obtuse
+#  - x + y > r/2 ( C angle obtuse )
+#  - x + y < 0   ( 0 angle obtuse )
+#  - (x,y) is strictly inside the circle of diameter OC
+# Within all those points, the ones in the line (OC) must be excluded, O,B,C cant be aligned.
+#
+# We suppose that r is divisible by 8 so that the circle is centered on a integer point.
+#
+# The first 2 sets can be divided into 6 regions of r/2*r/2
+#
+# 
+# For the calculation of the points into the circle (of radius R=sqrt(2)*r/8). 3 area are considered : 
+# - The 8 rounded parts, one of them such that x is in [ R/sqrt(2); R], y > 0. (the other are obtained by symetry)
+#   for all x in this set we look for y(x) maximizing y^2 + x^2 < R^2.
+# - The 4 squares such that 0 < x < R/sqrt(2) , 0 < y < R/sqrt(2). (the other are obtained by symetry)
+#   Their size is R^2/2, and we must verify that the upper corner is not exactly on the circle.
+# - The 2 diameters (of 4 radius), and the center, also verifying to not include a point exactly in the circle.
+#
+# With that way of counting, no sqrt or multiplication is made, as a good optimization, using 
+# (y-1)^2 = y^2 - 2*y + 1 
 
-# (x-r/8)^2 + (y-r/8)^2 = (r/8)^2*2
-# (8x-r)^2 = (r)^2*2 - (8y-r)^2
-# (8x-r)^2 = (r*sqrt(2) - 8y + r )*(r*sqrt(2) + 8y - r)
-# 8x = r +/- sqrt(...)
+
 my($r)=10**9;
 
 my($external_points)=($r/2)*($r/2)*6;
 my($border_circle_points)=0;
 my($diagonal)=$r/4-1;
-
 my($internal_points)=circle_points($r*$r/32);
-
 
 
 print ($external_points + $internal_points - $diagonal);
 
-sub internal_points_bf
-{
-  my($r)=@_;
-  my($r2)=$r*sqrt(2);
-
-  my($internal_points)=0;
-  my($y_min,$y_max)=(ceil(-$r2/8+$r/8),floor($r2/8+$r/8));
-  for(my($y)=$y_min;$y<=$y_max;$y++)
-  {
-    my($yd)=8*$y - $r;
-    my($x_base)=sqrt(($r2 - $yd)*($r2 + $yd));
-    
-    my($xmin)=floor(($r-$x_base)/8+1);
-    my($xmax)=ceil(($r+$x_base)/8-1);
-
-    # print "$y $xmin $xmax\n";
-    my($points)=$xmax-$xmin+1;
-    # $points-- if($xmin == ($r-$x_base)/8);
-    # $points-- if($xmax == ($r+$x_base)/8);
-    
-    $internal_points += $points;
-    print "$y\n" if($y%100000 == 0);
-  }
-  
-}
-
-
 sub circle_points
 {
   my($r2)=@_;
-  my($x_middle)=floor(sqrt($r2/2));
-  my($x_end)=floor(sqrt($r2));
+  my($x_middle)=opposite_floor(sqrt($r2/2));
+  my($x_end)=opposite_floor(sqrt($r2));
   
   my($x2)=($x_middle+1)**2;
-  my($y)=floor(sqrt($r2 - $x2));
+  my($y)=($r2 >= $x2)?opposite_floor(sqrt($r2 - $x2)):0;
   my($y2)=$y**2;
   
+  
   my($count)=0;
+  if( $y2 + $x2 < $r2 )
+  {
+    $y2 += $y*2 + 1;
+    $y++;
+  }
+  
   for(my($x)=$x_middle+1;$x<= $x_end; $x++)
   {
+    $y2 += -$y*2 + 1;
+    $y --;
     
     while( $y2 + $x2 >= $r2 )
     {
       $y2 += -$y*2 + 1;
       $y--;
     }
-    print "$x : $y\n" if( $x%100000 == 0);
     $count += $y;
     $x2+=2*$x + 1;
   }
-  return 8*$count + 4*$x_middle**2;
+  
+  return 8*$count + 4*$x_middle**2 + 4*$x_end + 1;
+}
+
+sub opposite_floor
+{
+  my($x)=@_;
+  return -floor(-$x)-1;
 }
 
