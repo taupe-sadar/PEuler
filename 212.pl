@@ -5,16 +5,18 @@ use Data::Dumper;
 use POSIX qw/floor/;
 use List::Util qw(max min);
 
-my($num_cuboids)=100;
+my($num_cuboids)=50000;
 my($space)=10000;
 my($width)=399;
-my($divisions)=2;
+my($divisions)=25;
 
 my(@cuboids)=();
-my(@regions)=();
+my(@regions_main)=();
+my(@regions_presence)=();
 for(my($r)=0; $r < ($divisions**3); $r++)
 {
-  push(@regions,[]);
+  push(@regions_main,[]);
+  push(@regions_presence,[]);
 }
 
 my($gen)=generator();
@@ -32,56 +34,80 @@ for(my($c)=0;$c<$num_cuboids;$c++)
   my(@cubo_idxs)=();
   
   for my $x (@xidx){ for my $y (@yidx){ for my $z (@zidx){
-    push(@cubo_idxs,region_id($x,$y,$z,$divisions));
+    my($rid)=region_id($x,$y,$z);
+    push(@cubo_idxs,$rid);
+    push(@{$regions_presence[$rid]},$c);
   }}}
-  shift(@cubo_idxs);
+  my($zone)=shift(@cubo_idxs);
   
-  push(@cuboids,[$cubo,\@cubo_idxs]);
-  my($rid)=region_id($xidx[0],$yidx[0],$zidx[0],$divisions);
+  push(@cuboids,[$cubo,$zone,\@cubo_idxs]);
+  my($rid)=region_id($xidx[0],$yidx[0],$zidx[0]);
 
-  push(@{$regions[$rid]},$c);
+  push(@{$regions_main[$rid]},$c);
+  
 }
 
+# print Dumper \@cuboids;
+# for(my($i)=0;$i<=$#regions;$i++)
+# {
+  # print ("$i : [".join(" ",@{$regions[$i]})."]\n");
+# }
 
 my($union)=0;
-for(my($r)=0;$r<=$#regions;$r++)
+for(my($r)=0;$r<=$#regions_main;$r++)
 {
-  my($current_cuboids)=$regions[$r];
+  my($current_cuboids)=$regions_main[$r];
   for(my($c)=0;$c<=$#$current_cuboids;$c++)
   {
-    $union += volume($cuboids[$c][0]);
+    my($cuboid,$zone,$radjacents)=(@{$cuboids[$$current_cuboids[$c]]});
+    $union += volume($cuboid);
+    # print "Simple : ($$current_cuboids[$c]) : +".volume($cuboid)."\n";
     
-    my(@all_others)=();
+    
+    my(%all_others_idx)=();
     for(my($cc)=$c+1;$cc<=$#$current_cuboids;$cc++)
     {
-      push(@all_others,$cuboids[$cc][0]);
+      my($cuboid_other_idx)=$$current_cuboids[$cc];
+      $all_others_idx{$cuboid_other_idx} = 1;
     }
-    for(my($idx_adj)=0;$idx_adj<=$#{$cuboids[$c][1]};$idx_adj++)
+    for(my($idx_adj)=0;$idx_adj<=$#$radjacents;$idx_adj++)
     {
-      my($zone)=$cuboids[$c][1][$idx_adj];
-      for(my($cub_adj)=0;$cub_adj<=$#{$regions[$zone]};$cub_adj++)
+      my($zone_adj)=$$radjacents[$idx_adj];
+      for(my($cub_adj)=0;$cub_adj<=$#{$regions_presence[$zone_adj]};$cub_adj++)
       {
-        my($cubo)=$cuboids[$regions[$zone][$cub_adj]][0];
-        
-        push(@all_others,$cubo);
+        my($adj_idx)=$regions_presence[$zone_adj][$cub_adj];
+        if( $cuboids[$adj_idx][1] > $zone )
+        {
+          $all_others_idx{$adj_idx}=1;
+        }
       }
     }
-    $union -= rec_intersections($cuboids[$c][0],\@all_others);
+    
+    my(@all_others)=();
+    foreach my $idx (sort(keys(%all_others_idx)))
+    {
+      push(@all_others,$cuboids[$idx][0]);
+    }
+    # print "($$current_cuboids[$c]) rec_inter (".($#all_others+1).") ($r/$#regions_main)" if($#all_others>=0);
+    my($aa)=rec_intersections($cuboid,\@all_others);
+    # print "($$current_cuboids[$c]) rec_inter (".join(" ",(keys(%all_others_idx))).") -$aa\n" if($#all_others>=0);
+    $union -= $aa;
   }
   
-  # print "($r) [".(join(" ",@{$regions[$r]}))."]\n";
+  # print "($r) [".(join(" ",@{$regions_main[$r]}))."]\n";
 }
 
 print $union;
 
-
 sub rec_intersections
 {
   my($current_intersected,$alls)=@_;
+  
   my($total_volume)=0;
   for(my($i)=0;$i<=$#$alls;$i++)
   {
     my($inter)=intersection($current_intersected,$$alls[$i]);
+    
     my($vol)=volume($inter);
     next if($vol==0);
     $total_volume += $vol;
@@ -127,8 +153,8 @@ sub volume
 
 sub region_id
 {
-  my($x,$y,$z,$div)=@_;
-  return (($z*$div + $y)*$div + $x);
+  my($x,$y,$z)=@_;
+  return (($z*$divisions + $y)*$divisions + $x);
 }
 
 sub idx_div
