@@ -5,6 +5,24 @@ use Data::Dumper;
 use POSIX qw/floor/;
 use List::Util qw(max min);
 
+# For any sets A and B, the volume V of the union (A u B) is : 
+#   V(A u B) = V(a) + V(b) - V(a ^ b)
+#
+# This formula may be generalized to large amount of sets : A_1 , A_2, ... , A_n
+#   V( UA_i ) = sum_s( (-1)^(card(s)+1)*V(^A_s(i)) )
+# More clearly, it is the sum of all intersections of all subsets of {A_1,A_2,...,A_n},
+# ponderated with the cardinal of this subset
+#
+# The volume of the intersection of a cuboid is easy to compute, using min/max functions
+#
+# For the calculation, it is a multiple loop other all cuboid, but we divide the space into regions
+# for optimization.
+# Each cuboid is associated to a region, and we only calculated the intersection of cuboids into this region,
+# and adfjacent regions, for cuboid that overlap in several regions.
+#
+# We choose the width(s) of the region larger than the size max of the cuboid, so that it can overlap
+# only on no more than 2 regions (in one coordiante, so no more than 8 in total)
+
 my($num_cuboids)=50000;
 my($space)=10000;
 my($width)=399;
@@ -47,12 +65,6 @@ for(my($c)=0;$c<$num_cuboids;$c++)
   
 }
 
-# print Dumper \@cuboids;
-# for(my($i)=0;$i<=$#regions;$i++)
-# {
-  # print ("$i : [".join(" ",@{$regions[$i]})."]\n");
-# }
-
 my($union)=0;
 for(my($r)=0;$r<=$#regions_main;$r++)
 {
@@ -61,9 +73,7 @@ for(my($r)=0;$r<=$#regions_main;$r++)
   {
     my($cuboid,$zone,$radjacents)=(@{$cuboids[$$current_cuboids[$c]]});
     $union += volume($cuboid);
-    # print "Simple : ($$current_cuboids[$c]) : +".volume($cuboid)."\n";
-    
-    
+
     my(%all_others_idx)=();
     for(my($cc)=$c+1;$cc<=$#$current_cuboids;$cc++)
     {
@@ -88,35 +98,30 @@ for(my($r)=0;$r<=$#regions_main;$r++)
     {
       push(@all_others,$cuboids[$idx][0]);
     }
-    # print "($$current_cuboids[$c]) rec_inter (".($#all_others+1).") ($r/$#regions_main)" if($#all_others>=0);
-    my($aa)=rec_intersections($cuboid,\@all_others);
-    # print "($$current_cuboids[$c]) rec_inter (".join(" ",(keys(%all_others_idx))).") -$aa\n" if($#all_others>=0);
+    my($aa)=rec_intersections($cuboid,0,\@all_others);
     $union -= $aa;
   }
   
-  # print "($r) [".(join(" ",@{$regions_main[$r]}))."]\n";
 }
 
 print $union;
 
 sub rec_intersections
 {
-  my($current_intersected,$alls)=@_;
+  my($current_intersected,$start_idx,$alls)=@_;
   
   my($total_volume)=0;
-  for(my($i)=0;$i<=$#$alls;$i++)
+  for(my($i)=$start_idx;$i<=$#$alls;$i++)
   {
-    my($inter)=intersection($current_intersected,$$alls[$i]);
+    my($inter,$empty)=intersection($current_intersected,$$alls[$i]);
     
-    my($vol)=volume($inter);
-    next if($vol==0);
-    $total_volume += $vol;
+    next if($empty);
+    
+    $total_volume += volume($inter);
     
     if( $i < $#$alls )
     {
-      my(@next_volumes)=@$alls[$i+1..$#$alls];
-      
-      $total_volume -= rec_intersections($inter,\@next_volumes);
+      $total_volume -= rec_intersections($inter,$i+1,$alls);
     }
   }
   return $total_volume;
@@ -127,22 +132,21 @@ sub intersection
   my($c1,$c2)=@_;
   
   my(@cr)=(0)x6;
+  my($empty)=0;
   for(my($co)=0;$co<3;$co++)
   {
     my($cmin,$cmax)=($$c1[$co]<$$c2[$co])?($c1,$c2):($c2,$c1);
     
-    next if($$cmin[$co] + $$cmin[$co+3] <= $$cmax[$co]);
+    if($$cmin[$co] + $$cmin[$co+3] <= $$cmax[$co])
+    {
+      $empty = 1;
+      last;
+    }
     $cr[$co]=$$cmax[$co];
     $cr[$co+3]=min($$cmax[$co+3], $$cmin[$co] - $$cmax[$co] + $$cmin[$co+3]);
   }
-  # unless ($cr[3] == 0 || $cr[4] == 0 || $cr[5] == 0 )
-  # {
-    # print Dumper $c1;
-    # print Dumper $c2;
-    # print Dumper \@cr;
-    # <STDIN>;
-  # }
-  return \@cr;
+  
+  return (\@cr,$empty);
 }
 
 sub volume
