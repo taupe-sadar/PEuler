@@ -4,6 +4,19 @@ use warnings;
 use Data::Dumper;
 use List::Util qw(max min);
 
+# For each flea starting in position(x,y), we calculate the probability p(x,y,X,Y)
+# of being in position(X,Y) after 50 steps. For each starting flea we have then a
+# 2 dimensional array 30x30.
+# 
+# For optimization reason we may compute only the starting fleas such as 0 <= x <= y < 30/2,
+# the others can be found by symetry in already calculated flea
+#
+# The esperance E of the number of empty cells after 50 steps, may be expressed as the sum of
+# the esperance of empty in one single cell e(X,Y), over all cells
+#   E = sum e(X,Y)
+# As there can be at most 1 empty cell in 1 cell
+#   e(X,Y) = Prod_x_y( (1-p(x,y,X,Y)) )
+
 my($grid_size)=30;
 my($steps)=50;
 
@@ -31,7 +44,6 @@ for(my($i)=0;$i<$grid_size/2;$i++)
   }
 }
 print $esperance;
-
 
 sub compute_probas_flea
 {
@@ -65,19 +77,6 @@ sub compute_probas_flea
       }
     }
   }
-  # print "----- Start ($x $y) : -----\n";
-  # for(my($i)=0;$i<=$#grid;$i++)
-  # {
-    # print "| ";
-    # for(my($j)=0;$j<=$#grid;$j++)
-    # {
-      # my($micro_str)=sprintf("%5s",int(($grid[$i][$j]*100000)));
-      # print ($micro_str." ");
-    # }
-    # print "|\n";
-    
-  # }
-  # <STDIN>;
   return \@grid;
 }
 
