@@ -374,5 +374,76 @@ sub fact_p_valuation
   return $pval;
 }
 
+sub pow_loop
+{
+  my($n,$init_fn,$incr_func,$operation_func,$last_prime)=@_;
+  $last_prime = $n unless(defined($last_prime));
+  
+  Prime::init_crible($n+1000);
+  my($sqrt_n)=floor(sqrt($n));
+  my(@list)=(1);
+  my($p)=Prime::next_prime();
+
+  while($p <= $last_prime)
+  {
+    my(@pows)=();
+    my($pow)=$p;
+    while($pow<=$n)
+    {
+      push(@pows,$pow);
+      $pow*=$p;
+    }
+    
+    @list = sort({$a<=>$b} @list) if($p<=$sqrt_n);
+    my($nextp)=Prime::next_prime();
+    my($max_elem)=floor($n/$nextp);
+
+    my($end_list)=$#list;
+    $init_fn->($p);
+
+    #Dichotomy
+    my($splice_idx)=-1;
+
+    if( $p<=$sqrt_n )
+    {
+      my($bound_min)=0;
+      my($bound_max)=$end_list;
+      while( $bound_max - $bound_min > 1)
+      {
+        my($test)=ceil(($bound_min+$bound_max)/2);
+        if($list[$test] <= $max_elem)
+        {
+          $bound_min = $test;
+        }
+        else
+        {
+          $bound_max = $test;
+        }
+      }
+      $splice_idx = $bound_max if( $list[$bound_max] > $max_elem );
+    }
+
+    foreach my $ppow (@pows)
+    {
+      for(my($i)=0;$i<=$end_list;$i++)
+      {
+        my($elem)=$ppow*$list[$i];
+        last if($elem > $n);
+
+        $operation_func->($elem,$list[$i],$max_elem);
+
+        if($elem <= $max_elem)
+        {
+          push(@list,$elem);
+        }
+      }
+      $incr_func->();
+    }
+    
+    splice(@list,$splice_idx,$end_list-$splice_idx+1) if($splice_idx!=-1);
+    $p=$nextp;
+  }
+}
+
 1;
 

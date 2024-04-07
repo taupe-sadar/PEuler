@@ -24,63 +24,38 @@ use POSIX qw/floor/;
 # So we can stop the loop over primes until n/3.
 
 my($n)=64000000;
-
-Prime::init_crible($n+1000);
-my(@list)=(1);
-my($p)=Prime::next_prime();
 my(@sigma2_store)=(1)x($n+1);
+my($sigma2p)=0;
+my($p2)=0;
+
 my($sum_squares)=1;#1 is already present in list
-
-my($sqrt_n)=floor(sqrt($n));
-
-while($p <= $n/3)
-{
-  my(@pows)=();
-  my($pow)=$p;
-  while($pow<=$n)
-  {
-    push(@pows,$pow);
-    $pow*=$p;
-  }
-  
-  @list = sort({$a<=>$b} @list) if($p<=$sqrt_n);
-  
-  my($nextp)=Prime::next_prime();
-  my($max_elem)=floor($n/$nextp);
-
-  my($end_list)=$#list;
-  my($splice_idx)=-1;
-  my($sigma2p)=1;
-  my($p2)=$p*$p;
-  foreach my $ppow (@pows)
-  {
-    $sigma2p = ($sigma2p*$p2) + 1;
-    for(my($i)=0;$i<=$end_list;$i++)
-    {
-      if( $splice_idx == -1 && $ppow == $p && $list[$i] > $max_elem)
-      {
-        $splice_idx = $i;
-      }
-      my($elem)=$ppow*$list[$i];
-      last if($elem > $n);
-      my($sig2)=$sigma2p * $sigma2_store[$list[$i]];
-      
-      my($int_root)=floor(sqrt($sig2));
-      if($int_root*$int_root == $sig2)
-      {
-        # print "$elem -> square ($ppow*$list[$i])\n";
-        $sum_squares+=$elem ;
-      }
-      
-      if($elem <= $max_elem)
-      {
-        $sigma2_store[$elem]=$sig2;
-        push(@list,$elem);
-      }
-    }
-  }
-  
-  splice(@list,$splice_idx,$end_list-$splice_idx+1) if($splice_idx!=-1);
-  $p=$nextp;
-}
+Prime::pow_loop($n,\&init_sigma2,\&incr_sigma2,\&check_square,$n/3);
 print $sum_squares;
+
+sub check_square
+{
+  my($nb,$prev,$max_elem)=@_;
+  my($sig2)=$sigma2p * $sigma2_store[$prev];
+  my($root)=(sqrt($sig2));
+  if($root==floor($root))
+  {
+    $sum_squares+=$nb ;
+    # print "$nb = $pow * $prev\n";
+  }
+  if($nb <= $max_elem)
+  {
+    $sigma2_store[$nb]=$sig2;
+  }
+}
+
+sub init_sigma2
+{
+  my($p)=@_;
+  $p2 = $p*$p;
+  $sigma2p = $p2+1;
+}
+
+sub incr_sigma2
+{
+  $sigma2p = ($sigma2p*$p2) + 1;
+}
