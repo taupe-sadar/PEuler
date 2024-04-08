@@ -4,6 +4,26 @@ use warnings;
 use Data::Dumper;
 use Prime;
 
+# for each number n = prod( p_i^k_i ) we can observe that during 
+# the successive iterations of u_k = phi(u_k-1) (u_0 = n), the 
+# "quantity of twos" will be decrease by 1
+#
+# the "generating of 2 function" can be defined as : 
+# g(n)= sum( k_i ) * g(phi(p_i)) if n > 2
+# g(2) = 1
+#
+# So the totient chain length until 2 will be 
+# ch(n)= 1 + g(n) if n is odd because no decaying of 2 until next step
+# ch(n) = g(n)    if n is even since the power of 2 will decay
+#
+# And the totien chain length until 1 is ch(n) + 1
+#
+# We use a loop over pows algorithm. It starts looping over powers of 2, then numbers with powers
+# of 2 and 3, ... and so on with all powers of primes.
+# At each number we store the "generating of 2" function
+# At each prime number p, the totient chain length can be found in the array stored in 
+# at (p-1)
+
 my($n)=40000000;
 my($chain_target)=25;
 my(@generated_2)=(0)x($n+1);
@@ -25,7 +45,6 @@ sub init_generated2
   {
     $sum_generated2 += $p ;
   }
-  
 }
 
 sub incr_generated
