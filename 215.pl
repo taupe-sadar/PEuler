@@ -3,6 +3,25 @@ use strict;
 use warnings;
 use Data::Dumper;
 
+# We consider a state vector representing a column of bricks borders
+#   V = (v_0, ... ,v_n) where v_i is in {0,1,2} and codes for :
+#     0 : brick border
+#     1 : not a border, 1 space after a border
+#     2 : not a border, 2 spaces after a border
+#
+# We start with the the state V_init = [0,...,0] (all borders) and calculate all possible transitions 
+# from a state to another, such that no border can be adjacent on the same column
+#
+# The state transitions allowed will be : 
+#   0 -> 1
+#   1 -> 2
+#   1 -> 0 (brick of size 2)
+#   2 -> 0 (brick of size 3)
+#   and we also must check that border are not adjacents, ie there are not two adjacent states value 0.
+#   
+# Finally we start iterating a counting vector with the transitions, width times.
+# The last state is an exception because at the end of the wall, all are borders.
+
 my($width)=32;
 my($height)=10;
 my($num_states)=3**$height;
@@ -18,8 +37,6 @@ for(my($state)=0;$state<=$num_states;$state++)
   if( valid($dec_state) || $state == 0 )
   {
     push(@transitions, calc_transitions($dec_state));
-    # print "$state\n";
-    # print Dumper $transitions[$state]; <STDIN>;
     $end_of_wall_reachable[$state] = calc_end_of_wall_reachable($dec_state);
   }
   else
@@ -36,8 +53,6 @@ my($rstate_counting)=\@state_counting;
 for(my($i)=1;$i<$width;$i++)
 {
   $rstate_counting = iterate_counting($rstate_counting,\@transitions);
-  # print Dumper \@transitions;
-  # print Dumper $rstate_counting;<STDIN>;
 }
 
 
@@ -106,10 +121,6 @@ sub calc_transitions_rec
 
   if($#$rstate == $#$rpossible)
   {
-    # print ('['.join("",@$rstate)."] -> ");
-    # print ('['.join("",@$rpossible)."]\n");
-    # <STDIN>;
-    
     return (encode($rpossible));
   }
   else
@@ -128,12 +139,6 @@ sub calc_transitions_rec
     {
       @nexts = (0);
     }
-    
-    # print "Loop ($step)\n";
-    # print ('['.join("",@$rstate)."]\n");
-    # print ('['.join("",@$rpossible)."]");
-    # print (' -> ['.join("",@nexts)."]\n");
-    # <STDIN>;
 
     my(@sols)=();
     foreach my $case (@nexts)
