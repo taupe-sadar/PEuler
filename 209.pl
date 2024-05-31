@@ -41,8 +41,6 @@ sub all_placement_in_orbit
     my($n,$k)=($set_size-$sub,$sub);
     my($p)=Permutations::cnk($set_size-$sub,$sub);
     
-    print "C_$n-$k : $p\n";
-    
     $num += Permutations::cnk($set_size-$sub,$sub);
     if($sub > 0 )
     {
