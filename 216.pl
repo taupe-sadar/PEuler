@@ -36,6 +36,12 @@ if(0) #old prime search
 }
 
 my(@crible_residuals)=(0)x($n+1);
+
+# for(my($i)=0;$i<=$n;$i++)
+# {
+  # push(@crible_residuals,f($i));
+# }
+
 my($count_seen_primes)=0;
 for(my($i)=2;$i<=$n;$i++)
 {
@@ -49,7 +55,7 @@ for(my($i)=2;$i<=$n;$i++)
     {
       $count_seen_primes++;
       $crible_residuals[$i] = 1;
-      $prime = f($i);
+      $prime = 2*($i*$i) - 1;
       # print "($prime)\n";<STDIN>;
     }
     else
@@ -106,7 +112,7 @@ sub init_residuals
   {
     if( $$rcrible[$nb] == 0 )
     {
-      $$rcrible[$nb] = f($nb)/$p;
+      $$rcrible[$nb] = (2*$nb*$nb - 1)/$p;
     }
     
     while( $$rcrible[$nb] %$p == 0)
