@@ -5,6 +5,9 @@ use Data::Dumper;
 use Prime;
 use POSIX qw/floor/;
 # use SmartMult;
+use integer;
+
+#5437849
 
 my($n)=50000000;
 
@@ -68,7 +71,9 @@ for(my($i)=2;$i<=$n;$i++)
     my($other_res)=$prime - $i;
     if( $other_res < $n )
     {
-      init_residuals(\@crible_residuals,$prime,$i);
+      # init_residuals_2(\@crible_residuals,$prime,$i);
+      
+      init_residuals(\@crible_residuals,$prime,$i + $prime);
       init_residuals(\@crible_residuals,$prime,$other_res);
     }
   }
@@ -121,6 +126,42 @@ sub init_residuals
     }
   }
   # <STDIN>;
+}
+
+sub init_residuals_2
+{
+  my($rcrible,$p,$residual)=@_;
+   
+  my($incr1,$incr2)=(2*$residual,$p - 2*$residual);
+  my($nb)=$p + $residual;
+  while($nb <= $#$rcrible)
+  {
+    if( $$rcrible[$nb] == 0 )
+    {
+      $$rcrible[$nb] = (2*$nb*$nb - 1)/$p;
+    }
+    
+    while( $$rcrible[$nb] %$p == 0)
+    {
+      $$rcrible[$nb] /=$p;
+    }
+    $nb += $incr2;
+    
+    last unless $nb <= $#$rcrible;
+    
+    if( $$rcrible[$nb] == 0 )
+    {
+      $$rcrible[$nb] = (2*$nb*$nb - 1)/$p;
+    }
+    
+    while( $$rcrible[$nb] %$p == 0)
+    {
+      $$rcrible[$nb] /=$p;
+    }
+    $nb += $incr1;
+  }
+   
+   
 }
 
 sub find_residual
