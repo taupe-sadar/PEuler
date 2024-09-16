@@ -77,9 +77,19 @@ for(my($i)=2;$i<=$n;$i++)
       
       if( $prime < $n/100 )
       {
-        init_residuals_2(\@crible_residuals,$prime,$residual);
+        my($p2)=$prime*$prime;
+
+
+        my($factor)=(2*($residual*$residual) - 1)/$prime;
+        my($inv)=Bezout::znz_inverse(4*$residual,$prime);
+        my($residual_steps)= $factor * $inv % $prime;
+        $residual_steps = ($residual_steps==0)?0:($prime - $residual_steps);
+        init_residuals_2(\@crible_residuals,$prime,$p2,$residual,$residual_steps);
         # debug_crible(\@crible_residuals);
-        init_residuals_2(\@crible_residuals,$prime,$other_res);
+
+        my($other_factor)= $factor + 2*$prime -4*$residual;
+        my($residual_steps_other)= $other_factor * $inv %$prime;
+        init_residuals_2(\@crible_residuals,$prime,$p2,$other_res,$residual_steps_other);
         # debug_crible(\@crible_residuals);
         # <STDIN>;
       }
@@ -152,7 +162,7 @@ sub init_residuals
 
 sub init_residuals_2
 {
-  my($rcrible,$p,$residual)=@_;
+  my($rcrible,$p,$p2,$residual,$residual_steps)=@_;
    
   # print "  --- Cribling $residual % $p ---\n";
   
@@ -162,11 +172,6 @@ sub init_residuals_2
     $$rcrible[$nb]/=$p;
   }
   
-  my($p2)=$p*$p;
-  my($factor)=(2*($residual*$residual) - 1)/$p;
-  my($residual_steps)= $factor * Bezout::znz_inverse(4*$residual,$p)%$p;
-  $residual_steps = ($residual_steps==0)?0:($p - $residual_steps);
-
    # print "[$p] $residual , $factor, $residual_steps\n";
   
   for(my($nb)=$residual + $residual_steps*$p;$nb <= $#$rcrible;$nb+=$p2 )
