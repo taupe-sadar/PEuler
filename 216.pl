@@ -4,10 +4,14 @@ use warnings;
 use Data::Dumper;
 use Prime;
 use POSIX qw/floor/;
+use Bezout;
 # use SmartMult;
+
+# for debug, activate gains 25%
 use integer;
 
 #5437849
+#629698
 
 my($n)=50000000;
 
@@ -57,7 +61,6 @@ for(my($i)=2;$i<=$n;$i++)
     if($crible_residuals[$i]==0)
     {
       $count_seen_primes++;
-      $crible_residuals[$i] = 1;
       $prime = 2*($i*$i) - 1;
       # print "($prime)\n";<STDIN>;
     }
@@ -71,10 +74,20 @@ for(my($i)=2;$i<=$n;$i++)
     my($other_res)=$prime - $i;
     if( $other_res < $n )
     {
-      # init_residuals_2(\@crible_residuals,$prime,$i);
       
-      init_residuals(\@crible_residuals,$prime,$i + $prime);
-      init_residuals(\@crible_residuals,$prime,$other_res);
+      if( $prime < $n/100 )
+      {
+        init_residuals_2(\@crible_residuals,$prime,$residual);
+        # debug_crible(\@crible_residuals);
+        init_residuals_2(\@crible_residuals,$prime,$other_res);
+        # debug_crible(\@crible_residuals);
+        # <STDIN>;
+      }
+      else
+      {
+        init_residuals(\@crible_residuals,$prime,$i + $prime);
+        init_residuals(\@crible_residuals,$prime,$other_res);
+      }
     }
   }
 }
@@ -87,6 +100,17 @@ print "$count_seen_primes\n";
   # my($fx)=f($i);
   # print "$i : $fx\n";
 # }
+
+sub debug_crible
+{
+  my($cr)=@_;
+  print "[";
+  for(my($i)=0;$i<30;$i++)
+  {
+    print "$$cr[$i] ";
+  }
+  print "]\n";
+}
 
 sub f
 {
@@ -110,15 +134,13 @@ sub init_residuals
 {
   my($rcrible,$p,$residual)=@_;
   
-  # print "--- Cribling $residual % $p ---\n";
+  
   
   
   for(my($nb)=$residual;$nb <= $#$rcrible;$nb+=$p )
   {
-    if( $$rcrible[$nb] == 0 )
-    {
-      $$rcrible[$nb] = (2*$nb*$nb - 1)/$p;
-    }
+    $$rcrible[$nb] = (2*$nb*$nb - 1) if( $$rcrible[$nb] == 0 );
+    $$rcrible[$nb]/=$p;
     
     while( $$rcrible[$nb] %$p == 0)
     {
@@ -132,36 +154,56 @@ sub init_residuals_2
 {
   my($rcrible,$p,$residual)=@_;
    
-  my($incr1,$incr2)=(2*$residual,$p - 2*$residual);
-  my($nb)=$p + $residual;
-  while($nb <= $#$rcrible)
+  # print "  --- Cribling $residual % $p ---\n";
+  
+  for(my($nb)=$residual;$nb <= $#$rcrible;$nb+=$p )
   {
-    if( $$rcrible[$nb] == 0 )
-    {
-      $$rcrible[$nb] = (2*$nb*$nb - 1)/$p;
-    }
-    
-    while( $$rcrible[$nb] %$p == 0)
-    {
-      $$rcrible[$nb] /=$p;
-    }
-    $nb += $incr2;
-    
-    last unless $nb <= $#$rcrible;
-    
-    if( $$rcrible[$nb] == 0 )
-    {
-      $$rcrible[$nb] = (2*$nb*$nb - 1)/$p;
-    }
-    
-    while( $$rcrible[$nb] %$p == 0)
-    {
-      $$rcrible[$nb] /=$p;
-    }
-    $nb += $incr1;
+    $$rcrible[$nb] = (2*$nb*$nb - 1) if( $$rcrible[$nb] == 0 );
+    $$rcrible[$nb]/=$p;
   }
-   
-   
+  
+  my($p2)=$p*$p;
+  my($factor)=(2*($residual*$residual) - 1)/$p;
+  my($residual_steps)= $factor * Bezout::znz_inverse(4*$residual,$p)%$p;
+  $residual_steps = ($residual_steps==0)?0:($p - $residual_steps);
+
+   # print "[$p] $residual , $factor, $residual_steps\n";
+  
+  for(my($nb)=$residual + $residual_steps*$p;$nb <= $#$rcrible;$nb+=$p2 )
+  {
+    # if($p==23)
+    # {
+      # print "crible[$n] : $$crible[$n]\n";
+      # <STDIN>;
+    # }
+    
+    
+    # my($n21)=$nb*$nb*2-1;
+    # print "[$p] $nb : $n21 -> ".($n21/($p2))."\n";
+    # <STDIN>;
+    $$rcrible[$nb] /=$p;
+    
+    while( $$rcrible[$nb] %$p == 0)
+    {
+      $$rcrible[$nb] /=$p;
+    }
+    
+# 7 : 2
+# 17 : 3
+# 31 : 4
+# 71 : 6
+# 97 : 7
+# 127 : 8
+# 23 : 9
+# 199 : 10
+# 241 : 11
+# 41 : 12
+# 337 : 13
+# 449 : 15
+
+    
+    
+  }
 }
 
 sub find_residual
