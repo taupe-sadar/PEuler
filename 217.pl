@@ -30,6 +30,40 @@ print "$modulo\n";
 
 my(@all_sums)=(0,45);
 
+my($test_array,$test_nonzero)=testa(6);
+print Dumper $test_array;
+# <STDIN>;
+
+sub testa
+{
+  my($n)=@_;
+  my(@a)=();
+  my(@z)=();
+  for(my($i)=1;$i<=$n;$i++)
+  {
+    my(@t)=(0)x($i*9);
+    push(@a,\@t);
+    my(@t2)=(0)x($i*9);
+    push(@z,\@t2);
+  }
+  for(my($i)=0;$i<$n;$i++)
+  {
+    my($min)=10**$i;
+    for(my($nb)=$min;$nb<$min*10;$nb++)
+    {
+      my($s)=sum(split("",$nb));
+      $z[$i][$s] += $nb;
+      for(my($j)=$i;$j<$n;$j++)
+      {
+        $a[$j][$s] += $nb;
+      }
+    }
+  }
+  return (\@a,\@z);
+}
+
+
+
 for(my($ndigits)=1;$ndigits<=$half;$ndigits++)
 {
   my(@c_num_all_numbers)=(0)x($#$num_all_numbers+1+9);
@@ -48,10 +82,31 @@ for(my($ndigits)=1;$ndigits<=$half;$ndigits++)
       $c_num_all_numbers[$digit_sum] =   ($c_num_all_numbers[$digit_sum]   + $$num_all_numbers[$sum]) % $modulo;
       $c_num_nzero_numbers[$digit_sum] = ($c_num_nzero_numbers[$digit_sum] + $$num_all_numbers[$sum]) % $modulo if($digit > 0);
 
-      $c_sum_all_numbers[$digit_sum] =   ($c_sum_all_numbers[$digit_sum] + ($$sum_all_numbers[$sum]  + $digit*$pows_10[$ndigits-1])*$$num_all_numbers[$sum]) % $modulo;
-      $c_sum_nzero_numbers[$digit_sum] = ($c_sum_nzero_numbers[$digit_sum] + ($$sum_all_numbers[$sum] + $digit*$pows_10[$ndigits-1])*$$num_all_numbers[$sum]) % $modulo if($digit > 0);
+      $c_sum_all_numbers[$digit_sum] =   ($c_sum_all_numbers[$digit_sum] + $$sum_all_numbers[$sum]  + $digit*$pows_10[$ndigits-1]*$$num_all_numbers[$sum]) % $modulo;
+      $c_sum_nzero_numbers[$digit_sum] = ($c_sum_nzero_numbers[$digit_sum] + $$sum_all_numbers[$sum] + $digit*$pows_10[$ndigits-1]*$$num_all_numbers[$sum]) % $modulo if($digit > 0);
     }
   }
+  
+  if($ndigits <= 6)
+  {
+    for(my($i)=0;$i<=$#c_sum_all_numbers;$i++)
+    {
+      if( $c_sum_all_numbers[$i] != $$test_array[$ndigits-1][$i]%$modulo )
+      {
+        print "Error !((1)$ndigits $i)\n";
+        print Dumper \@c_sum_all_numbers;
+        print Dumper $$test_array[$ndigits-1];
+        <STDIN>;
+      }
+      if( $c_sum_nzero_numbers[$i] != $$test_nonzero[$ndigits-1][$i]%$modulo )
+      {
+        print "Error !((2)$ndigits $i)\n";
+        <STDIN>;
+      }
+    }
+    print "Ok $ndigits\n";
+  }
+  
   
   # print "Summary\n";
   # print Dumper \@c_num_all_numbers;
@@ -76,7 +131,7 @@ for(my($ndigits)=1;$ndigits<=$half;$ndigits++)
     $even_sum = ($even_sum + $sum_high * $pows_10[$ndigits ] + $sum_low)%$modulo;
     
     my($e)=$sum_high * $pows_10[$ndigits ] + $sum_low;
-    print "-- $sum : $e\n"
+    # print "-- $sum : $e\n"
   }
   push(@all_sums,$even_sum,$odd_sum);
   
