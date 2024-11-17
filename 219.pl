@@ -30,8 +30,27 @@ use List::Util qw( min max );
 #  Introducing now m_k the 'milestones', such that for all x in [m_k,m_k+1[ d(x) = k.
 #    for each x in [m_k,m_k+1[
 #    r(x,y)=0 <=> d(x) - d(y) - 3 = 0 <=> d(y)= k-3 
-#    then y is in [m_k-3,m_k-2[, and IDX(m_k) = IDX(m_k-1) + m_k-2 - m_k-3
-
+#    then y is in [m_k-3,m_k-2[, and IDX(m_k) = IDX(m_k-1) + m_k-2 - m_k-3 (*)
+#  (2) with n = m_k + x (x>=0), j_max, such that r(n+1 - j,j) >= 0 , j_max = IDX(m_k-1)-1
+#    It implies that 
+#    d(n) = m_k + x + 3 - sum_j(r(m_k + x + 1 - j,j)) for(j in [2;j_max])
+#    d(n) = m_k + x + 3 - sum_j(r(m_k,j)) (j in [2,x+1]) - sum_j(r(m_k,j)) (j in [x+2,jmax])
+#    Then we can calculate the difference :
+#    for x in [ 1, j_max -1 ]
+#      d(n) - d(n-1) = 1 - r(m_k,x+1) + r(m_k,x+1) = 0.
+#      then d(n) = d(m_k) = k
+#    for x = jmax = IDX(m_k-1)-1
+#      d(n)- d(n-1) = 1
+#      then d(n)= d(m_k) + 1 = k+1, and m_k+1 = n = m_k + IDX(m_k-1)-1
+#
+# Introducing the length between milestones l_k = m_k - m_k-1, we deduce (from last expr and(*)):
+#    l_k - l_k-1 = IDX(m_k-2) - IDX(m_k-3) = m_k-4 - m_k-5 = l_k-4
+# Finally : l_k = l_k-1 + l_k-3
+#
+# This way, we can calculate all milestones, with the lengths
+# And the skew can be calculated as the sum of elements of d(n) :
+# s(n) = sum(d(n)) = sum_k( sum_j(m_k -> m_k+1 - 1)(d(j)) + sum_j(m_k -> n)
+#                  = sum_k( l_k + 1*k ) + (n - m_k') * k' (with k' such that n is in [m_k',m_k'+1])
 
 my($num_codes)=10**9;
 
