@@ -3,6 +3,31 @@ use warnings;
 use Data::Dumper;
 use List::Util qw( min max );
 
+# Let the reverse function defined as :
+#   rev(R)=L, rev(L)=R, rev(F)=F, and also rev(a)=b, rev(b)=a
+# And for longer strings
+#   rev(s_0 s_1 .. s_n ) = rev(s_n) .. rev(s_1) rev(s_0)
+#
+# let the function f, that replaces all occurences of a,b 
+#   a -> (aRbFR)
+#   b -> (LFaLb)
+#
+# With D_0 = Fa, anf D_n+1 = f(D_n)
+# We have :
+#   D_n+1 = f^n+1(D_0) = f^n(D_1) = f^n(FaRbFR)
+#         = f^n( D_0 R rev(D_0) R)
+#         = f^n( D_0 ) R f^n(rev(D_0)) R
+#
+# But because f(rev(a))=f(b)=LFaLb=rev(f(a)) and similary f(rev(b))=rev(f(b))
+#
+# D_n+1 = f^n( D_0 ) R f^n(rev(D_0)) R
+#       = f^n( D_0 ) R rev(f^n(D_0)) R
+#       = D_n R rev(D_n) R
+#
+# Then gixing a dragon size and a position, we can run through recursively
+# First we can calculate the size and final orientation of each dragon D^n
+# The we can calculate the position of a specific cursor in each dragon.
+
 my($moves_target)=10**12;
 
 my(@vectors)=([1,0]);
