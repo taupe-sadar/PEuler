@@ -8,7 +8,7 @@ use Divisors;
 
 my($limit)=10**15;
 
-my(@crible)=(0)x200000;
+my(@crible)=(0)x100000;
 
 my(@divisors)=();
 my(%residuals)=();
@@ -18,10 +18,9 @@ my($count)=0;
 for( my($d)=1; $d <= $#crible; $d++ )
 {
   
-  
-  my($mini_alex)=alexandrian(5*$d/2, $d);
-  # last unless($mini_alex < $limit);
-  last unless($d < 100000);
+  my($mini_alex)=(4*$d + 2)*$d*$d;
+  last unless($mini_alex < $limit);
+  # last unless($d < 1000000);
 
   next if($crible[$d] < 0);
   my($first_p)=fetch_residual($d);
@@ -62,7 +61,7 @@ for( my($d)=1; $d <= $#crible; $d++ )
   my($count2)=($alt > 0)?(floor(($last-$init - $alt)/$d) + 1):0;
   
   print "[$d : $first_p] ($alt) : $count1 + $count2\n";
-  
+  <STDIN>;
   $count+= $count1 + $count2;
   if( 0 )
   {
