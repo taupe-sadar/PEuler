@@ -46,7 +46,10 @@ sub znz_inverse
   return $n% $set_size;
 }
 
-1;
+# Gives solution of Chinese remainders problem
+# x = a_1 [e_1], x = a_2 [e_2], ... , x = a_n [e_n] (a_i being coprimes)
+# 
+# there is only one solution x in Z/(a_1*a_2*...*a_n)Z
 
 sub congruence_solve
 {
@@ -64,6 +67,7 @@ sub congruence_solve
     die "congruence_solve must be used with prime themselves numbers" if( Gcd::pgcd($other, $modulos[$i])!=1);
     $sol += znz_inverse( $other, $modulos[$i] ) * $other * $modulo_values{$modulos[$i]};;
   }
-  return $sol % $big;;
+  return $sol % $big;
 }
 
+1;
