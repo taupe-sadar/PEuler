@@ -4,6 +4,7 @@ use Data::Dumper;
 use POSIX qw/floor ceil/;
 use Solver;
 use Prime;
+use Bezout;
 use Divisors;
 
 my($highest_div)=2000000;
@@ -11,35 +12,66 @@ my($highest_div)=2000000;
 Prime::init_crible($highest_div + 1000);
 
 my($p)=Prime::next_prime();
-my(@all_divisors)=([1]);
+my($pcount)=0 ;
+my(@all_divisors)=();
 my(%residuals)=(1=>0);
 while($p < $highest_div )
 {
   if( $p%4 != 3 )
   {
-  
-  my($prev_residual)=$residuals{$p} = fetch_residual($p);
-  my($prev_pow)=$p;
-  my(@pows)=($p);
-  for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
-  {
-    $prev_residual = fetch_pow_residual($prev_pow,$pow,$prev_residual);
-    print "New : $p $pow $prev_residual\n";
-    last if( $prev_residual == -1);
+    $all_divisors[$pcount] = [] if($#all_divisors < $pcount);
+    my($rdivisors)= $all_divisors[$pcount];
+    my($current_max_div) = ($#$rdivisors < 0)?0:$$rdivisors[-1];
+    
+    my($prev_residual)=$residuals{$p} = fetch_residual($p);
+    if($p > $current_max_div )
+    {
+      $residuals{$p} = $prev_residual;
+      push(@$rdivisors,$p);
+    }
 
-    
-    
-    
-    
-    $residuals{$pow} = $prev_residual;
-    $prev_pow = $pow;
-    push(@pows,$pow);
+    my($prev_pow)=$p;
+    my(@pows)=($p);
+    for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
+    {
+      $prev_residual = fetch_pow_residual($prev_pow,$pow,$prev_residual);
+      print "New : $p $pow $prev_residual\n";
+      last if( $prev_residual == -1);
+
+      if($pow > $current_max_div )
+      {
+        $residuals{$pow} = $prev_residual;
+        push(@$rdivisors,$pow);
+      }
+      
+      $prev_pow = $pow;
+      push(@pows,$pow);
+    }
+
+    for(my($i)=0;$i<$pcount;$i++)
+    {
+      my($pmult)=$all_divisors[$i];
+      for(my($j)=0;$j<=$#$pmult;$j++)
+      {
+        #To test :
+        # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
+        for(my($k)=0;$k<=$#pows;$k++)
+        {
+          my($div)=$pows[$k]*$$pmult[$j];
+          # next if($pows[$k] <= $first_new_div);
+          next if($div <= $current_max_div);
+          
+          
+          my($p,$q)=($$pmult[$j],$pows[$k]);
+          print "m residuals : $pows[$k]*$$pmult[$j] = $div | $p,$q\n";
+          my($residual)=fetch_multiple_residual($p,$residuals{$p},$q,$residuals{$q});
+        }
+      }
+    }
+  
+    $pcount++;
   }
-  <STDIN>;
-  
-  
-  }
-  
+
   $p=Prime::next_prime();
 }
 sub fetch_pow_residual
@@ -57,13 +89,10 @@ sub fetch_pow_residual
 sub fetch_multiple_residual
 {
   my($p1,$res1,$p2,$res2)=@_;
-  for(my($pow_res)=$res;$pow_res<$pow;$pow_res+=$prev_pow)
-  {
-    if( ($pow_res*$pow_res + 1)%$pow == 0)
-    {
-      return ( $pow_res <= $pow/2 )?$pow_res: ($pow - $pow_res);
-    }
-  }
+  my($x)=Bezout::congruence_solve(($p1=>$res1,$p2=>$res2));
+  print "$p1,$res1,$p2,$res2 => $x\n";
+  <STDIN>;
+  
   return -1;
 }
 
