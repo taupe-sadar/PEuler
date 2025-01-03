@@ -55,19 +55,18 @@ sub congruence_solve
 {
   my( %modulo_values ) = @_;
   my(@modulos)=keys(%modulo_values);
-  my($big)= 1;
-  for(my($i)=0; $i<= $#modulos; $i++ )
+  
+  die "Invalid modulos in congruence_solve input" if($#modulos) < 0;
+  my($left,$modulo)=($modulo_values{$modulos[0]},$modulos[0]);
+  for(my($i)=1; $i<= $#modulos; $i++ )
   {
-    $big *= $modulos[$i];
+    my($remainder,$u,$v)=bezout_pair( $modulo, $modulos[$i] );
+    die "congruence_solve must be used with prime themselves numbers" if($remainder != 1);
+    my($big_modulo) = $modulo*$modulos[$i];
+    $left = ($left*$modulos[$i]*$v + $modulo_values{$modulos[$i]}*$modulo*$u)%$big_modulo;
+    $modulo = $big_modulo;
   }
-  my($sol) = 0;
-  for(my($i)=0; $i<= $#modulos; $i++ )
-  {
-    my( $other ) = $big/$modulos[$i];
-    die "congruence_solve must be used with prime themselves numbers" if( Gcd::pgcd($other, $modulos[$i])!=1);
-    $sol += znz_inverse( $other, $modulos[$i] ) * $other * $modulo_values{$modulos[$i]};;
-  }
-  return $sol % $big;
+  return $left;
 }
 
 1;
