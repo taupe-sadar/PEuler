@@ -6,8 +6,9 @@ use Solver;
 use Prime;
 use Bezout;
 use Divisors;
+use Math::BigInt;
 
-my($highest_div)=2000000;
+my($highest_div)=200000;
 
 Prime::init_crible($highest_div + 1000);
 
@@ -26,10 +27,12 @@ while($p < $highest_div )
     my($prev_residual)=$residuals{$p} = fetch_residual($p);
     if($p > $current_max_div )
     {
-      $residuals{$p} = $prev_residual;
+      $residuals{$p} = ($p == 2)?[$prev_residual]:[$prev_residual,$p - $prev_residual];
       push(@$rdivisors,$p);
     }
 
+    print "p : $p\n"; 
+    
     my($prev_pow)=$p;
     my(@pows)=($p);
     for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
@@ -40,7 +43,7 @@ while($p < $highest_div )
 
       if($pow > $current_max_div )
       {
-        $residuals{$pow} = $prev_residual;
+        $residuals{$pow} = [$prev_residual,$pow - $prev_residual];
         push(@$rdivisors,$pow);
       }
       
@@ -48,27 +51,31 @@ while($p < $highest_div )
       push(@pows,$pow);
     }
 
-    for(my($i)=0;$i<$pcount;$i++)
+    for(my($k)=0;$k<=$#pows;$k++)
     {
-      my($pmult)=$all_divisors[$i];
-      for(my($j)=0;$j<=$#$pmult;$j++)
+      my($highest_prime)=floor(($highest_div-1)/$pows[$k]);
+      for(my($i)=0;$i<$pcount;$i++)
       {
-        #To test :
-        # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
-        for(my($k)=0;$k<=$#pows;$k++)
+        my($pmult)=$all_divisors[$i];
+        last if($$pmult[0] > $highest_prime);
+        
+        for(my($j)=0;$j<=$#$pmult;$j++)
         {
+          #To test :
+          # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
           my($div)=$pows[$k]*$$pmult[$j];
           # next if($pows[$k] <= $first_new_div);
-          next if($div <= $current_max_div);
+          next if($div < $current_max_div);
+          last if($div >= $highest_div);
+          push(@$rdivisors,$div);
           
-          
-          my($p,$q)=($$pmult[$j],$pows[$k]);
-          print "m residuals : $pows[$k]*$$pmult[$j] = $div | $p,$q\n";
-          my($residual)=fetch_multiple_residual($p,$residuals{$p},$q,$residuals{$q});
+          my($pm,$q)=($$pmult[$j],$pows[$k]);
+          # print "m residuals : $pows[$k]*$$pmult[$j] = $div | $p,$q\n";
+          $residuals{$div} = fetch_multiple_residual($pm,$residuals{$pm},$q,$residuals{$q});
         }
       }
     }
-  
+    @$rdivisors = sort(@$rdivisors);
     $pcount++;
   }
 
@@ -88,12 +95,33 @@ sub fetch_pow_residual
 }
 sub fetch_multiple_residual
 {
-  my($p1,$res1,$p2,$res2)=@_;
-  my($x)=Bezout::congruence_solve(($p1=>$res1,$p2=>$res2));
-  print "$p1,$res1,$p2,$res2 => $x\n";
-  <STDIN>;
+  my($p,$resp,$q,$resq)=@_;
   
-  return -1;
+  my($prod)=$p*$q;
+  
+  my(@residuals)=();
+  for my $rp (@$resp)
+  {
+    for my $rq (@$resq)
+    {
+      # my($test)=Math::BigInt->new(Bezout::congruence_solve(($p=>$rp,$q=>$rq)));
+      # if($test*$test % $prod != $prod-1 )
+      # {
+         # print "Issue : $test*$test % $p*$q != -1 \n";
+         # my($test2)=$test*$test;
+         # print "$test2\n";<STDIN>;
+      # }
+      
+      push(@residuals,Bezout::congruence_solve(($p=>$rp,$q=>$rq)));
+    }
+  }
+
+  @residuals=sort(@residuals);
+  # print (" --> $p : ".join(" ",@$resp)."\n");
+  # print (" --> $q : ".join(" ",@$resq)."\n");
+  # print (" <-- ".join(" ",@residuals)."\n");
+  # <STDIN>;
+  return \@residuals;
 }
 
 ####
