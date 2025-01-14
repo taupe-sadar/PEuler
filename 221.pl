@@ -7,80 +7,144 @@ use Prime;
 use Bezout;
 use Divisors;
 use Math::BigInt;
+use List::Util qw( sum max min );
 
-my($highest_div)=200000;
+my($target)=150000;
 
-Prime::init_crible($highest_div + 1000);
+Prime::init_crible(200000);
 
-my($p)=Prime::next_prime();
-my($pcount)=0 ;
 my(@all_divisors)=();
-my(%residuals)=(1=>0);
-while($p < $highest_div )
+my(%residuals)=();
+
+my(%residual_count)=();
+
+my($born)=10000;
+my($res)=0;
+while($res < $target)
 {
-  if( $p%4 != 3 )
+  
+  calc_residuals(\@all_divisors,\%residuals,$born);
+
+  $res = count_alex(\@all_divisors,\%residuals,\%residual_count,$born);
+  print "$born, $res -> test(".test($born).")\n";
+  
+  # print Dumper \%residuals;
+
+  <STDIN>;
+  $born *= 10;
+}
+
+sub test
+{
+  my($limit)=@_;
+  my($count)=0;
+  for(my($p)=2;;$p++)
   {
-    $all_divisors[$pcount] = [] if($#all_divisors < $pcount);
-    my($rdivisors)= $all_divisors[$pcount];
-    my($current_max_div) = ($#$rdivisors < 0)?0:$$rdivisors[-1];
+    # print "($p)\n";
+    last if(($p**3/2 + $p) > $limit);
     
-    my($prev_residual)=$residuals{$p} = fetch_residual($p);
-    if($p > $current_max_div )
+    my(%dec)=Prime::decompose($p*$p+1);
+    my(@divs)=Prime::all_divisors_no_larger(\%dec,floor($p/2)+1);
+    # print Dumper \@divs;
+    foreach my $d (sort({$b<=>$a}@divs))
     {
-      $residuals{$p} = ($p == 2)?[$prev_residual]:[$prev_residual,$p - $prev_residual];
-      push(@$rdivisors,$p);
-    }
-
-    print "p : $p\n"; 
-    
-    my($prev_pow)=$p;
-    my(@pows)=($p);
-    for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
-    {
-      $prev_residual = fetch_pow_residual($prev_pow,$pow,$prev_residual);
-      print "New : $p $pow $prev_residual\n";
-      last if( $prev_residual == -1);
-
-      if($pow > $current_max_div )
+      my($alex)=alexandrian($p,$d);
+      if($alex <= $limit)
       {
-        $residuals{$pow} = [$prev_residual,$pow - $prev_residual];
-        push(@$rdivisors,$pow);
+        # print "$p $d -> $alex\n";
+        $count++;
       }
-      
-      $prev_pow = $pow;
-      push(@pows,$pow);
-    }
-
-    for(my($k)=0;$k<=$#pows;$k++)
-    {
-      my($highest_prime)=floor(($highest_div-1)/$pows[$k]);
-      for(my($i)=0;$i<$pcount;$i++)
+      else
       {
-        my($pmult)=$all_divisors[$i];
-        last if($$pmult[0] > $highest_prime);
-        
-        for(my($j)=0;$j<=$#$pmult;$j++)
+        last;
+      }
+    }
+    
+  }
+  return $count;
+  
+}
+
+
+sub calc_residuals
+{
+  my($rrdivisors,$rresiduals,$limit)=@_;
+
+  Prime::reset_prime_index();
+  my($p)=Prime::next_prime();
+  my($pcount)=0;
+  
+  my($highest_div)=($limit/4)**(1/3);
+  while($p < $highest_div)
+  {
+    if( $p%4 != 3 )
+    {
+      $all_divisors[$pcount] = [] if($#all_divisors < $pcount);
+      my($rdivisors)= $$rrdivisors[$pcount];
+      my($current_max_div) = ($#$rdivisors < 0)?0:$$rdivisors[-1];
+      
+      my($prev_residual)=fetch_residual($p);
+      my(@new_divs)=();
+      if($p > $current_max_div )
+      {
+        $$rresiduals{$p} = ($p == 2)?[$prev_residual]:[$prev_residual,$p - $prev_residual];
+        push(@new_divs,$p);
+      }
+
+      my($prev_pow)=$p;
+      my(@pows)=($p);
+      for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
+      {
+        $prev_residual = fetch_pow_residual($prev_pow,$pow,$prev_residual);
+        last if( $prev_residual == -1);
+
+        if($pow > $current_max_div )
         {
-          #To test :
-          # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
-          my($div)=$pows[$k]*$$pmult[$j];
-          # next if($pows[$k] <= $first_new_div);
-          next if($div < $current_max_div);
-          last if($div >= $highest_div);
-          push(@$rdivisors,$div);
+          $$rresiduals{$pow} = [$prev_residual,$pow - $prev_residual];
+          push(@new_divs,$pow);
+        }
+        
+        $prev_pow = $pow;
+        push(@pows,$pow);
+      }
+
+      for(my($k)=0;$k<=$#pows;$k++)
+      {
+        my($highest_prime)=floor(($highest_div-1)/$pows[$k]);
+        for(my($i)=0;$i<$pcount;$i++)
+        {
+          my($pmult)=$all_divisors[$i];
+          last if($$pmult[0] > $highest_prime);
           
-          my($pm,$q)=($$pmult[$j],$pows[$k]);
-          # print "m residuals : $pows[$k]*$$pmult[$j] = $div | $p,$q\n";
-          $residuals{$div} = fetch_multiple_residual($pm,$residuals{$pm},$q,$residuals{$q});
+          for(my($j)=0;$j<=$#$pmult;$j++)
+          {
+            #To test :
+            # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
+            my($div)=$pows[$k]*$$pmult[$j];
+            # next if($pows[$k] <= $first_new_div);
+            next if($div < $current_max_div);
+            last if($div >= $highest_div);
+            push(@new_divs,$div);
+            
+            my($pm,$q)=($$pmult[$j],$pows[$k]);
+            # print "m residuals : $pows[$k]*$$pmult[$j] = $div | $p,$q\n";
+            # print Dumper $$rresiduals{$pm};
+            # print Dumper $$rresiduals{$q};
+            $$rresiduals{$div} = fetch_multiple_residual($pm,$$rresiduals{$pm},$q,$$rresiduals{$q});
+          }
         }
       }
-    }
-    @$rdivisors = sort(@$rdivisors);
-    $pcount++;
-  }
+      @new_divs = sort({$a <=> $b} @new_divs);
 
-  $p=Prime::next_prime();
+      # print "($p) : New mult array : ".join(" ",@new_divs)."\n";
+      @$rdivisors = (@$rdivisors,@new_divs);
+      $pcount++;
+    }
+
+    $p=Prime::next_prime();
+  }
 }
+
 sub fetch_pow_residual
 {
   my($prev_pow,$pow,$res)=@_;
@@ -93,6 +157,7 @@ sub fetch_pow_residual
   }
   return -1;
 }
+
 sub fetch_multiple_residual
 {
   my($p,$resp,$q,$resq)=@_;
@@ -116,7 +181,7 @@ sub fetch_multiple_residual
     }
   }
 
-  @residuals=sort(@residuals);
+  @residuals=sort({$a<=>$b} @residuals);
   # print (" --> $p : ".join(" ",@$resp)."\n");
   # print (" --> $q : ".join(" ",@$resq)."\n");
   # print (" <-- ".join(" ",@residuals)."\n");
@@ -124,139 +189,96 @@ sub fetch_multiple_residual
   return \@residuals;
 }
 
-####
-
-my(@crible)=(0)x200000;
-
-my(@divisors)=();
-
-my($born)=1000000;
-my($res)=0;
-while($res < 150000)
-{
-   $res = count_alex(\@divisors,\%residuals,$born);
-   print "$born, $res ($#divisors)\n";
-   
-   <STDIN>;
-   $born *= 10;
-}
-
-
 sub count_alex
 {
-  my($rdivisors,$rresiduals,$limit)=@_;
+  my($rdivisors,$rresiduals,$rcounts,$limit)=@_;
 
-  my($count)=0;
+  my($count_total)=0;
   
-  my($div_index)=($#$rdivisors >= 0) ? 0 : -1;
-  my($d)=0;
-  while( 1 )
+  # Manage divisor 1
   {
+    my($last)=find_limit_alex(1,$limit);
+    my($count) = max($last - 1,0);
+    $count_total += $count;
 
-    if($div_index >=0) 
-    {
-      if( $div_index <= $#$rdivisors )
-      {
-        $d = $$rdivisors[$div_index++];
-      }
-      else
-      {
-        $div_index = -1;
-        $d++;
-      }
-    }
-    else
-    {
-      $d++;
-    }
-
-    my($mini_alex)=(4*$d + 2)*$d*$d;
-    last unless($mini_alex < $limit);
-    die "out of crible ($d)!" if ($d > $#crible);
-
-    my($first_p) = crible_update($d);
-    next if($first_p < 0);
-
-    push(@$rdivisors,$d) if($div_index < 0);
-
-    my($init)=2*$d + $first_p;
-    my($alt)=($d==1)?0:($d - 2*$first_p);
-
-
-    #new implem : 
-    my($last)=find_limit_alex($d,$limit);
-    my($count1)=floor(($last-$init)/$d) + 1;
-    my($count2)=($alt > 0)?(floor(($last-$init - $alt)/$d) + 1):0;
-    die "WTF " if( $count2 < 0);
-
-    $$rresiduals{$d} = [$count1,$count2];
-    
-    print "[$d : $first_p] ($alt) : $count1 + $count2\n";
-    # <STDIN>;
-    
-    $count+= $count1 + $count2;
     if( 0 )
     {
-      my($p)=$init;
-      #old implem : test
-      my($dcount1)=0;
-      my($dcount2)=0;
+      my($p)=2;
+      
       while(1)
       {
-        my($alex)=alexandrian($p,$d);
+        my($alex)=alexandrian($p,1);
         last unless($alex < $limit );
-        # alex_trace($p,$d);
-        $dcount1 ++;
+        alex_trace($p,1);
         
-        if($alt > 0)
-        {
-          $alex=alexandrian($p+$alt,$d);
-          last unless($alex < $limit);
-          # alex_trace($p+$alt,$d);
-          $dcount2++;
-        }
-        $p+=$d;
-      }
-      
-      
-      if($count1!=$dcount1 || ($alt > 0 && $count2!=$dcount2))
-      {
-      print "-------------\n";
-      print "$count1 $count2\n";
-      print "$dcount1 $dcount2\n";
-      print "-------------\n";
-      <STDIN>;
+        $p++;
       }
     }
-  }
-  return $count;
-}
 
-sub crible_update
-{
-  my($d)=@_;
+
+    # print "[1 : 0] : $count\n";
+  }
   
-  if($crible[$d] == 0 )
+  
+  for(my($i)=0;$i<=$#$rdivisors;$i++)
   {
-    my($first_p)=fetch_residual($d);
-    if( $first_p == -1 )
+    my($r_sub_divisors)=$$rdivisors[$i];
+
+    # print (join(",",@$r_sub_divisors)."\n");
+    # <STDIN>;
+    
+    for(my($j)=0;$j<=$#$r_sub_divisors;$j++)
     {
-      my($mult)=$d;
-      while($mult <= $#crible)
+      my($d)=$$r_sub_divisors[$j];
+
+      # TODO : move into residual fetching(DONE). Keep it there ?
+      # my($mini_alex)=(4*$d + 2)*$d*$d;
+      # last unless($mini_alex < $limit);
+
+      my($rres)=$$rresiduals{$d};
+      
+      #new implem : 
+      my($last)=find_limit_alex($d,$limit);
+
+      # $$rcounts{$d} = [];
+      foreach my $r (@$rres)
       {
-        $crible[$mult]=-1;
-        $mult+=$d;
+        my($init)=2*$d + $r;
+        my($count)=max(floor(($last-$init)/$d) + 1,0);
+        # push(@{$$rcounts{$d}},$count);
+        
+        # print "[$d : $r] : $count\n";
+
+        $count_total+= $count;
+        
+        if( 0 )
+        {
+          my($p)=$init;
+          my($dcount)=0;
+          
+          while(1)
+          {
+            my($alex)=alexandrian($p,$d);
+            last unless($alex < $limit );
+            alex_trace($p,$d);
+            $dcount ++;
+
+            $p+=$d;
+          }
+
+          if($count!=$dcount)
+          {
+          print "-------------\n";
+          print "$count $dcount\n";
+          print "-------------\n";
+          <STDIN>;
+          }
+        }
       }
     }
-    else
-    {
-      $crible[$d]=$first_p;
-    }
   }
-  
-  return $crible[$d];
+  return $count_total;
 }
-
 
 sub find_limit_alex
 {
