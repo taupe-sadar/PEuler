@@ -16,23 +16,31 @@ Prime::init_crible(200000);
 my(@all_divisors)=();
 my(%residuals)=();
 
-my(%residual_count)=();
-
 my($born)=10000;
 my($res)=0;
+my(@counts)=();
 while($res < $target)
 {
-  
   calc_residuals(\@all_divisors,\%residuals,$born);
 
-  $res = count_alex(\@all_divisors,\%residuals,\%residual_count,$born);
-  print "$born, $res -> test(".test($born).")\n";
+  my($count) = count_alex(\@all_divisors,\%residuals,$born);
+  push(@counts,[$born,$count]);
+  if(0)
+  {
+    print "$born, $res -> test(".test($born).")\n";
+  }
+  else
+  {
+    print "$born, $res \n";
+  }
+  # print Dumper \@all_divisors;
   
   # print Dumper \%residuals;
 
-  <STDIN>;
-  $born *= 10;
+  $born *= 4;
 }
+
+
 
 sub test
 {
@@ -122,7 +130,7 @@ sub calc_residuals
             # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
             my($div)=$pows[$k]*$$pmult[$j];
             # next if($pows[$k] <= $first_new_div);
-            next if($div < $current_max_div);
+            next if($div <= $current_max_div);
             last if($div >= $highest_div);
             push(@new_divs,$div);
             
@@ -240,12 +248,10 @@ sub count_alex
       #new implem : 
       my($last)=find_limit_alex($d,$limit);
 
-      # $$rcounts{$d} = [];
       foreach my $r (@$rres)
       {
         my($init)=2*$d + $r;
         my($count)=max(floor(($last-$init)/$d) + 1,0);
-        # push(@{$$rcounts{$d}},$count);
         
         # print "[$d : $r] : $count\n";
 
