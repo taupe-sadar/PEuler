@@ -17,21 +17,21 @@ my(@all_divisors)=();
 my(%residuals)=();
 
 my($born)=10000;
-my($res)=0;
 my(@counts)=();
-while($res < $target)
+my($count)=0;
+while($count < $target)
 {
   calc_residuals(\@all_divisors,\%residuals,$born);
 
-  my($count) = count_alex(\@all_divisors,\%residuals,$born);
+  $count = count_alex(\@all_divisors,\%residuals,$born);
   push(@counts,[$born,$count]);
   if(0)
   {
-    print "$born, $res -> test(".test($born).")\n";
+    print "$born, $count -> test(".test($born).")\n";
   }
   else
   {
-    print "$born, $res \n";
+    print "$born, $count \n";
   }
   # print Dumper \@all_divisors;
   
@@ -199,7 +199,7 @@ sub fetch_multiple_residual
 
 sub count_alex
 {
-  my($rdivisors,$rresiduals,$rcounts,$limit)=@_;
+  my($rdivisors,$rresiduals,$limit)=@_;
 
   my($count_total)=0;
   
