@@ -10,6 +10,8 @@ use Math::BigInt;
 use List::Util qw( sum max min );
 
 my($target)=150000;
+# my($target)=150;
+
 
 Prime::init_crible(200000);
 
@@ -39,8 +41,10 @@ while($count < $target)
 
   $born *= 4;
 }
-
-
+my($last_residuals)=get_alex_range(\@all_divisors,\%residuals,$counts[-2][0],$counts[-1][0]);
+my($offset)=$target - $counts[-2][1] - 1;
+my($alexandrian_wanted)=$$last_residuals[$offset];
+print $alexandrian_wanted;
 
 sub test
 {
@@ -284,6 +288,45 @@ sub count_alex
     }
   }
   return $count_total;
+}
+
+sub get_alex_range
+{
+  my($rdivisors,$rresiduals,$limit_low,$limit_high)=@_;
+  my(@alexs)=();
+  
+  my($one_last_low)=max(find_limit_alex(1,$limit_low),2);
+  my($one_last_high)=find_limit_alex(1,$limit_high);
+  for(my($p)=$one_last_low+1;$p<=$one_last_high;$p++)
+  {
+    push(@alexs,alexandrian($p,1));
+  }
+
+  for(my($i)=0;$i<=$#$rdivisors;$i++)
+  {
+    my($r_sub_divisors)=$$rdivisors[$i];
+    for(my($j)=0;$j<=$#$r_sub_divisors;$j++)
+    {
+      my($d)=$$r_sub_divisors[$j];
+      my($rres)=$$rresiduals{$d};
+      
+      my($last_low)=find_limit_alex($d,$limit_low);
+      my($last_high)=find_limit_alex($d,$limit_high);
+
+      foreach my $r (@$rres)
+      {
+        my($begin)= max(floor(($last_low+$d - $r)/$d),2)*$d + $r;
+        my($end)= floor(($last_high - $r)/$d)*$d + $r;
+        for(my($p)=$begin;$p<=$end;$p+=$d)
+        {
+          push(@alexs,alexandrian($p,$d));
+        }
+      }
+    }
+  }
+  @alexs = sort({$a<=>$b} @alexs);
+  print "Final size : ".($#alexs+1)."\n";
+  return \@alexs;
 }
 
 sub find_limit_alex
