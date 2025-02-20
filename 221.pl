@@ -5,13 +5,9 @@ use POSIX qw/floor ceil/;
 use Solver;
 use Prime;
 use Bezout;
-use Divisors;
-use Math::BigInt;
 use List::Util qw( sum max min );
 
 my($target)=150000;
-# my($target)=150;
-
 
 Prime::init_crible(200000);
 
@@ -27,17 +23,6 @@ while($count < $target)
 
   $count = count_alex(\@all_divisors,\%residuals,$born);
   push(@counts,[$born,$count]);
-  if(0)
-  {
-    print "$born, $count -> test(".test($born).")\n";
-  }
-  else
-  {
-    print "$born, $count \n";
-  }
-  # print Dumper \@all_divisors;
-  
-  # print Dumper \%residuals;
 
   $born *= 4;
 }
@@ -45,37 +30,6 @@ my($last_residuals)=get_alex_range(\@all_divisors,\%residuals,$counts[-2][0],$co
 my($offset)=$target - $counts[-2][1] - 1;
 my($alexandrian_wanted)=$$last_residuals[$offset];
 print $alexandrian_wanted;
-
-sub test
-{
-  my($limit)=@_;
-  my($count)=0;
-  for(my($p)=2;;$p++)
-  {
-    # print "($p)\n";
-    last if(($p**3/2 + $p) > $limit);
-    
-    my(%dec)=Prime::decompose($p*$p+1);
-    my(@divs)=Prime::all_divisors_no_larger(\%dec,floor($p/2)+1);
-    # print Dumper \@divs;
-    foreach my $d (sort({$b<=>$a}@divs))
-    {
-      my($alex)=alexandrian($p,$d);
-      if($alex <= $limit)
-      {
-        # print "$p $d -> $alex\n";
-        $count++;
-      }
-      else
-      {
-        last;
-      }
-    }
-    
-  }
-  return $count;
-  
-}
 
 
 sub calc_residuals
@@ -91,7 +45,7 @@ sub calc_residuals
   {
     if( $p%4 != 3 )
     {
-      $all_divisors[$pcount] = [] if($#all_divisors < $pcount);
+      $$rrdivisors[$pcount] = [] if($#$rrdivisors < $pcount);
       my($rdivisors)= $$rrdivisors[$pcount];
       my($current_max_div) = ($#$rdivisors < 0)?0:$$rdivisors[-1];
       
@@ -125,30 +79,25 @@ sub calc_residuals
         my($highest_prime)=floor(($highest_div-1)/$pows[$k]);
         for(my($i)=0;$i<$pcount;$i++)
         {
-          my($pmult)=$all_divisors[$i];
+          my($pmult)=$$rrdivisors[$i];
           last if($$pmult[0] > $highest_prime);
           
+          my($first_mult)=floor(($current_max_div)/$pows[$k]);
+          my($stop_mult)=ceil(($highest_div)/$pows[$k]);
           for(my($j)=0;$j<=$#$pmult;$j++)
           {
-            #To test :
-            # my($first_new_div)=ceil(($current_max_div+1)/$$pmult[$j]);
+            next if($$pmult[$j] <= $first_mult);
+            last if($$pmult[$j] >= $stop_mult);
             my($div)=$pows[$k]*$$pmult[$j];
-            # next if($pows[$k] <= $first_new_div);
-            next if($div <= $current_max_div);
-            last if($div >= $highest_div);
             push(@new_divs,$div);
             
             my($pm,$q)=($$pmult[$j],$pows[$k]);
-            # print "m residuals : $pows[$k]*$$pmult[$j] = $div | $p,$q\n";
-            # print Dumper $$rresiduals{$pm};
-            # print Dumper $$rresiduals{$q};
             $$rresiduals{$div} = fetch_multiple_residual($pm,$$rresiduals{$pm},$q,$$rresiduals{$q});
           }
         }
       }
       @new_divs = sort({$a <=> $b} @new_divs);
 
-      # print "($p) : New mult array : ".join(" ",@new_divs)."\n";
       @$rdivisors = (@$rdivisors,@new_divs);
       $pcount++;
     }
@@ -181,23 +130,12 @@ sub fetch_multiple_residual
   {
     for my $rq (@$resq)
     {
-      # my($test)=Math::BigInt->new(Bezout::congruence_solve(($p=>$rp,$q=>$rq)));
-      # if($test*$test % $prod != $prod-1 )
-      # {
-         # print "Issue : $test*$test % $p*$q != -1 \n";
-         # my($test2)=$test*$test;
-         # print "$test2\n";<STDIN>;
-      # }
-      
       push(@residuals,Bezout::congruence_solve(($p=>$rp,$q=>$rq)));
     }
   }
 
   @residuals=sort({$a<=>$b} @residuals);
-  # print (" --> $p : ".join(" ",@$resp)."\n");
-  # print (" --> $q : ".join(" ",@$resq)."\n");
-  # print (" <-- ".join(" ",@residuals)."\n");
-  # <STDIN>;
+
   return \@residuals;
 }
 
@@ -213,43 +151,17 @@ sub count_alex
     my($count) = max($last - 1,0);
     $count_total += $count;
 
-    if( 0 )
-    {
-      my($p)=2;
-      
-      while(1)
-      {
-        my($alex)=alexandrian($p,1);
-        last unless($alex < $limit );
-        alex_trace($p,1);
-        
-        $p++;
-      }
-    }
-
-
-    # print "[1 : 0] : $count\n";
-  }
-  
-  
   for(my($i)=0;$i<=$#$rdivisors;$i++)
   {
     my($r_sub_divisors)=$$rdivisors[$i];
 
-    # print (join(",",@$r_sub_divisors)."\n");
-    # <STDIN>;
-    
     for(my($j)=0;$j<=$#$r_sub_divisors;$j++)
     {
       my($d)=$$r_sub_divisors[$j];
 
-      # TODO : move into residual fetching(DONE). Keep it there ?
-      # my($mini_alex)=(4*$d + 2)*$d*$d;
-      # last unless($mini_alex < $limit);
 
       my($rres)=$$rresiduals{$d};
       
-      #new implem : 
       my($last)=find_limit_alex($d,$limit);
 
       foreach my $r (@$rres)
@@ -257,33 +169,7 @@ sub count_alex
         my($init)=2*$d + $r;
         my($count)=max(floor(($last-$init)/$d) + 1,0);
         
-        # print "[$d : $r] : $count\n";
-
         $count_total+= $count;
-        
-        if( 0 )
-        {
-          my($p)=$init;
-          my($dcount)=0;
-          
-          while(1)
-          {
-            my($alex)=alexandrian($p,$d);
-            last unless($alex < $limit );
-            alex_trace($p,$d);
-            $dcount ++;
-
-            $p+=$d;
-          }
-
-          if($count!=$dcount)
-          {
-          print "-------------\n";
-          print "$count $dcount\n";
-          print "-------------\n";
-          <STDIN>;
-          }
-        }
       }
     }
   }
@@ -335,11 +221,6 @@ sub find_limit_alex
   
   my($fn)= sub { my($p)=@_;return $p * (($p*$p +1)/$div - $p) * ($p - $div); };
   
-  ### test
-  # my($ftest)= sub {my($p)=@_;return $p * $p -1;};
-  # my($x)=Solver::solve_no_larger_integer($ftest,65,1520);
-  # print "test : $x\n";
-  # <STDIN>;
   return Solver::solve_no_larger_integer($fn,floor(($stop*$div)**(1/4)),$stop);
 }
 
@@ -348,17 +229,6 @@ sub alexandrian
   my($p,$d)=@_;
   my($frac)=$p*$p + 1;
   return $p * ($frac/$d - $p) * ($p - $d);
-}
-
-sub alex_trace
-{
-  my($p,$d)=@_;
-
-  my($frac)=$p*$p + 1;
-  my($r)=$p - $d;
-  my($q)=$frac/$d - $p;
-  my($a)=$p*$q*$r;
-  print "---> $p $q $r => $a\n";
 }
 
 sub fetch_residual
