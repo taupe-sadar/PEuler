@@ -7,6 +7,59 @@ use Prime;
 use Bezout;
 use List::Util qw( sum max min );
 
+# Alexandrian number are of the form A = p * q * r, where 1 = p*q + q*r + p*r
+# p,q, r are are relatives integers, some of them are negative, and necessary two of them.
+# By Changing the sign of p and q, this can be reformulted by :
+#
+# 1 = p*q - q*r - p*r, all being positive integers
+#
+# we then have r = (1 - p*q)/(p + q)
+# using the divisor d = p+q, (d > p)
+#
+# r = ( 1 - p * ( d - p )) / d = (1+p^2) / d - p. 
+# (Note that d' = (1+p^2) / d is another divisor of p^2+1, such that d * d' = p^2+1)
+# (And d' < p, thats more convinient)
+#
+# So for any integer p, and for any divisor of 1+p^2, there is an alexandrian, written 
+#   A = p * q * r = p * ((1+p^2) / d - p) * ( d - p )
+#
+# We want to ensure the unicity of this triplet (p,q,r), using r < p < q
+#   we already have q > r, since d > d', because  d > sqrt(p^2+1) ~ p > d'
+#   p > r <=> d' < 2p, already true (d' < p)
+#   p < q <=> d > 2p, or d' < p/2
+#
+# So we will look to all integer p, and its divisors d' of (p^2+1/2) in the interval [1;p/2]
+#
+# Actually, we are doing the inverse process : for all potential divisors d', will find all multiples
+# m = k*d' such that m can be written m = p^2+1 
+# we need to know what are the solutions of x^2 = -1 [d], ie the square residuals of -1 in Z/dZ
+#
+# Depending on d :
+# 1) if d is a prime, Z/pZ is a field, there are either 2 solutions, r and d - r, or 0 solutions.
+#    - if d = 4k + 1, (-1)^(d-1)/2 = (-1)^(2k) = 1 [d], there are 2 solutions
+#    - if d = 4k + 3, (-1)^(d-1)/2 = (-1)^(2k+1) = -1 [d], no solutions
+#    - if d = 2, only one solution r = d - r = 1
+# 2) if d is an exponent of a prime d = k^e, then the residuals r must verify :
+#      r = r' + b * k^(e-1), where r' is a residual in Z/k^(e-1)
+#      r^2 = -1 <=> r'^2 + 2*r'*b*k^(e-1) = -1
+#      b = -(r^-1 + r)/2^-1[k], which gives us recursively 2 residuals (if there are residuals in Z/kZ)
+#      if k = 2, no residuals in Z/4Z
+# 3) if d as the form d = a*b, with a and b coprimes, and r_a is a residual in Z/aZ, and r_b a residual in Z/bZ
+#      With Bezout there are u,v such that a*u + b*v = 1, and the residual r in Z/abZ must verify r^2 = -1 [a] and r^2 = -1 [b]
+#      the only candidtae is the solution of the chinese leftover problem, than can be expressed : 
+#        r = r_a*b*v + r_b*a*u
+#        we can verify that r^2 = r_a^2 * (b*v)^2 + r_b^^2 * (a*u)^2 [ab]
+#                           r^2 = -1 * (b*v)^2 - 1 * (a*u)^2 [ab]
+#                           r^2 = -1 [ab]
+#
+# The algorithm choses a bound and is looking for all alexandrian up to that bound
+#   First it finds all residuals we will need into this bound
+#   Then, for all divisors d (including d = 1), for each residual r in Z/dZ, it counts the possible alexandrians
+#   with p = r + k*d, with k > 2*d (symetry considerations).
+# If the born is not large enough, the bound increases, 
+# Finally we enumerate the alexandrian counted in the last iterations
+# 
+
 my($target)=150000;
 
 Prime::init_crible(200000);
@@ -150,6 +203,7 @@ sub count_alex
     my($last)=find_limit_alex(1,$limit);
     my($count) = max($last - 1,0);
     $count_total += $count;
+  }
 
   for(my($i)=0;$i<=$#$rdivisors;$i++)
   {
@@ -211,7 +265,6 @@ sub get_alex_range
     }
   }
   @alexs = sort({$a<=>$b} @alexs);
-  print "Final size : ".($#alexs+1)."\n";
   return \@alexs;
 }
 
