@@ -1,28 +1,36 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use List::Util qw( sum max min );
+use POSIX qw/floor/;
 
 my($main_radius)=50;
 
-
-my(@radius)=(30,35,40,45,50);
+my(@radius)=(30..50);
 my($best)=10**12;
 my($best_idx)=-1;
-for(my($i)=0;$i<120;$i++)
+my($best_list)=[];
+my($arrs)=minimal_arrangements($#radius+1);
+
+for(my($i)=0;$i<=$#$arrs;$i++)
 {
-  my(@shuff)=suffle_list($i,120,@radius);
-  print "($i) - [ ".join(" , ",@shuff)." ]";
-  my($length)=list_length(\@shuff,$main_radius);
-  print " : $length\n";
+  my(@arranged_radius)=();
+  for(my($j)=0;$j<=$#{$$arrs[$i]};$j++)
+  {
+    push(@arranged_radius,$radius[$$arrs[$i][$j]]);
+  }
+  my($length)=list_length(\@arranged_radius,$main_radius);
   if($length<$best)
   {
     $best = $length;
     $best_idx = $i;
+    $best_list = \@arranged_radius;
   }
 }
-print "Best : $best_idx ($best)\n";
-print "".list_length([45 , 35 , 30 , 40 , 50],$main_radius)."\n";
-print "".list_length([45 , 30 , 35 , 40 , 50],$main_radius)."\n";
+# print "Best : $best_idx ($best)\n";
+# print "[".join(",",@$best_list)."]\n";
+print floor($best*1000 + 0.5);
+
 
 sub minimal_arrangements
 {
@@ -31,31 +39,40 @@ sub minimal_arrangements
   {
     return [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
   }
-}
-
-
-
-sub suffle_list
-{
-  my($idx,$fact,@list)=@_;
-  my($n)=$#list+1;
-  if( $n == 1 )
-  {
-    return @list;
-  }
   else
   {
-    my(@shuffled)=@list;
-    
-    my($swap_idx)=$idx%$n;
-    # print "--- $idx $fact $n\n";
-    if($swap_idx!=0)
+    my($arrangements)=minimal_arrangements($n-1);
+    my(@valids)=();
+    for my $arr (@$arrangements)
     {
-      my($tmp)=$shuffled[0];
-      $shuffled[0]=$shuffled[$swap_idx];
-      $shuffled[$swap_idx]=$tmp;
+      my($lower_than)=$n-1;
+      my($higher_than)=0;
+      
+      for(my($i)=0;$i<=$#$arr-2;$i++)
+      {
+        if($$arr[$i+1]>$$arr[-1])
+        {
+          $lower_than = min($lower_than,$$arr[$i]);
+        }
+        else
+        {
+          $higher_than = max($higher_than,$$arr[$i]+1);
+        }
+      }
+      
+      # print (join("",@$arr)." : $lower_than -> $higher_than\n");<STDIN>;
+      
+      for(my($v)=$higher_than;$v<=$lower_than;$v++)
+      {
+        my(@valid)=(@$arr,$v);
+        for(my($j)=0;$j<$#valid;$j++)
+        {
+          $valid[$j]++ if($valid[$j]>=$v);
+        }
+        push(@valids,\@valid);
+      }
     }
-    return ($shuffled[0],suffle_list(($idx-$swap_idx)/$n,$fact/$n,@shuffled[1..$#list]));
+    return \@valids;
   }
 }
 
