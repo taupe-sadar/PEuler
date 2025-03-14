@@ -4,6 +4,37 @@ use Data::Dumper;
 use List::Util qw( sum max min );
 use POSIX qw/floor/;
 
+# For 2 differents spheres, of radius r_i and r_j, stacked in a horizontal pipe of radius R
+# The vertical and horizontal distance between circle radius verify :
+#     h^2 + v^2 = (r_i + r_j)^2
+#     r_i + v + r_j = 2*R
+# So 
+#     v^2 = (r_i + r_j)^2 - (2*R - r_i -r_j)^2
+#     v = 2 * sqrt(R*(R - r_i -r_j))
+#
+# Let us consider the sequence of stacked spheres, r_1 , ... , r_n
+# The distance between two sphers centers is d_ij = 2 * sqrt(R*(R - r_i -r_j))
+# For a subsquence of spheres : r_i , r_i+1 , ... , r_j-1, r_j, let us suppose that r_i < r_j and r_i+1 > r_j-1
+# 
+# There exists s in [0,1] such that r_i+r_i+1 =   s  *(r_i+r_j-1) + (1-s)*(r_i+1 + r_j)
+# And then                          r_j-1+r_j = (1-s)*(r_i+r_j-1) +   s * (r_i+1 + r_j)
+# Using sqrt concavity:
+#   sqrt( R - r_i-r_i+1 ) > s * sqrt( R - r_i - r_j-1 ) + (1-s)*sqrt(R - r_i+1 - r_j)
+#   sqrt( R - r_j-1-r_j ) > (1-s) * sqrt( R - r_i - r_j-1 ) + s*sqrt(R - r_i+1 - r_j)
+# So:
+#   sqrt( R - r_i-r_i+1 ) + sqrt( R - r_j-1-r_j ) > sqrt( R - r_i - r_j-1 ) + sqrt(R - r_i+1 - r_j)
+#
+# That means that a better arrangement of spheres can be found, by reversing the sequence of spheres between 
+# spheres i and j : r_i , r_j-1 , r_j-2, ... , r_i+2, r_i+1, r_j
+# 
+# So if any subsequence (i,...,j) verify (r_i < r_j AND and r_i+1 > r_j-1) OR (r_i > r_j AND and r_i+1 < r_j-1)
+# then, a sequence with a shorter horizontal distance can be found.
+# If no such subsequence can be found, we call that sequence a minimal solution
+# 
+# The algorithm finds all minimal solutions for a given sequence size
+# Finally, it compares size of all minimal solutions
+
+
 my($main_radius)=50;
 
 my(@radius)=(30..50);
