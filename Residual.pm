@@ -28,13 +28,15 @@ use POSIX qw/floor ceil/;
 
 sub calc_residuals
 {
-  my($rrdivisors,$rresiduals,$residual_val,$highest_div)=@_;
+  my($rrdivisors,$rresiduals,$residual_val,$highest_div,$max_prime)=@_;
 
+  $max_prime = $highest_div unless(defined($max_prime));
+  
   Prime::reset_prime_index();
   my($p)=Prime::next_prime();
   my($pcount)=0;
   
-  while($p < $highest_div)
+  while($p < $max_prime)
   {
     if(valid_prime($p,$residual_val))
     {

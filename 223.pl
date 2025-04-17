@@ -4,22 +4,28 @@ use Data::Dumper;
 use Prime;
 use Residual;
 
-# my($perimeter_max)=25000000;
-my($perimeter_max)=1000000;
+my($perimeter_max)=25000000;
+
+
+my($div_max)=(-4*$perimeter_max + sqrt(18*$perimeter_max**2 - 18))/2;
+
 
 Prime::init_crible(200000);
 
 my(@all_divisors)=();
 my(%residuals)=();
-Residual::calc_residuals(\@all_divisors,\%residuals,1,$perimeter_max/8);
+Residual::calc_residuals(\@all_divisors,\%residuals,1,$div_max,$div_max/3);
 
+print "Calc residual done\n";
+exit(0);
 my(@k)=(sort({$a <=> $b} keys(%residuals)));
+print "sort keys done\n";
 
 print "num divs : ".($#k + 1)."\n";
 
 my($count_egal,$count_sup,$count_inf,$count1_sup,$count1_inf)=(0,0,0,0,0);
 $residuals{1} = [0];
-foreach my $div (1,@k)
+for(my($div)=1;$div<=$div_max;$div++)
 {
   
   my($s)=join(" ",@{$residuals{$div}});
@@ -74,8 +80,8 @@ foreach my $div (1,@k)
         
         if($a <= $b )
         {
-        print "** $div / $res ** \n";
-        print "  ($a,$b,$c) ".($a*$a)." + ".($b*$b)." = ".($c*$c)." + 1 (perimeter : $perimeter)\n";
+        # print "** $div / $res ** \n";
+        # print "  ($a,$b,$c) ".($a*$a)." + ".($b*$b)." = ".($c*$c)." + 1 (perimeter : $perimeter)\n";
         # <STDIN>;
         }
       }
@@ -96,6 +102,7 @@ foreach my $div (1,@k)
   }
   
 }
+print "everything done\n";
 print " = : $count_egal\n";
 print " a < b : $count_sup\n";
 print " a > b : $count_inf\n";
