@@ -159,18 +159,21 @@ sub fetch_multiple_residual
   
   my($prod)=$p*$q;
   
-  my(@residuals)=();
+  
+  my(@all_residual_pairs)=();
   for my $rp (@$resp)
   {
     for my $rq (@$resq)
     {
-      push(@residuals,Bezout::congruence_solve(($p=>$rp,$q=>$rq)));
+      push(@all_residual_pairs,[$rp,$rq]);
     }
   }
+  
+  my($rresiduals)=Bezout::multiple_congruence_solve([$p,$q],\@all_residual_pairs);
 
-  @residuals=sort({$a<=>$b} @residuals);
+  @$rresiduals=sort({$a<=>$b} @$rresiduals);
 
-  return \@residuals;
+  return $rresiduals;
 }
 
 1;

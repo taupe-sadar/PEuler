@@ -69,4 +69,33 @@ sub congruence_solve
   return $left;
 }
 
+sub multiple_congruence_solve
+{
+  my( $rcoprimes, $rmodulo_values ) = @_;
+  
+  die "Invalid coprimes in congruence_solve input" if($#$rcoprimes) < 0;
+  
+  my(@solutions)=();
+  for(my($j)=0; $j<= $#$rmodulo_values; $j++ )
+  {
+    push(@solutions,$$rmodulo_values[$j][0]);
+  }
+  
+  my($modulo)=$$rcoprimes[0];
+  for(my($i)=1; $i<= $#$rcoprimes; $i++ )
+  {
+    my($remainder,$u,$v)=bezout_pair( $modulo, $$rcoprimes[$i] );
+    die "congruence_solve must be used with prime themselves numbers" if($remainder != 1);
+    my($big_modulo) = $modulo*$$rcoprimes[$i];
+    for(my($j)=0; $j<= $#$rmodulo_values; $j++ )
+    {
+       $solutions[$j] = ($solutions[$j]*$$rcoprimes[$i]*$v + $$rmodulo_values[$j][$i]*$modulo*$u)%$big_modulo;
+    }
+    $modulo = $big_modulo;
+  }
+  return \@solutions;
+}
+
+
+
 1;
