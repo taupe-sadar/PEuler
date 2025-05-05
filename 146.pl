@@ -5,6 +5,8 @@ use Bezout;
 use Prime;
 use integer;
 use Chinois;
+use Set;
+
 
 my($max)= 150*10**6;
 
@@ -22,23 +24,16 @@ my(%possible_congruences) =  (
   19 => [ 0, 1, 2,3,6,7,8,9,10,11,12,13,16, 17, 18 ]
 );
 
-my(@set_of_congruence) = build_set(%possible_congruences);
-
-
 my(@mods)=sort({$a<=>$b}keys(%possible_congruences));
 
-my( @list_of_shift ) = ();
-
-for( my($i)=0; $i<= $#set_of_congruence; $i++ )
+my(@sets)=();
+for my $m (@mods)
 {
-  my(%sol)=();
-  for( my($j)=0; $j<= $#mods; $j++ )
-  {
-    $sol{$mods[$j]} = $set_of_congruence[$i][$j];
-  }
-  
-  push( @list_of_shift, Bezout::congruence_solve(%sol));
+  push(@sets,$possible_congruences{$m});
 }
+
+my($rset_of_congruence) = Set::cartesian_product(\@sets);
+my( $rlist_of_shift ) = Bezout::multiple_congruence_solve(\@mods,$rset_of_congruence);
 
 my($product)=1;
 for( my($j)=0; $j<= $#mods; $j++ )
@@ -46,15 +41,15 @@ for( my($j)=0; $j<= $#mods; $j++ )
   $product*=$mods[$j];
 }
 
-@list_of_shift=sort({$a<=>$b}(@list_of_shift));
+@$rlist_of_shift=sort({$a<=>$b}(@$rlist_of_shift));
 
 my($bound) = 0;
 my($sum)=0;
 while( $bound < $max )
 {
-  for( my($i)=0; $i<= $#list_of_shift; $i++ )
+  for( my($i)=0; $i<= $#$rlist_of_shift; $i++ )
   {
-    my($n) = $bound + $list_of_shift[$i];
+    my($n) = $bound + $$rlist_of_shift[$i];
     last if( $n >= $max );
     if( test_primality($n) )
     {
@@ -92,28 +87,4 @@ sub test_primality
     }
   }
   return 1;
-}
-
-sub build_set
-{
-  my(%possibles)=@_;
-  
-  my(@primes)=sort({$a<=>$b}keys(%possibles));
-  
-  my(@tab)=([]);
-  
-  for(my($i)=0;$i<=$#primes;$i++)
-  {
-    my(@ps)=@{$possibles{$primes[$i]}};
-    my(@t)=();
-    for(my($j)=0;$j<=$#ps;$j++)
-    {
-      for(my($e)=0;$e<=$#tab;$e++)
-      {
-        push( @t, [@{$tab[$e]},$ps[$j]] );
-      }
-    }
-    @tab=@t;
-  }
-  return @tab;
 }
