@@ -169,7 +169,7 @@ sub fetch_multiple_residual
     }
   }
   
-  my($rresiduals)=Bezout::multiple_congruence_solve([$p,$q],\@all_residual_pairs);
+  my($rresiduals)=Bezout::congruence_solve([$p,$q],\@all_residual_pairs);
 
   @$rresiduals=sort({$a<=>$b} @$rresiduals);
 

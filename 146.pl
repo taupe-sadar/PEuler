@@ -33,7 +33,7 @@ for my $m (@mods)
 }
 
 my($rset_of_congruence) = Set::cartesian_product(\@sets);
-my( $rlist_of_shift ) = Bezout::multiple_congruence_solve(\@mods,$rset_of_congruence);
+my( $rlist_of_shift ) = Bezout::congruence_solve(\@mods,$rset_of_congruence);
 
 my($product)=1;
 for( my($j)=0; $j<= $#mods; $j++ )

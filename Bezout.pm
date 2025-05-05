@@ -53,24 +53,6 @@ sub znz_inverse
 
 sub congruence_solve
 {
-  my( %modulo_values ) = @_;
-  my(@modulos)=keys(%modulo_values);
-  
-  die "Invalid modulos in congruence_solve input" if($#modulos) < 0;
-  my($left,$modulo)=($modulo_values{$modulos[0]},$modulos[0]);
-  for(my($i)=1; $i<= $#modulos; $i++ )
-  {
-    my($remainder,$u,$v)=bezout_pair( $modulo, $modulos[$i] );
-    die "congruence_solve must be used with prime themselves numbers" if($remainder != 1);
-    my($big_modulo) = $modulo*$modulos[$i];
-    $left = ($left*$modulos[$i]*$v + $modulo_values{$modulos[$i]}*$modulo*$u)%$big_modulo;
-    $modulo = $big_modulo;
-  }
-  return $left;
-}
-
-sub multiple_congruence_solve
-{
   my( $rcoprimes, $rmodulo_values ) = @_;
   
   die "Invalid coprimes in congruence_solve input" if($#$rcoprimes) < 0;
