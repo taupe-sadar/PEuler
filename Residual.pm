@@ -3,6 +3,7 @@ use strict;
 use Prime;
 use Bezout;
 use POSIX qw/floor ceil/;
+use Set;
 
 # Calculates the square residuals, ie the solutions of x^2 = r in Z/pZ
 # Depending on p :
@@ -157,19 +158,9 @@ sub fetch_multiple_residual
 {
   my($p,$resp,$q,$resq)=@_;
   
-  my($prod)=$p*$q;
+  my($rresidual_pairs)=Set::cartesian_product([$resp,$resq]);
   
-  
-  my(@all_residual_pairs)=();
-  for my $rp (@$resp)
-  {
-    for my $rq (@$resq)
-    {
-      push(@all_residual_pairs,[$rp,$rq]);
-    }
-  }
-  
-  my($rresiduals)=Bezout::congruence_solve([$p,$q],\@all_residual_pairs);
+  my($rresiduals)=Bezout::congruence_solve([$p,$q],$rresidual_pairs);
 
   @$rresiduals=sort({$a<=>$b} @$rresiduals);
 
