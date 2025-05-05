@@ -57,7 +57,15 @@ sub calc_residuals
       my(@pows)=($p);
       for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
       {
-        $prev_residual = fetch_exp_residual($prev_pow,$pow,$prev_residual,$residual_val);
+        if( $p == 2 )
+        {
+          $prev_residual = fetch_exp_2_residual($prev_pow,$pow,$prev_residual,$residual_val);
+        }
+        else
+        {
+          $prev_residual = fetch_exp_residual($prev_pow,$pow,$prev_residual,$residual_val);
+        }
+
         last if( $prev_residual == -1);
 
         if($pow > $current_max_div )
@@ -130,6 +138,19 @@ sub fetch_prime_residual
       return $x if(($x*$x)%$d == $residual_val);
     }
     return -1;
+  }
+}
+
+sub fetch_exp_2_residual
+{
+  my($prev_pow,$pow,$res,$residual_val)=@_;
+  if($residual_val == 1)
+  {
+    return [1,$prev_pow-1,$prev_pow+1,$pow-1];
+  }
+  else
+  {
+    return fetch_exp_residual($prev_pow,$pow,$res,$residual_val);
   }
 }
 
