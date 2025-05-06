@@ -3,6 +3,7 @@ use strict;
 use Prime;
 use Bezout;
 use POSIX qw/floor ceil/;
+use Data::Dumper;
 use Set;
 
 # Calculates the square residuals, ie the solutions of x^2 = r in Z/pZ
@@ -41,6 +42,7 @@ sub calc_residuals
   {
     if(valid_prime($p,$residual_val))
     {
+      
       $$rrdivisors[$pcount] = [] if($#$rrdivisors < $pcount);
       my($rdivisors)= $$rrdivisors[$pcount];
       my($current_max_div) = ($#$rdivisors < 0)?0:$$rdivisors[-1];
@@ -55,27 +57,42 @@ sub calc_residuals
 
       my($prev_pow)=$p;
       my(@pows)=($p);
-      for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
+  
+  
+      if( $p == 2 )
       {
-        if( $p == 2 )
+        for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
         {
-          $prev_residual = fetch_exp_2_residual($prev_pow,$pow,$prev_residual,$residual_val);
+          my($resis)= fetch_exp_2_residual($prev_pow,$pow,$residual_val);
+          last if( $$resis[0] == -1);
+
+          if($pow > $current_max_div )
+          {
+            $$rresiduals{$pow} = $resis;
+            push(@new_divs,$pow);
+          }
+          
+          $prev_pow = $pow;
+          push(@pows,$pow);
         }
-        else
+      }
+      else
+      {
+        for(my($pow)=$p*$p;$pow < $highest_div;$pow*=$p)
         {
           $prev_residual = fetch_exp_residual($prev_pow,$pow,$prev_residual,$residual_val);
-        }
 
-        last if( $prev_residual == -1);
+          last if( $prev_residual == -1);
 
-        if($pow > $current_max_div )
-        {
-          $$rresiduals{$pow} = [$prev_residual,$pow - $prev_residual];
-          push(@new_divs,$pow);
+          if($pow > $current_max_div )
+          {
+            $$rresiduals{$pow} = [$prev_residual,$pow - $prev_residual];
+            push(@new_divs,$pow);
+          }
+          
+          $prev_pow = $pow;
+          push(@pows,$pow);
         }
-        
-        $prev_pow = $pow;
-        push(@pows,$pow);
       }
 
       for(my($k)=0;$k<=$#pows;$k++)
@@ -143,14 +160,30 @@ sub fetch_prime_residual
 
 sub fetch_exp_2_residual
 {
-  my($prev_pow,$pow,$res,$residual_val)=@_;
+  my($prev_pow,$pow,$residual_val)=@_;
+  
   if($residual_val == 1)
   {
-    return [1,$prev_pow-1,$prev_pow+1,$pow-1];
+    if($pow == 2)
+    {
+      return [1];
+    }
+    elsif($pow == 4)
+    {
+      return [1,3];
+    }
+    else
+    {
+      return [1,$prev_pow-1,$prev_pow+1,$pow-1];
+    }
+  }
+  elsif($residual_val == -1)
+  {
+    return [-1];
   }
   else
   {
-    return fetch_exp_residual($prev_pow,$pow,$res,$residual_val);
+    die "Not implemented fetch_exp_2_residual, with res $residual_val != +/- 1";
   }
 }
 
@@ -179,11 +212,41 @@ sub fetch_multiple_residual
 {
   my($p,$resp,$q,$resq)=@_;
   
-  my($rresidual_pairs)=Set::cartesian_product([$resp,$resq]);
+  # print "$p $q : \n";
   
-  my($rresiduals)=Bezout::congruence_solve([$p,$q],$rresidual_pairs);
+  my($calc_half)=$#$resq >= 1 && $#$resq %2 == 1;
+  # my($calc_half)=1;
+  # my($calc_half)=0;
 
-  @$rresiduals=sort({$a<=>$b} @$rresiduals);
+  my($rresidual_pairs);
+  if($calc_half)
+  {
+    my(@half_resq) = @$resq[0..(($#$resq-1)/2)];
+    # print Dumper $resp;
+    # print Dumper $resq;
+    # print Dumper \@half_resq;
+    $rresidual_pairs=Set::cartesian_product([$resp,\@half_resq]);
+  }
+  else
+  {
+    $rresidual_pairs=Set::cartesian_product([$resp,$resq]);
+  }
+
+  my($rresiduals)=Bezout::congruence_solve([$p,$q],$rresidual_pairs);
+  # print Dumper $rresiduals;
+  if($calc_half)
+  {
+    my($num)=$#$rresidual_pairs+1;
+    my($n)=$p*$q;
+    for(my($i)=0;$i<$num;$i++)
+    {
+      push(@$rresiduals,$n-$$rresiduals[$i]);
+    }
+  }
+
+  # @$rresiduals=sort({$a<=>$b} @$rresiduals);
+  # print Dumper $rresiduals;<STDIN>;
+
 
   return $rresiduals;
 }

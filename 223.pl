@@ -9,12 +9,23 @@ my($perimeter_max)=25000000;
 
 my($div_max)=(-4*$perimeter_max + sqrt(18*$perimeter_max**2 - 18))/2;
 
-
-Prime::init_crible(200000);
+Prime::init_crible($div_max + 1000);
 
 my(@all_divisors)=();
 my(%residuals)=();
 Residual::calc_residuals(\@all_divisors,\%residuals,1,$div_max,$div_max/3);
+# Residual::calc_residuals(\@all_divisors,\%residuals,1,100);
+
+sub print_residuals
+{
+  my($r)=@_;
+  foreach my $p (sort({$a<=>$b}(keys(%$r))))
+  {
+      print "$p : [".join(",",@{$$r{$p}})."]\n"
+  }
+}
+
+# print_residuals( \%residuals);
 
 print "Calc residual done\n";
 exit(0);
